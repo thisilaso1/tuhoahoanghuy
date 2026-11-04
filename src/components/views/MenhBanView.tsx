@@ -5,6 +5,7 @@ import { ActiveChartForm } from '../chart/ActiveChartForm';
 import { SinglePalaceQiTabs } from '../chart/SinglePalaceQiTabs';
 import { SelectedPalacesQiTabs } from '../chart/SelectedPalacesQiTabs';
 import { QiFlowGraph } from '../chart/QiFlowGraph';
+import { PalaceInspector } from '../chart/PalaceInspector';
 import { DEFAULT_PHI_HOA_VISIBILITY, PhiHoaFilterPanel, PhiHoaVisibility } from '../chart/PhiHoaFilterPanel';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { calculateAllFlyingTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
@@ -93,16 +94,18 @@ export const MenhBanView: React.FC = () => {
       // Tìm phần tử lá số thực (chart-export-frame) để render với kích thước cố định
       const chartEl = chartContainerRef.current.querySelector<HTMLElement>('.chart-export-frame') ?? chartContainerRef.current;
       const fontEmbedCSS = await getFontEmbedCSS(chartEl);
-      // Luôn xuất ảnh 1200×1200 bất kể kích thước màn hình
+      // Include the full wide Nam Phái board; keep the existing compact export size for Khâm Thiên.
+      const exportWidth = chartEl.classList.contains('chart-school-nam-phai') ? Math.max(1200, chartEl.scrollWidth) : 1200;
+      const exportHeight = chartEl.classList.contains('chart-school-nam-phai') ? Math.max(1200, chartEl.scrollHeight) : 1200;
       const dataUrl = await toPng(chartEl, {
         pixelRatio: 2,
         cacheBust: true,
         fontEmbedCSS,
-        width: 1200,
-        height: 1200,
+        width: exportWidth,
+        height: exportHeight,
         style: {
-          width: '1200px',
-          height: '1200px',
+          width: `${exportWidth}px`,
+          height: `${exportHeight}px`,
         },
         backgroundColor: chartTheme === 'paper' ? '#fbfcfd' : chartTheme === 'parchment' ? '#efe4d0' : '#0a111c',
       });
@@ -270,6 +273,13 @@ export const MenhBanView: React.FC = () => {
             school={school}
             phiHoaVisibility={phiHoaVisibility}
           />
+          {focusedPalaceIndex !== null && <PalaceInspector
+            palace={activeChart.palaces[focusedPalaceIndex]}
+            chart={activeChart}
+            onClose={() => setFocusedPalaceIndex(null)}
+            school={school}
+            layers={layers}
+          />}
         </div>
         <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />
 

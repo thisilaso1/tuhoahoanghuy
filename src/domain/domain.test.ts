@@ -14,6 +14,7 @@ import { calculateAnnualLimitState, calculateTieuHanBranchIndex } from './annual
 import { calculateAnnualStars } from './annualStars';
 import { getStarBrightness, NAM_PHAI_BRIGHTNESS_DEFINITIONS, NAM_PHAI_FULL_PROFILE_ID } from './starBrightness';
 import { STAR_ID_BY_NAME } from './starElements';
+import { buildNamPhaiStarAuditReport, NAM_PHAI_STAR_REGISTRY } from './namPhaiStarRegistry';
 
 describe('Domain Astrology & I Ching Engines', () => {
   it('calculates lunar calendar and Can Chi correctly', () => {
@@ -130,14 +131,20 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(trangSinhRing.map((star) => reverse[star])).toEqual(Array.from({ length: 12 }, (_, index) => (5 - index + 12) % 12));
   });
 
-  it('places the nine core annual stars and re-keys the data when the forecast year changes', () => {
+  it('places the verified annual star set and re-keys the data when the forecast year changes', () => {
     const chart = generateNatalChart({ name: 'Annual test', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
     const annual2026 = calculateAnnualStars(chart, 2026);
-    expect(annual2026.map(({ name, branch }) => [name, branch])).toEqual([
+    expect(annual2026).toHaveLength(25);
+    expect(annual2026.map(({ name, branch }) => [name, branch])).toEqual(expect.arrayContaining([
       ['Lưu Thái Tuế', 'Ngọ'], ['Lưu Tang Môn', 'Thân'], ['Lưu Bạch Hổ', 'Dần'],
       ['Lưu Thiên Khốc', 'Tý'], ['Lưu Thiên Hư', 'Tý'], ['Lưu Lộc Tồn', 'Tỵ'],
       ['Lưu Kình Dương', 'Ngọ'], ['Lưu Đà La', 'Thìn'], ['Lưu Thiên Mã', 'Thân'],
-    ]);
+      ['Lưu Thiếu Dương', 'Mùi'], ['Lưu Thiếu Âm', 'Dậu'], ['Lưu Quan Phù', 'Tuất'],
+      ['Lưu Tử Phù', 'Hợi'], ['Lưu Tuế Phá', 'Tý'], ['Lưu Long Đức', 'Sửu'],
+      ['Lưu Phúc Đức', 'Mão'], ['Lưu Điếu Khách', 'Thìn'], ['Lưu Trực Phù', 'Tỵ'],
+      ['Lưu Thiên Khôi', 'Hợi'], ['Lưu Thiên Việt', 'Dậu'], ['Lưu Văn Xương', 'Thân'],
+      ['Lưu Văn Khúc', 'Ngọ'], ['Lưu Đào Hoa', 'Mão'], ['Lưu Hồng Loan', 'Dậu'], ['Lưu Thiên Hỷ', 'Mão'],
+    ]));
     expect(annual2026.every(({ brightness, annualYear, id }) => brightness === 'UNSPECIFIED' && annualYear === 2026 && id.startsWith('ANNUAL:2026:'))).toBe(true);
     expect(getAnnualTransformations(chart, 2026, 'nam_phai').map(({ type, star }) => [type, star])).toEqual([
       ['Lộc', 'Thiên Đồng'], ['Quyền', 'Thiên Cơ'], ['Khoa', 'Văn Xương'], ['Kỵ', 'Liêm Trinh'],
@@ -145,6 +152,20 @@ describe('Domain Astrology & I Ching Engines', () => {
     const annual2027 = calculateAnnualStars(chart, 2027);
     expect(annual2027.every(({ annualYear, id }) => annualYear === 2027 && id.startsWith('ANNUAL:2027:'))).toBe(true);
     expect(annual2027.map(({ branch }) => branch)).not.toEqual(annual2026.map(({ branch }) => branch));
+  });
+
+  it('audits Nam Phái stars by unique ID and flags unsupported placement rules', () => {
+    expect(new Set(NAM_PHAI_STAR_REGISTRY.map(({ id }) => id)).size).toBe(NAM_PHAI_STAR_REGISTRY.length);
+    expect(NAM_PHAI_BRIGHTNESS_DEFINITIONS).toHaveLength(168);
+    const chart = generateNatalChart({ name: 'Audit', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const report = buildNamPhaiStarAuditReport(
+      chart.palaces.flatMap((palace) => [...palace.majorStars, ...palace.minorStars].map(({ name }) => name)),
+      calculateAnnualStars(chart, 2026).map(({ name }) => name),
+    );
+    expect(report.missingBrightnessIds).toEqual([]);
+    expect(report.missingAnnualStarIds).toEqual([]);
+    expect(report.unverifiedRuleIds).toContain('UNRESOLVED_PROFILE_VARIANT_V1');
+    expect(report.missingStarIds).toEqual(expect.arrayContaining(['NATAL:VAN_TINH','NATAL:THIEN_QUAN','NATAL:THIEN_PHUC']));
   });
 
   it('maps palace ages through the full 60-year Can Chi cycle and branch-only mode', () => {

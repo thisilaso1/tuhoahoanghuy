@@ -31,6 +31,7 @@ interface PalaceCellProps {
 
 const BRIGHTNESS_SHORT: Record<string, string> = { Miếu: 'M', Vượng: 'V', Đắc: 'Đ', Hãm: 'H', Bình: 'B' };
 const TRANG_SINH_STAGES = new Set(['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng']);
+const CYCLE_STARS = new Set(['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù','Bác Sĩ','Lực Sĩ','Thanh Long','Tiểu Hao','Tướng Quân','Tấu Thư','Phi Liêm','Hỷ Thần','Bệnh Phù','Đại Hao','Phục Binh','Quan Phủ']);
 const BRANCH_ELEMENT: Record<string, string> = {
   Tý: 'Thủy', Sửu: 'Thổ', Dần: 'Mộc', Mão: 'Mộc', Thìn: 'Thổ', Tỵ: 'Hỏa',
   Ngọ: 'Hỏa', Mùi: 'Thổ', Thân: 'Kim', Dậu: 'Kim', Tuất: 'Thổ', Hợi: 'Thủy',
@@ -66,10 +67,12 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   const { majorStars: displayedMajorStars, minorStars: allDisplayedMinorStars } = getDisplayedPalaceStars(palace, school);
   const trangSinhStage = school === 'nam_phai' ? allDisplayedMinorStars.find((star) => TRANG_SINH_STAGES.has(star.name)) : undefined;
   const displayedMinorStars = school === 'nam_phai'
-    ? allDisplayedMinorStars.filter((star) => !TRANG_SINH_STAGES.has(star.name))
+    ? allDisplayedMinorStars.filter((star) => !TRANG_SINH_STAGES.has(star.name) && !CYCLE_STARS.has(star.name))
     : allDisplayedMinorStars;
-  const auspiciousStars = displayedMinorStars.filter((star) => star.category !== 'bad');
+  const auspiciousStars = displayedMinorStars.filter((star) => star.category === 'good');
   const adverseStars = displayedMinorStars.filter((star) => star.category === 'bad');
+  const neutralStars = displayedMinorStars.filter((star) => star.category === 'other');
+  const cycleStars = school === 'nam_phai' ? allDisplayedMinorStars.filter((star) => CYCLE_STARS.has(star.name)) : [];
 
   return (
     <article
@@ -176,6 +179,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
       {/* ══ PHỤ TINH — cát tinh trái | hung tinh phải ══ */}
       <div className="palace-minor-columns">
         <div className="palace-auspicious-stars">
+          {school === 'nam_phai' && auspiciousStars.length > 0 && <span className="palace-minor-group-title">Cát / Trợ tinh</span>}
           {auspiciousStars.map((star) => (
             <span
               key={star.name}
@@ -192,6 +196,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
           ))}
         </div>
         <div className="palace-adverse-stars" aria-label="Sát bại tinh">
+          {school === 'nam_phai' && adverseStars.length > 0 && <span className="palace-minor-group-title">Sát / Hao tinh</span>}
           {adverseStars.map((star) => (
             <span
               key={star.name}
@@ -208,6 +213,11 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
           ))}
         </div>
       </div>
+
+      {school === 'nam_phai' && neutralStars.length > 0 && <div className="palace-neutral-stars" aria-label="Phụ tinh khác">
+        <span className="palace-minor-group-title">Phụ tinh khác</span>
+        {neutralStars.map((star) => <span key={star.name} data-element={star.element} className="palace-neutral-star">{STAR_ID_BY_NAME[star.name] ? <StarName starId={STAR_ID_BY_NAME[star.name]} name={star.name} /> : star.name}</span>)}
+      </div>}
 
       {showAnnual && school === 'nam_phai' && (annualStars.length > 0 || annualHuas.length > 0) && (
         <div className="palace-annual-star-list" aria-label={`Sao Lưu Niên ${annualYear}`}>
@@ -231,6 +241,11 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
           {trangSinhStage.name}
         </div>
       )}
+
+      {cycleStars.length > 0 && <div className="palace-cycle-footer" aria-label="Các vòng sao">
+        <span><b>Thái Tuế</b> · {cycleStars.find((star) => ['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù'].includes(star.name))?.name ?? '—'}</span>
+        <span><b>Bác Sĩ</b> · {cycleStars.find((star) => ['Bác Sĩ','Lực Sĩ','Thanh Long','Tiểu Hao','Tướng Quân','Tấu Thư','Phi Liêm','Hỷ Thần','Bệnh Phù','Đại Hao','Phục Binh','Quan Phủ'].includes(star.name))?.name ?? '—'}</span>
+      </div>}
 
       {/* ══ FOOTER: Nguyệt hạn + Tiểu Hạn ══ */}
       <div className="palace-cell-footer">

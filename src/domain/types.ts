@@ -27,12 +27,17 @@ export type PalaceName = (typeof PALACE_NAMES)[number];
 export type StarBrightness = 'Miếu' | 'Vượng' | 'Đắc' | 'Hãm' | 'Bình' | 'UNSPECIFIED';
 
 export interface Star {
+  id?: string;
   name: string;
-  category: 'major' | 'good' | 'bad' | 'flow' | 'other';
+  category: 'major' | 'good' | 'bad' | 'flow' | 'other' | 'cycle';
   brightness?: StarBrightness;
   element?: 'Kim' | 'Mộc' | 'Thủy' | 'Hỏa' | 'Thổ';
   description?: string;
   transformation?: TransformationType;
+  placementRuleId?: string;
+  placementDependencies?: string[];
+  schoolProfileId?: string;
+  verificationStatus?: 'VERIFIED' | 'UNVERIFIED';
 }
 
 export interface Palace {

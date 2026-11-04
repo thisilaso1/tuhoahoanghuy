@@ -24,6 +24,7 @@ import {
 } from './lunarCalendar';
 import { getStarPrimaryElementLabel, STAR_ID_BY_NAME } from './starElements';
 import { calculateFirstMonthlyLimitBranchIndex, calculateTieuHanBranchIndex, getAnnualAgeAtBranch } from './annualLimits';
+import { getNamPhaiStarIdForName, NAM_PHAI_PROFILE_ID, NAM_PHAI_STAR_REGISTRY } from './namPhaiStarRegistry';
 
 // 14 Chính Tinh
 export const CHINH_TINH = [
@@ -55,12 +56,17 @@ const MINOR_STAR_ELEMENTS: Record<string, 'Kim' | 'Mộc' | 'Thủy' | 'Hỏa' |
   'Lộc Tồn': 'Thổ', 'Kình Dương': 'Kim', 'Đà La': 'Kim', 'Thiên Khôi': 'Hỏa',
   'Thiên Việt': 'Hỏa', 'Địa Không': 'Hỏa', 'Địa Kiếp': 'Hỏa', 'Hỏa Tinh': 'Hỏa',
   'Linh Tinh': 'Hỏa', 'Đào Hoa': 'Mộc', 'Thiên Mã': 'Hỏa', 'Hoa Cái': 'Kim',
+  'Quốc Ấn': 'Thổ', 'Đường Phù': 'Mộc', 'Hồng Loan': 'Thủy', 'Thiên Hỷ': 'Thủy',
+  'Cô Thần': 'Thổ', 'Quả Tú': 'Thổ', 'Thiên Đức': 'Hỏa', 'Nguyệt Đức': 'Hỏa',
+  'Kiếp Sát': 'Hỏa', 'Phá Toái': 'Hỏa', 'Long Trì': 'Thủy', 'Phượng Các': 'Mộc',
+  'Tam Thai': 'Thủy', 'Bát Tọa': 'Mộc', 'Ân Quang': 'Mộc', 'Thiên Quý': 'Thổ',
+  'Thai Phụ': 'Kim', 'Phong Cáo': 'Thổ', 'Thiên Hình': 'Hỏa', 'Thiên Riêu': 'Thủy', 'Thiên Y': 'Thủy',
+  'Thiên La': 'Kim', 'Địa Võng': 'Kim', 'Thiên Khốc': 'Thủy', 'Thiên Hư': 'Thủy',
   'Thái Tuế': 'Hỏa', 'Thiếu Dương': 'Hỏa', 'Tang Môn': 'Mộc', 'Thiếu Âm': 'Thủy',
   'Quan Phù': 'Hỏa', 'Tử Phù': 'Hỏa', 'Tuế Phá': 'Hỏa', 'Long Đức': 'Thủy',
   'Bạch Hổ': 'Kim', 'Phúc Đức': 'Thổ', 'Điếu Khách': 'Hỏa', 'Trực Phù': 'Hỏa',
 };
-const AUSPICIOUS_MINOR_STARS = ['Tả Phù', 'Hữu Bật', 'Văn Xương', 'Văn Khúc', 'Thiên Khôi', 'Thiên Việt', 'Lộc Tồn', 'Thiên Mã', 'Hoa Cái', 'Long Đức', 'Phúc Đức', 'Thiếu Dương'];
-const ADVERSE_MINOR_STARS = ['Kình Dương', 'Đà La', 'Địa Không', 'Địa Kiếp', 'Hỏa Tinh', 'Linh Tinh', 'Tang Môn', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Bạch Hổ', 'Điếu Khách', 'Tiểu Hao', 'Phi Liêm', 'Bệnh Phù', 'Đại Hao', 'Phục Binh', 'Quan Phủ'];
+const NAM_PHAI_DEFINITION_BY_NAME = new Map(NAM_PHAI_STAR_REGISTRY.map((definition) => [definition.displayName, definition]));
 export const LOC_TON_POSITION_BY_STEM: Record<Stem, number> = {
   Giáp: 2, Ất: 3, Bính: 5, Đinh: 7, Mậu: 5, Kỷ: 7, Canh: 8, Tân: 9, Nhâm: 11, Quý: 0,
 };
@@ -187,6 +193,9 @@ export function placeMinorStars(
   hourBranch: Branch,
   gender?: Gender,
   cucNumber?: number,
+  lunarDay?: number,
+  menhIndex?: number,
+  thanIndex?: number,
 ): Record<string, number> {
   const minor: Record<string, number> = {};
   const hourIdx = BRANCHES.indexOf(hourBranch);
@@ -226,11 +235,15 @@ export function placeMinorStars(
   minor['Địa Không'] = ((11 - hourIdx) % 12 + 12) % 12;
   minor['Địa Kiếp'] = (11 + hourIdx) % 12;
 
-  // Hỏa Tinh & Linh Tinh
+  // Hỏa Tinh & Linh Tinh: year-group start branches, counted by birth hour and polarity.
   const branchIdx = BRANCHES.indexOf(yearBranch);
-  const fireBase = (branchIdx % 4 === 2) ? 1 : (branchIdx % 4 === 0) ? 2 : 3;
-  minor['Hỏa Tinh'] = (fireBase + hourIdx) % 12;
-  minor['Linh Tinh'] = ((10 - hourIdx) % 12 + 12) % 12;
+  const fireBellBase: Record<number, [number, number]> = { 0: [2, 10], 1: [3, 10], 2: [1, 3], 3: [2, 10] };
+  const [fireStart, bellStart] = fireBellBase[branchIdx % 4];
+  const isYangYear = ['Giáp', 'Bính', 'Mậu', 'Canh', 'Nhâm'].includes(yearStem);
+  const forwardForFire = gender ? ((isYangYear && gender === 'Nam') || (!isYangYear && gender === 'Nữ')) : true;
+  const directionForFire = forwardForFire ? 1 : -1;
+  minor['Hỏa Tinh'] = mod(fireStart + directionForFire * hourIdx, 12);
+  minor['Linh Tinh'] = mod(bellStart - directionForFire * hourIdx, 12);
 
   // Đào Hoa
   const daoHoaMap: Record<number, number> = { 0: 9, 1: 6, 2: 3, 3: 0 };
@@ -243,6 +256,42 @@ export function placeMinorStars(
   // Tỵ Dậu Sửu tại Sửu, Hợi Mão Mùi tại Mùi.
   const hoaCaiMap: Record<number, number> = { 0: 4, 1: 10, 2: 1, 3: 7 };
   minor['Hoa Cái'] = hoaCaiMap[branchIdx % 4];
+
+  minor['Hồng Loan'] = mod(3 - branchIdx, 12);
+  minor['Thiên Hỷ'] = mod(minor['Hồng Loan'] + 6, 12);
+  const branchGroupIndex = Math.floor(branchIdx / 3);
+  minor['Cô Thần'] = [2, 5, 8, 11][branchGroupIndex];
+  minor['Quả Tú'] = [10, 1, 4, 7][branchGroupIndex];
+  minor['Thiên Đức'] = mod(9 + branchIdx, 12);
+  minor['Nguyệt Đức'] = mod(5 + branchIdx, 12);
+  minor['Kiếp Sát'] = ({ 0: 5, 1: 2, 2: 11, 3: 8 } as Record<number, number>)[branchIdx % 4];
+  minor['Phá Toái'] = ({ 0: 5, 1: 1, 2: 9 } as Record<number, number>)[branchIdx % 3];
+  minor['Long Trì'] = mod(4 + branchIdx, 12);
+  minor['Phượng Các'] = mod(10 - branchIdx, 12);
+  minor['Thiên Khốc'] = mod(6 - branchIdx, 12);
+  minor['Thiên Hư'] = mod(6 + branchIdx, 12);
+  minor['Quốc Ấn'] = mod(locTonPos + 8, 12);
+  minor['Đường Phù'] = mod(locTonPos - 7, 12);
+  minor['Thiên Hình'] = mod(9 + lunarMonth - 1, 12);
+  minor['Thiên Riêu'] = mod(1 + lunarMonth - 1, 12);
+  minor['Thiên Y'] = minor['Thiên Riêu'];
+
+  const safeLunarDay = Math.max(1, lunarDay ?? 1);
+  minor['Tam Thai'] = mod(minor['Tả Phù'] + safeLunarDay - 1, 12);
+  minor['Bát Tọa'] = mod(minor['Hữu Bật'] - safeLunarDay + 1, 12);
+  minor['Ân Quang'] = mod(minor['Văn Xương'] + safeLunarDay - 2, 12);
+  minor['Thiên Quý'] = mod(minor['Văn Khúc'] - safeLunarDay + 2, 12);
+  minor['Thai Phụ'] = mod(minor['Văn Khúc'] - 1, 12);
+  minor['Phong Cáo'] = mod(minor['Văn Khúc'] + 1, 12);
+  if (menhIndex !== undefined) minor['Thiên Tài'] = mod(menhIndex + branchIdx, 12);
+  if (thanIndex !== undefined) minor['Thiên Thọ'] = mod(thanIndex + branchIdx, 12);
+  if (menhIndex !== undefined) {
+    minor['Thiên Thương'] = mod(menhIndex + 5, 12);
+    minor['Thiên Sứ'] = mod(menhIndex + 7, 12);
+  }
+  minor['Thiên La'] = 4;
+  minor['Địa Võng'] = 10;
+  minor['Đẩu Quân'] = mod(branchIdx - (lunarMonth - 1) + hourIdx, 12);
 
   // Vòng Thái Tuế: 12 sao đi thuận, độc lập với chiều giới tính.
   const thaiTueRing = ['Thái Tuế', 'Thiếu Dương', 'Tang Môn', 'Thiếu Âm', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Long Đức', 'Bạch Hổ', 'Phúc Đức', 'Điếu Khách', 'Trực Phù'];
@@ -334,6 +383,9 @@ export function generateNatalChart(input: BirthInput): NatalChart {
     hourBranch,
     input.gender,
     cuc.number,
+    lDay,
+    menhIndex,
+    thanIndex,
   );
   const tuanTrietBranches = getTuanTrietBranches(birthCanChiYear.stem, birthCanChiYear.branch);
 
@@ -353,10 +405,15 @@ export function generateNatalChart(input: BirthInput): NatalChart {
     for (const [starName, pos] of Object.entries(majorStarPositions)) {
       if (pos === branchIndex) {
         majorStars.push({
+          id: getNamPhaiStarIdForName(starName),
           name: starName,
           category: 'major',
           element: STAR_ID_BY_NAME[starName] ? getStarPrimaryElementLabel(STAR_ID_BY_NAME[starName]) : undefined,
           brightness: BRIGHTNESS_TABLE[starName]?.[branchIndex] || 'Đắc',
+          placementRuleId: NAM_PHAI_DEFINITION_BY_NAME.get(starName)?.placementRuleId,
+          placementDependencies: NAM_PHAI_DEFINITION_BY_NAME.get(starName)?.placementDependencies,
+          schoolProfileId: NAM_PHAI_PROFILE_ID,
+          verificationStatus: 'VERIFIED',
         });
       }
     }
@@ -364,15 +421,20 @@ export function generateNatalChart(input: BirthInput): NatalChart {
     const minorStars: Star[] = [];
     for (const [starName, pos] of Object.entries(minorStarPositions)) {
       if (pos === branchIndex) {
-        const category = AUSPICIOUS_MINOR_STARS.includes(starName)
-          ? 'good'
-          : ADVERSE_MINOR_STARS.includes(starName)
-            ? 'bad'
-            : 'other';
+        const definition = NAM_PHAI_DEFINITION_BY_NAME.get(starName);
+        const category = definition?.category === 'AUSPICIOUS' ? 'good'
+          : definition?.category === 'MALEFIC' ? 'bad'
+            : definition?.category === 'CYCLE' ? 'cycle'
+              : 'other';
         minorStars.push({
+          id: getNamPhaiStarIdForName(starName),
           name: starName,
           category,
-          element: MINOR_STAR_ELEMENTS[starName],
+          element: MINOR_STAR_ELEMENTS[starName] ?? definition?.element,
+          placementRuleId: definition?.placementRuleId ?? `UNVERIFIED:${starName}`,
+          placementDependencies: definition?.placementDependencies ?? [],
+          schoolProfileId: NAM_PHAI_PROFILE_ID,
+          verificationStatus: definition?.verificationStatus ?? 'UNVERIFIED',
         });
       }
     }

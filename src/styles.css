@@ -983,6 +983,11 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; margin-left: 40px; }
 .chart-theme .chart-subject-slogan { grid-column: 1 / -1; grid-row: 3; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
 .chart-theme .palace-minor-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; line-height: 1.25; }
+.chart-theme .palace-minor-group-title { flex: 0 0 100%; width: 100%; color: var(--chart-muted); font-size: 9px; font-weight: 700; letter-spacing: .045em; line-height: 1.2; }
+.chart-theme .palace-neutral-stars { display: flex; flex-wrap: wrap; gap: 2px 6px; padding-top: 3px; border-top: 1px solid color-mix(in srgb, var(--chart-border) 55%, transparent); }
+.chart-theme .palace-neutral-star { color: var(--chart-muted); font-size: 11px; line-height: 1.25; }
+.chart-theme .palace-cycle-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; margin-top: 2px; padding-top: 3px; border-top: 1px solid color-mix(in srgb, var(--chart-border) 55%, transparent); color: var(--chart-muted); font-size: 9px; line-height: 1.2; }
+.chart-theme .palace-cycle-footer b { color: var(--chart-accent); font-weight: 700; }
 .chart-theme .palace-annual-star-list { display: block; margin-top: 1px; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .chart-theme .palace-annual-star-items { display: flex; flex-wrap: wrap; gap: 2px 6px; }
 .chart-theme .palace-annual-star, .chart-theme .palace-annual-hua { color: var(--chart-element-color, var(--chart-muted)); font-size: 11px; font-weight: 600; line-height: 1.25; white-space: normal; }
@@ -1022,6 +1027,14 @@ h1, h2, h3, h4, .font-serif {
   display: flex;
   flex-direction: column;
 }
+.chart-export-frame.chart-school-nam-phai { overflow-x: auto !important; overscroll-behavior-x: contain; }
+.chart-export-frame.chart-school-nam-phai .palace-grid { min-width: 1180px; grid-template-rows: repeat(4, minmax(240px, auto)); min-height: 960px; }
+.chart-export-frame.chart-school-nam-phai .palace-cell { min-height: 240px; padding: 11px; gap: 4px; }
+.chart-export-frame.chart-school-nam-phai .palace-major-star-entry .palace-major { font-size: 15px; }
+.chart-export-frame.chart-school-nam-phai .palace-good-star, .chart-export-frame.chart-school-nam-phai .palace-minor-star { font-size: 12px; font-weight: 450; }
+.chart-export-frame.chart-school-nam-phai .palace-auspicious-stars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 6px; }
+.chart-export-frame.chart-school-nam-phai .palace-auspicious-stars .palace-minor-group-title { grid-column: 1 / -1; }
+.chart-export-frame.chart-school-nam-phai .palace-adverse-stars { max-width: 130px; }
 /* Trên màn hình nhỏ: scroll ngang thay vì co lại */
 @media (max-width: 700px) {
   .chart-export-frame .palace-grid {
@@ -1033,6 +1046,8 @@ h1, h2, h3, h4, .font-serif {
   .chart-export-frame .palace-heading-title { font-size: 12px; }
   .chart-export-frame .palace-major-star-entry .palace-major { font-size: 13px; }
   .chart-export-frame .palace-brightness-badge { font-size: 13px; }
+  .chart-export-frame.chart-school-nam-phai .palace-grid { min-width: 1180px; grid-template-rows: repeat(4, minmax(230px, auto)); min-height: 920px; }
+  .chart-export-frame.chart-school-nam-phai .palace-cell { min-height: 230px; }
 }
 
 /* Five element colors are tied to the chart theme, never to a palace or Hua label. */

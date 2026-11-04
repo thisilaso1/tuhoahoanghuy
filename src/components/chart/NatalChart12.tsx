@@ -105,7 +105,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   );
 
   return (
-    <div className={`chart-theme chart-theme-${theme} chart-export-frame relative w-full overflow-visible rounded-2xl p-2 sm:p-4 shadow-2xl`}>
+    <div className={`chart-theme chart-theme-${theme} chart-export-frame ${school === 'nam_phai' ? 'chart-school-nam-phai' : ''} relative w-full overflow-visible rounded-2xl p-2 sm:p-4 shadow-2xl`}>
       <div className="star-element-legend" aria-label="Chú giải Ngũ Hành tinh diệu">
         <span className="star-element-legend-title">NGŨ HÀNH TINH DIỆU</span>
         {ELEMENT_IDS.map((element) => <span className="star-element-legend-item" data-element={element} key={element}><i />{ELEMENT_LABEL[element]}</span>)}
