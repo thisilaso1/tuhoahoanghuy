@@ -1,7 +1,7 @@
 services:
   tu-hoa:
     build: .
-    image: thisilaso1/tuhoa:latest
+    image: thisilaso1/tuhoabe:latest
     container_name: tu-hoa-kham-thien
     restart: unless-stopped
     ports:
