@@ -24,7 +24,7 @@ const SUPPORT_STARS = ['Văn Xương', 'Văn Khúc', 'Tả Phụ', 'Hữu Bật'
 export interface BirthInput {
   name: string;
   date: string;
-  hour: number;
+  time: string;
   gender: Gender;
   calendar: 'solar' | 'lunar';
   forecastYear: number;
@@ -39,6 +39,7 @@ export interface PalaceData {
   decade: string;
   annualAge: number;
   lunarMonth: number;
+  stem: (typeof STEMS)[number];
 }
 
 export function canChiYear(year: number) {
@@ -51,16 +52,19 @@ export function hourBranch(hour: number) {
 
 function hashSeed(input: BirthInput) {
   const digits = input.date.replaceAll('-', '').split('').reduce((sum, value) => sum + Number(value), 0);
-  return digits + input.hour * 7 + input.forecastYear * 3 + (input.gender === 'Nam' ? 11 : 23);
+  const [hour, minute] = input.time.split(':').map(Number);
+  return digits + hour * 7 + minute + input.forecastYear * 3 + (input.gender === 'Nam' ? 11 : 23);
 }
 
 export function buildChart(input: BirthInput): PalaceData[] {
   const [, monthText] = input.date.split('-');
   const month = Number(monthText);
-  const hourIndex = BRANCHES.indexOf(hourBranch(input.hour));
+  const hour = Number(input.time.split(':')[0]);
+  const hourIndex = BRANCHES.indexOf(hourBranch(hour));
   const lifeIndex = (2 + month - 1 - hourIndex + 24) % 12;
   const seed = hashSeed(input);
-  const clockwise = (canChiYear(Number(input.date.slice(0, 4))).stem.length + (input.gender === 'Nam' ? 0 : 1)) % 2 === 0;
+  const birthStemIndex = STEMS.indexOf(canChiYear(Number(input.date.slice(0, 4))).stem);
+  const clockwise = (birthStemIndex + (input.gender === 'Nam' ? 0 : 1)) % 2 === 0;
 
   return BRANCHES.map((branch, index) => {
     const palaceOffset = clockwise ? index - lifeIndex : lifeIndex - index;
@@ -74,6 +78,7 @@ export function buildChart(input: BirthInput): PalaceData[] {
       decade: `${2 + palaceIndex * 10}–${11 + palaceIndex * 10}`,
       annualAge: ((input.forecastYear - Number(input.date.slice(0, 4)) + palaceIndex) % 12 + 12) % 12 + 1,
       lunarMonth: ((index - hourIndex + 12) % 12) + 1,
+      stem: STEMS[(birthStemIndex * 2 + index) % 10],
     };
   });
 }
@@ -85,4 +90,32 @@ export function transformationTargets(chart: PalaceData[], year: number) {
     star,
     target: chart.find((palace) => [...palace.majorStars, ...palace.supportStars].includes(star))?.index ?? 0,
   }));
+}
+
+export interface TransformationLine {
+  layer: 'flying' | 'centrifugal' | 'centripetal';
+  kind: Transformation;
+  star: string;
+  source: number | null;
+  target: number;
+}
+
+export function transformationLines(chart: PalaceData[], year: number): TransformationLine[] {
+  const flying = transformationTargets(chart, year).map((item) => ({ ...item, layer: 'flying' as const, source: null }));
+  const selfLines = chart.flatMap((palace) => {
+    const rules = TU_HOA[palace.stem];
+    return (Object.entries(rules) as [Transformation, string][]).flatMap(([kind, star]) => {
+      const target = chart.find((item) => [...item.majorStars, ...item.supportStars].includes(star));
+      if (!target || target.index === palace.index) return [];
+      const outward = ((target.index - palace.index + 12) % 12) <= 6;
+      return [{
+        layer: outward ? 'centrifugal' as const : 'centripetal' as const,
+        kind,
+        star,
+        source: palace.index,
+        target: target.index,
+      }];
+    });
+  });
+  return [...flying, ...selfLines];
 }

@@ -12,6 +12,6 @@ describe('astrology rules', () => {
   });
 
   it('always creates twelve palaces', () => {
-    expect(buildChart({ name: 'Test', date: '1990-01-01', hour: 12, gender: 'Nam', calendar: 'solar', forecastYear: 2026 })).toHaveLength(12);
+    expect(buildChart({ name: 'Test', date: '1990-01-01', time: '12:30', gender: 'Nam', calendar: 'solar', forecastYear: 2026 })).toHaveLength(12);
   });
 });

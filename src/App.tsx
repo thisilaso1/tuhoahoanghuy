@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Eye, EyeOff, Printer, Search, Sparkles } from 'lucide-react';
 import { toPng } from 'html-to-image';
-import { BirthInput, buildChart, canChiYear, transformationTargets, TU_HOA, STEMS } from './astrology';
+import { BirthInput, buildChart, canChiYear, transformationLines, TU_HOA, STEMS } from './astrology';
 
 const GRID: Record<number, [number, number]> = {
   5: [1, 1], 6: [1, 2], 7: [1, 3], 8: [1, 4], 4: [2, 1], 9: [2, 4],
@@ -9,22 +9,25 @@ const GRID: Record<number, [number, number]> = {
 };
 
 const defaultInput: BirthInput = {
-  name: 'Nguyễn Minh An', date: '1992-08-18', hour: 9, gender: 'Nam', calendar: 'solar', forecastYear: new Date().getFullYear(),
+  name: 'Nguyễn Minh An', date: '1992-08-18', time: '09:30', gender: 'Nam', calendar: 'solar', forecastYear: new Date().getFullYear(),
 };
 
 function App() {
   const [form, setForm] = useState(defaultInput);
   const [chartInput, setChartInput] = useState(defaultInput);
   const [showAnnual, setShowAnnual] = useState(true);
-  const [showArrows, setShowArrows] = useState(true);
+  const [visibleLayers, setVisibleLayers] = useState({ flying: true, centrifugal: true, centripetal: true });
   const chartRef = useRef<HTMLDivElement>(null);
   const chart = buildChart(chartInput);
   const birthYear = Number(chartInput.date.slice(0, 4));
   const birthCanChi = canChiYear(birthYear);
   const forecastCanChi = canChiYear(chartInput.forecastYear);
-  const arrows = transformationTargets(chart, chartInput.forecastYear);
+  const lines = transformationLines(chart, chartInput.forecastYear);
+  const flying = lines.filter((line) => line.layer === 'flying');
+  const visibleLines = lines.filter((line) => visibleLayers[line.layer]);
 
   const update = <K extends keyof BirthInput>(key: K, value: BirthInput[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const toggleLayer = (layer: keyof typeof visibleLayers) => setVisibleLayers((current) => ({ ...current, [layer]: !current[layer] }));
 
   async function downloadPng() {
     if (!chartRef.current) return;
@@ -38,10 +41,10 @@ function App() {
   return (
     <main>
       <header className="hero">
-        <div className="brand-mark">天</div>
+        <div className="brand-mark">月</div>
         <div>
-          <p className="eyebrow">Mệnh bàn phương Đông</p>
-          <h1>Tứ Hóa <i>Khâm Thiên</i></h1>
+          <p className="eyebrow">Tử vi Tứ Hóa Khâm Thiên</p>
+          <h1>Vọng Nguyệt <i>Các</i></h1>
           <p className="hero-copy">Lập mệnh bàn, quan sát phi hóa và tra cứu Lộc · Quyền · Khoa · Kỵ trên cùng một đồ hình.</p>
         </div>
         <div className="seal">KHÂM<br />THIÊN</div>
@@ -53,7 +56,7 @@ function App() {
           <label>Họ và tên<input value={form.name} onChange={(event) => update('name', event.target.value)} /></label>
           <div className="field-pair">
             <label>Ngày sinh<input type="date" value={form.date} onChange={(event) => update('date', event.target.value)} /></label>
-            <label>Giờ sinh<select value={form.hour} onChange={(event) => update('hour', Number(event.target.value))}>{Array.from({ length: 24 }, (_, hour) => <option key={hour} value={hour}>{String(hour).padStart(2, '0')}:00</option>)}</select></label>
+            <label>Giờ sinh<input type="time" step="60" value={form.time} onChange={(event) => update('time', event.target.value)} /></label>
           </div>
           <div className="segmented">
             <button className={form.gender === 'Nam' ? 'active' : ''} onClick={() => update('gender', 'Nam')}>Nam</button>
@@ -69,7 +72,9 @@ function App() {
           <div className="chart-toolbar">
             <div><small>Mệnh bàn đang xem</small><strong>{chartInput.name} · {forecastCanChi.stem} {forecastCanChi.branch} {chartInput.forecastYear}</strong></div>
             <div className="toolbar-actions">
-              <button onClick={() => setShowArrows((value) => !value)}>{showArrows ? <Eye size={16} /> : <EyeOff size={16} />} Phi hóa</button>
+              <button className="layer-flying" onClick={() => toggleLayer('flying')}>{visibleLayers.flying ? <Eye size={16} /> : <EyeOff size={16} />} Phi hóa</button>
+              <button className="layer-centrifugal" onClick={() => toggleLayer('centrifugal')}>{visibleLayers.centrifugal ? <Eye size={16} /> : <EyeOff size={16} />} Ly tâm</button>
+              <button className="layer-centripetal" onClick={() => toggleLayer('centripetal')}>{visibleLayers.centripetal ? <Eye size={16} /> : <EyeOff size={16} />} Hướng tâm</button>
               <button onClick={() => setShowAnnual((value) => !value)}>{showAnnual ? <Eye size={16} /> : <EyeOff size={16} />} Tiểu hạn</button>
               <button onClick={downloadPng}><Download size={16} /> PNG</button>
               <button onClick={() => window.print()}><Printer size={16} /> PDF</button>
@@ -80,7 +85,7 @@ function App() {
             <div className="chart-grid">
               {chart.map((palace) => (
                 <article className="palace" key={palace.branch} style={{ gridRow: GRID[palace.index][0], gridColumn: GRID[palace.index][1] }}>
-                  <header><b>{palace.name}</b><em>{palace.branch}</em></header>
+                  <header><b>{palace.name}</b><em>{palace.stem} {palace.branch}</em></header>
                   <div className="stars major">{palace.majorStars.map((star) => <span key={star}>{star}</span>)}</div>
                   <div className="stars support">{palace.supportStars.map((star) => <span key={star}>{star}</span>)}</div>
                   <footer><span>ĐH {palace.decade}</span><span>Nguyệt {palace.lunarMonth}</span>{showAnnual && <strong>TH {palace.annualAge}</strong>}</footer>
@@ -89,18 +94,22 @@ function App() {
               <div className="chart-center">
                 <div className="yin-yang">☯</div>
                 <p>ĐƯƠNG SỐ</p><h3>{chartInput.name}</h3>
-                <dl><dt>Sinh năm</dt><dd>{birthCanChi.stem} {birthCanChi.branch} {birthYear}</dd><dt>Giờ sinh</dt><dd>{String(chartInput.hour).padStart(2, '0')}:00</dd><dt>Năm xem</dt><dd>{forecastCanChi.stem} {forecastCanChi.branch}</dd><dt>Âm dương</dt><dd>{chartInput.gender}</dd></dl>
+                <dl><dt>Sinh năm</dt><dd>{birthCanChi.stem} {birthCanChi.branch} {birthYear}</dd><dt>Giờ sinh</dt><dd>{chartInput.time}</dd><dt>Năm xem</dt><dd>{forecastCanChi.stem} {forecastCanChi.branch}</dd><dt>Âm dương</dt><dd>{chartInput.gender}</dd></dl>
               </div>
-              {showArrows && <svg className="arrows" viewBox="0 0 1000 1000" aria-label="Đường phi hóa">
-                <defs>{arrows.map(({ kind }) => <marker key={kind} id={`arrow-${kind}`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" className={`fill-${kind}`} /></marker>)}</defs>
-                {arrows.map(({ kind, target }, index) => {
-                  const [row, column] = GRID[target];
-                  const x = (column - .5) * 250; const y = (row - .5) * 250;
-                  return <path key={kind} d={`M ${460 + index * 28} ${510 + index * 18} Q 500 ${y > 500 ? 700 : 300}, ${x} ${y}`} className={`arrow arrow-${kind}`} markerEnd={`url(#arrow-${kind})`} />;
+              <svg className="arrows" viewBox="0 0 1000 1000" aria-label="Đường Tứ Hóa">
+                <defs>{lines.map(({ kind, layer }, index) => <marker key={`${layer}-${kind}-${index}`} id={`arrow-${layer}-${kind}`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" className={`fill-${kind}`} /></marker>)}</defs>
+                {visibleLines.map(({ kind, target, source, layer, star }, index) => {
+                  const [targetRow, targetColumn] = GRID[target];
+                  const targetX = (targetColumn - .5) * 250; const targetY = (targetRow - .5) * 250;
+                  const sourceGrid = source === null ? null : GRID[source];
+                  const sourceX = sourceGrid ? (sourceGrid[1] - .5) * 250 : 460 + index * 18;
+                  const sourceY = sourceGrid ? (sourceGrid[0] - .5) * 250 : 490 + index * 12;
+                  return <path key={`${layer}-${kind}-${source}-${target}-${star}`} d={`M ${sourceX} ${sourceY} Q 500 500, ${targetX} ${targetY}`} className={`arrow arrow-${kind} layer-${layer}`} markerEnd={`url(#arrow-${layer}-${kind})`} />;
                 })}
-              </svg>}
+              </svg>
             </div>
-            <div className="legend">{arrows.map(({ kind, star }) => <span key={kind} className={`tag tag-${kind}`}><i /> {kind}: {star}</span>)}</div>
+            <div className="legend transformations"><b>Phi hóa năm xem</b>{flying.map(({ kind, star }) => <span key={kind} className={`tag tag-${kind}`}><i /> {kind}: {star}</span>)}</div>
+            <div className="line-legend"><span className="sample flying" /> Phi hóa <span className="sample centrifugal" /> Tự hóa ly tâm <span className="sample centripetal" /> Tự hóa hướng tâm</div>
           </div>
         </section>
       </section>
@@ -110,7 +119,7 @@ function App() {
         <div className="table-wrap"><table><thead><tr><th>Thiên Can</th><th>Hóa Lộc</th><th>Hóa Quyền</th><th>Hóa Khoa</th><th>Hóa Kỵ</th></tr></thead><tbody>{STEMS.map((stem) => <tr key={stem} className={stem === forecastCanChi.stem ? 'selected' : ''}><th>{stem}</th><td>{TU_HOA[stem].Lộc}</td><td>{TU_HOA[stem].Quyền}</td><td>{TU_HOA[stem].Khoa}</td><td>{TU_HOA[stem].Kỵ}</td></tr>)}</tbody></table></div>
         <div className="search-hint"><Search size={18} /><span>Dòng <b>{forecastCanChi.stem}</b> đang được đánh dấu theo năm xem {chartInput.forecastYear}.</span></div>
       </section>
-      <footer className="site-footer">Tứ Hóa Khâm Thiên · Công cụ nghiên cứu và tham khảo học thuật</footer>
+      <footer className="site-footer">Vọng Nguyệt Các · Tứ Hóa Khâm Thiên · Công cụ nghiên cứu và tham khảo học thuật</footer>
     </main>
   );
 }
