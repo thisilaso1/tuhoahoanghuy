@@ -205,6 +205,11 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
           {visibleTransformations.map((t, index) => {
             const isCentrifugal = t.mode === 'ly_tam';
             const isSelf = t.sourcePalaceIndex === t.targetPalaceIndex;
+            // Self/opposite-palace transformations are core chart annotations,
+            // not ordinary flying lines; keep them visible regardless of the
+            // optional Phi Hóa type filters.
+            const isAlwaysVisibleTransformation = t.mode !== 'flying';
+            const isFilteredOut = !isAlwaysVisibleTransformation && !phiHoaVisibility[t.type];
             const start = getPalaceEdgePoint(t.sourcePalaceIndex, isCentrifugal ? 'outer' : 'inner');
             const end = isCentrifugal
               ? getCentrifugalOuterPoint(t.sourcePalaceIndex)
@@ -234,7 +239,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               t.mode === 'ly_tam' ? '4 4' : t.mode === 'huong_tam' ? '12 4 2 4' : '8 5';
 
             return (
-              <g key={t.id} className={`group phi-hoa-edge ${phiHoaVisibility[t.type] ? '' : 'phi-hoa-filtered-out'}`} aria-hidden={!phiHoaVisibility[t.type]}>
+              <g key={t.id} className={`group phi-hoa-edge ${isFilteredOut ? 'phi-hoa-filtered-out' : ''}`} aria-hidden={isFilteredOut}>
                 <title>
                   {t.mode === 'ly_tam'
                     ? `Cung ${chart.palaces[t.sourcePalaceIndex].name} tự hóa ${t.type}, hướng ra ngoài lá số`
