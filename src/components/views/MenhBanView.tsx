@@ -8,6 +8,7 @@ import { QiFlowGraph } from '../chart/QiFlowGraph';
 import { DEFAULT_PHI_HOA_VISIBILITY, PhiHoaFilterPanel, PhiHoaVisibility } from '../chart/PhiHoaFilterPanel';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { calculateAllFlyingTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
+import { solarToLunar } from '../../domain/lunarCalendar';
 import { AgeMatchMode, PalaceAgeOptions } from '../../domain/palaceAge';
 import {
   Download,
@@ -25,6 +26,7 @@ export const MenhBanView: React.FC = () => {
   const {
     activeChart,
     createChart,
+    updateForecastYear,
     focusedPalaceIndex,
     setFocusedPalaceIndex,
     sendMessageToThienCo,
@@ -36,6 +38,12 @@ export const MenhBanView: React.FC = () => {
     showAnnual: true,
   });
   const [selectedPhiPalaceIndices, setSelectedPhiPalaceIndices] = useState<number[]>([]);
+  const [selectedLunarMonth, setSelectedLunarMonth] = useState(() => {
+    const now = new Date();
+    return activeChart.forecastYear === now.getFullYear()
+      ? solarToLunar(now.getDate(), now.getMonth() + 1, now.getFullYear()).lMonth
+      : 1;
+  });
   const [phiHoaVisibility, setPhiHoaVisibility] = useState<PhiHoaVisibility>(DEFAULT_PHI_HOA_VISIBILITY);
   const [palaceAgeOptions, setPalaceAgeOptions] = useState<PalaceAgeOptions>({
     enabled: false,
@@ -122,6 +130,30 @@ export const MenhBanView: React.FC = () => {
       <div className="chart-workspace-toolbar mb-4 flex flex-col gap-3 rounded-2xl p-3 shadow-xl backdrop-blur-md">
         {/* Action Buttons & Layer Controls */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <label className="chart-theme-picker chart-view-period-picker">
+            <span>Năm xem</span>
+            <select
+              aria-label="Năm âm lịch đang xem"
+              value={activeChart.forecastYear}
+              onChange={(event) => updateForecastYear(Number(event.target.value))}
+            >
+              {Array.from({ length: 2200 - Math.max(1800, activeChart.lunarDate.year) }, (_, index) => Math.max(1800, activeChart.lunarDate.year) + index).map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </label>
+          <label className="chart-theme-picker chart-view-period-picker">
+            <span>Tháng hạn</span>
+            <select
+              aria-label="Tháng hạn âm lịch"
+              value={selectedLunarMonth}
+              onChange={(event) => setSelectedLunarMonth(Number(event.target.value))}
+            >
+              {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
+                <option key={month} value={month}>Tháng {month}</option>
+              ))}
+            </select>
+          </label>
           <div className="chart-theme-picker" role="group" aria-label="Màu nền lá số">
             <Palette size={14} />
             {([
@@ -231,6 +263,7 @@ export const MenhBanView: React.FC = () => {
             focusedPalaceIndex={focusedPalaceIndex}
             selectedPhiPalaceIndices={selectedPhiPalaceIndices}
             palaceAgeOptions={palaceAgeOptions}
+            selectedLunarMonth={selectedLunarMonth}
             onSelectPalace={togglePhiPalace}
             layers={layers}
             theme={chartTheme}

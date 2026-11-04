@@ -28,7 +28,7 @@ describe('Khâm Thiên natal star element metadata', () => {
       expect(markup).toContain('class="star-name"');
     });
     expect(ELEMENT_IDS.map((element) => ELEMENT_LABEL[element])).toEqual(['Kim', 'Mộc', 'Thủy', 'Hỏa', 'Thổ']);
-    expect(DARK_ELEMENT_COLORS).toEqual({ KIM: '#F5D47A', MOC: '#4ADE80', THUY: '#7DD3FC', HOA: '#FB7185', THO: '#E8B86D' });
+    expect(DARK_ELEMENT_COLORS).toEqual({ KIM: '#D7E0E8', MOC: '#4ADE80', THUY: '#7DD3FC', HOA: '#FB7185', THO: '#E8B86D' });
     expect(LIGHT_ELEMENT_COLORS).toEqual({ KIM: '#71808D', MOC: '#166534', THUY: '#075985', HOA: '#B42318', THO: '#87520C' });
   });
 

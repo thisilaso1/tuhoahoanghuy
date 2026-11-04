@@ -59,7 +59,8 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
             )}
           </div>
           <p className="text-xs text-stone-400 mt-0.5">
-            Đại Hạn: {palace.decade.startAge}–{palace.decade.endAge} tuổi · Nguyệt hạn: Tháng {palace.lunarMonth}
+            Đại Hạn: {palace.decade.startAge}–{palace.decade.endAge} tuổi · Năm xem {chart.forecastYear} ·{' '}
+            {palace.isAnnualLimit ? `Tiểu Hạn tại đây (${chart.forecastYear - chart.lunarDate.year + 1} tuổi)` : 'Không có Tiểu Hạn tại cung này'} · Nguyệt Hạn tháng {palace.lunarMonth}
           </p>
         </div>
         <button

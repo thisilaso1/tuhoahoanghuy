@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { BirthInput, NatalChart } from '../domain/types';
 import { generateNatalChart } from '../domain/tuViEngine';
-import { solarToLunar } from '../domain/lunarCalendar';
+import { getYearCanChi, solarToLunar } from '../domain/lunarCalendar';
+import { calculateAnnualLimitState, getAnnualAgeAtBranch } from '../domain/annualLimits';
 import { AISettings, ChatMessage } from '../ai/types';
 import { ThienCoCopilot } from '../ai/copilot';
 
@@ -45,6 +46,7 @@ interface AppContextType {
   authenticatedUser: AuthenticatedUserProfile | null;
   setAuthenticatedUser: (user: AuthenticatedUserProfile | null) => void;
   createChart: (input: BirthInput) => NatalChart;
+  updateForecastYear: (year: number) => void;
   selectChart: (chart: NatalChart) => void;
   deleteChart: (id: string) => void;
   focusedPalaceIndex: number | null;
@@ -275,6 +277,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return chart;
   };
 
+  const updateForecastYear = (year: number) => {
+    if (!Number.isInteger(year) || year < 1800 || year > 2199) {
+      throw new RangeError('Năm xem phải nằm trong khoảng 1800–2199.');
+    }
+    setActiveChart((current) => {
+      const annualState = calculateAnnualLimitState(current, year);
+      const tieuHanIndex = annualState.tieuHan.branchIndex;
+      const lunarMonthByBranch = new Map(annualState.monthlyLimits.map((limit) => [limit.branchIndex, limit.month]));
+      const nextChart: NatalChart = {
+        ...current,
+        forecastYear: year,
+        forecastCanChi: getYearCanChi(year),
+        palaces: current.palaces.map((palace) => ({
+          ...palace,
+          annualAge: getAnnualAgeAtBranch(current.birthCanChi.year.branch, current.gender, palace.index),
+          isAnnualLimit: palace.index === tieuHanIndex,
+          lunarMonth: lunarMonthByBranch.get(palace.index) ?? palace.lunarMonth,
+        })),
+      };
+      setSavedCharts((saved) => saved.map((chart) => chart.id === nextChart.id ? nextChart : chart));
+      return nextChart;
+    });
+  };
+
   const selectChart = (chart: NatalChart) => {
     setActiveChart(chart);
   };
@@ -363,6 +389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authenticatedUser,
         setAuthenticatedUser,
         createChart,
+        updateForecastYear,
         selectChart,
         deleteChart,
         focusedPalaceIndex,

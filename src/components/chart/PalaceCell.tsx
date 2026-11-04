@@ -18,6 +18,8 @@ interface PalaceCellProps {
   gridColumn: number;
   theme: ChartTheme;
   annualLimitAge: number;
+  annualLimitYear: number;
+  isSelectedLunarMonth: boolean;
   birthYearTransformations: BirthYearTransformation[];
   palaceAgeMapping: PalaceAgeMapping | null;
   school: TuHoaSchool;
@@ -47,6 +49,8 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   gridColumn,
   theme,
   annualLimitAge,
+  annualLimitYear,
+  isSelectedLunarMonth,
   birthYearTransformations,
   palaceAgeMapping,
   school,
@@ -59,7 +63,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
     <article
       onClick={onSelect}
       style={{ gridRow, gridColumn }}
-      className={`palace-cell group ${theme === 'paper' ? 'palace-paper' : theme === 'parchment' ? 'palace-parchment' : 'palace-night'} ${isFocused ? 'focused' : ''} ${isPhiSelected ? 'phi-selected' : ''}`}
+      className={`palace-cell group ${theme === 'paper' ? 'palace-paper' : theme === 'parchment' ? 'palace-parchment' : 'palace-night'} ${isFocused ? 'focused' : ''} ${isPhiSelected ? 'phi-selected' : ''} ${isSelectedLunarMonth ? 'selected-lunar-month' : ''} ${showAnnual && palace.isAnnualLimit ? 'selected-annual-limit' : ''}`}
     >
       {/* ══ HEADER: Tên cung / Đại Hạn / Can Chi ══ */}
       <div className="palace-cell-heading">
@@ -195,10 +199,12 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
 
       {/* ══ FOOTER: Nguyệt hạn + Tiểu Hạn ══ */}
       <div className="palace-cell-footer">
-        <span className="palace-month">Nguyệt {palace.lunarMonth}</span>
+        <span className={`palace-month ${isSelectedLunarMonth ? 'palace-month-current' : ''}`} title={`Nguyệt Hạn tháng ${palace.lunarMonth} âm lịch`}>
+          Nguyệt {palace.lunarMonth}{isSelectedLunarMonth && <small> · ĐANG XEM</small>}
+        </span>
         {showAnnual && palace.isAnnualLimit && (
-          <span className="palace-annual font-semibold" title="Cung an Tiểu Hạn trong năm đang xem">
-            TH {annualLimitAge}
+          <span className="palace-annual font-semibold" title={`Cung an Tiểu Hạn năm ${annualLimitYear}, tuổi mụ ${annualLimitAge}`}>
+            TH {annualLimitYear} · {annualLimitAge}t
           </span>
         )}
       </div>

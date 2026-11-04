@@ -21,6 +21,7 @@ interface NatalChart12Props {
   theme: ChartTheme;
   school: TuHoaSchool;
   palaceAgeOptions: PalaceAgeOptions;
+  selectedLunarMonth: number;
   phiHoaVisibility: PhiHoaVisibility;
 }
 
@@ -85,6 +86,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   theme,
   school,
   palaceAgeOptions,
+  selectedLunarMonth,
   phiHoaVisibility,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,8 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               showAnnual={layers.showAnnual}
               theme={theme}
               annualLimitAge={chart.forecastYear - chart.lunarDate.year + 1}
+              annualLimitYear={chart.forecastYear}
+              isSelectedLunarMonth={palace.lunarMonth === selectedLunarMonth}
               birthYearTransformations={birthYearTransformations.filter((item) => item.palaceIndex === palace.index)}
               palaceAgeMapping={palaceAgeMappings.find((item) => item.palaceId === `palace-${palace.index}`) ?? null}
               school={school}

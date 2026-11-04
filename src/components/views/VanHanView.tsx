@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getYearCanChi } from '../../domain/lunarCalendar';
 import { getAnnualTransformations } from '../../domain/tuHoaEngine';
 import { Calendar, Compass, Sparkles, ArrowRight } from 'lucide-react';
 
 export const VanHanView: React.FC = () => {
-  const { activeChart, sendMessageToThienCo, navigateTo } = useApp();
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const { activeChart, updateForecastYear, sendMessageToThienCo, navigateTo } = useApp();
+  const [selectedYear, setSelectedYear] = useState(activeChart.forecastYear);
+  useEffect(() => setSelectedYear(activeChart.forecastYear), [activeChart.forecastYear]);
 
   const birthYear = activeChart.lunarDate.year;
   const currentAge = selectedYear - birthYear + 1;
@@ -43,10 +44,10 @@ export const VanHanView: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="text-xs text-stone-400">Chọn năm xem:</span>
           <div className="flex items-center gap-1 rounded-xl border border-amber-900/40 bg-slate-900 p-1 text-xs">
-            {[2025, 2026, 2027, 2028].map((y) => (
+            {[2025, 2026, 2027, 2028].filter((year) => year >= birthYear).map((y) => (
               <button
                 key={y}
-                onClick={() => setSelectedYear(y)}
+                onClick={() => { setSelectedYear(y); updateForecastYear(y); }}
                 className={`rounded-lg px-3 py-1 font-semibold transition ${
                   selectedYear === y
                     ? 'bg-amber-600 text-slate-950 font-bold'

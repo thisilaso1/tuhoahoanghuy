@@ -22,6 +22,9 @@ export const ActiveChartForm: React.FC<ActiveChartFormProps> = ({ chart, onSubmi
   const [error, setError] = useState('');
 
   useEffect(() => { setForm(chartToInput(chart)); setError(''); }, [chart.id]);
+  useEffect(() => {
+    setForm((current) => ({ ...current, forecastYear: chart.forecastYear }));
+  }, [chart.forecastYear]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();

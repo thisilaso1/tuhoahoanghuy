@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PalaceCell } from '../components/chart/PalaceCell';
+import { NatalChart12 } from '../components/chart/NatalChart12';
 import { getYearCanChi, getHourBranch, NAP_AM_TABLE, solarToLunar, lunarToSolar, getDayCanChi } from './lunarCalendar';
 import { calculateCuc, findMenhAndThan, generateNatalChart, getTuanTrietBranches, placeMajorStars, placeMinorStars, placeTuVi } from './tuViEngine';
 import { calculateAllFlyingTransformations, getBirthYearTransformations, getPalaceTransformationProfile, TU_HOA_CARRIER_STARS, TU_HOA_KHAM_THIEN, validateTransformationCarriers } from './tuHoaEngine';
@@ -9,6 +10,7 @@ import { findHexagramByBinary, generateHexagramFromTosses } from './kinhDichEngi
 import { DeterministicToolExecutor } from '../ai/tools';
 import { getPalaceAgeMappings, getSexagenaryYear } from './palaceAge';
 import { getDisplayedPalaceStars, KHAM_THIEN_VISIBLE_STARS } from './starVisibility';
+import { calculateAnnualLimitState, calculateTieuHanBranchIndex } from './annualLimits';
 
 describe('Domain Astrology & I Ching Engines', () => {
   it('calculates lunar calendar and Can Chi correctly', () => {
@@ -176,6 +178,25 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(chart.palaces[chart.menhPalaceIndex].name).toBe('Mệnh');
     expect(chart.palaces[chart.thanPalaceIndex].name).toBe('Phu Thê');
     expect(chart.cuc).toMatchObject({ name: 'Kim Tứ Cục', number: 4 });
+    const annual2026 = calculateAnnualLimitState(chart, 2026, 9);
+    expect(annual2026.lunarAge).toBe(27);
+    expect(annual2026.tieuHan).toMatchObject({ branchIndex: 0, palaceName: 'Tài Bạch' });
+    expect(annual2026.monthlyLimits.map(({ month, branchIndex, palaceName }) => [month, branchIndex, palaceName])).toEqual([
+      [1, 10, 'Thiên Di'], [2, 11, 'Tật Ách'], [3, 0, 'Tài Bạch'], [4, 1, 'Tử Tức'],
+      [5, 2, 'Phu Thê'], [6, 3, 'Huynh Đệ'], [7, 4, 'Mệnh'], [8, 5, 'Phụ Mẫu'],
+      [9, 6, 'Phúc Đức'], [10, 7, 'Điền Trạch'], [11, 8, 'Quan Lộc'], [12, 9, 'Nô Bộc'],
+    ]);
+    const annual2027 = calculateAnnualLimitState(chart, 2027, 9);
+    expect(annual2027.lunarAge).toBe(28);
+    expect(annual2027.tieuHan).toMatchObject({ branchIndex: 1, palaceName: 'Tử Tức' });
+    expect(annual2027.monthlyLimits.map(({ month, branchIndex, palaceName }) => [month, branchIndex, palaceName])).toEqual([
+      [1, 11, 'Tật Ách'], [2, 0, 'Tài Bạch'], [3, 1, 'Tử Tức'], [4, 2, 'Phu Thê'],
+      [5, 3, 'Huynh Đệ'], [6, 4, 'Mệnh'], [7, 5, 'Phụ Mẫu'], [8, 6, 'Phúc Đức'],
+      [9, 7, 'Điền Trạch'], [10, 8, 'Quan Lộc'], [11, 9, 'Nô Bộc'], [12, 10, 'Thiên Di'],
+    ]);
+    expect(calculateTieuHanBranchIndex('Thìn', 2000, 2038, 'Nam')).toBe(0);
+    expect(calculateTieuHanBranchIndex('Thìn', 2000, 2038, 'Nữ')).toBe(8);
+    expect(new Set(annual2026.monthlyLimits.map(({ branchIndex }) => branchIndex)).size).toBe(12);
     const expectedPalaces: Record<string, string> = {
       Tý: 'Tài Bạch', Sửu: 'Tử Tức', Dần: 'Phu Thê', Mão: 'Huynh Đệ', Thìn: 'Mệnh', Tỵ: 'Phụ Mẫu',
       Ngọ: 'Phúc Đức', Mùi: 'Điền Trạch', Thân: 'Quan Lộc', Dậu: 'Nô Bộc', Tuất: 'Thiên Di', Hợi: 'Tật Ách',
@@ -276,6 +297,8 @@ describe('Domain Astrology & I Ching Engines', () => {
         gridColumn: 1,
         theme: 'paper',
         annualLimitAge: 27,
+        annualLimitYear: chart.forecastYear,
+        isSelectedLunarMonth: false,
         birthYearTransformations: birthHua.filter((item) => item.palaceIndex === palace.index),
         palaceAgeMapping: null,
         school,
@@ -311,7 +334,7 @@ describe('Domain Astrology & I Ching Engines', () => {
     });
     expect(chart.palaces.every((palace) => getDisplayedPalaceStars(palace, 'nam_phai').minorStars.length === palace.minorStars.filter((star) => !['Văn Xương', 'Văn Khúc'].includes(star.name)).length)).toBe(true);
     expect(chart.palaces.filter((palace) => palace.isAnnualLimit)).toHaveLength(1);
-    expect(chart.palaces.find((palace) => palace.isAnnualLimit)?.name).toBe('Mệnh');
+    expect(chart.palaces.find((palace) => palace.isAnnualLimit)?.name).toBe('Tài Bạch');
     const namPhaiBirthHua = getBirthYearTransformations(chart, 'nam_phai');
     expect(namPhaiBirthHua.map(({ type, star, palaceName }) => [type, star, palaceName])).toEqual([
       ['Lộc', 'Thái Dương', 'Phụ Mẫu'], ['Quyền', 'Vũ Khúc', 'Mệnh'],
@@ -336,6 +359,33 @@ describe('Domain Astrology & I Ching Engines', () => {
     const flying = calculateAllFlyingTransformations(chart, 'kham_thien');
     expect(flying.length).toBeGreaterThan(0);
     expect(flying.some((f) => f.type === 'Lộc' || f.type === 'Kỵ')).toBe(true);
+  });
+
+  it('keeps Ly Tam and Huong Tam arrows visible with no selected palace and all phi filters off', () => {
+    const chart = generateNatalChart({ name: 'Arrow check', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const transformations = calculateAllFlyingTransformations(chart).filter((flow) => flow.mode !== 'flying');
+    const markup = renderToStaticMarkup(React.createElement(NatalChart12, {
+      chart,
+      focusedPalaceIndex: null,
+      selectedPhiPalaceIndices: [],
+      onSelectPalace: () => undefined,
+      layers: { showBirthYear: true, showAnnual: true },
+      theme: 'paper',
+      school: 'kham_thien',
+      palaceAgeOptions: { enabled: false, mode: 'FULL_CAN_CHI', startYear: 1920, endYear: 2030, nearestToBirthYearOnly: false },
+      selectedLunarMonth: 1,
+      phiHoaVisibility: { Lộc: false, Quyền: false, Khoa: false, Kỵ: false },
+    }));
+    expect((markup.match(/aria-hidden="false"/g) ?? [])).toHaveLength(transformations.length);
+  });
+
+  it('identifies the chart screenshot Quan Loc self-hua from its actual stem and carrier star', () => {
+    const chart = generateNatalChart({ name: 'Mai Thi Huong Giang', date: '1999-04-21', time: '10:20', gender: 'Nữ', calendar: 'solar', forecastYear: 2026 });
+    const quanLoc = chart.palaces.find((palace) => palace.name === 'Quan Lộc')!;
+    const selfFlows = calculateAllFlyingTransformations(chart).filter((flow) => flow.sourcePalaceIndex === quanLoc.index && flow.mode === 'ly_tam');
+    expect(quanLoc).toMatchObject({ stem: 'Đinh', branch: 'Mão' });
+    expect(quanLoc.majorStars.map(({ name }) => name)).toContain('Thái Âm');
+    expect(selfFlows).toContainEqual(expect.objectContaining({ type: 'Lộc', star: 'Thái Âm', direction: 'LY_TAM' }));
   });
 
   it('generates I Ching hexagram and moving lines correctly', () => {

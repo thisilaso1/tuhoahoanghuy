@@ -23,6 +23,7 @@ import {
   solarToLunar,
 } from './lunarCalendar';
 import { getStarPrimaryElementLabel, STAR_ID_BY_NAME } from './starElements';
+import { calculateFirstMonthlyLimitBranchIndex, calculateTieuHanBranchIndex, getAnnualAgeAtBranch } from './annualLimits';
 
 // 14 Chính Tinh
 export const CHINH_TINH = [
@@ -370,13 +371,13 @@ export function generateNatalChart(input: BirthInput): NatalChart {
     const decade = { startAge: decadeStart, endAge: decadeStart + 9 };
 
     const forecastYear = input.forecastYear || 2026;
-    const ageNow = forecastYear - lYear + 1;
-    const annualStartByYearGroup: Record<number, number> = { 0: 2, 1: 11, 2: 8, 3: 5 };
-    const annualStart = annualStartByYearGroup[BRANCHES.indexOf(birthCanChiYear.branch) % 4];
-    const annualDirection = isClockwiseDecade ? 1 : -1;
-    // Tiểu Hạn starts at the natal year group's branch, then proceeds with the
-    // Dương Nam/Âm Nữ or Âm Nam/Dương Nữ direction rule.
-    const annualAge = mod((branchIndex - annualStart) * annualDirection, 12) + 1;
+    const tieuHanBranchIndex = calculateTieuHanBranchIndex(birthCanChiYear.branch, lYear, forecastYear, input.gender);
+    const firstMonthBranchIndex = calculateFirstMonthlyLimitBranchIndex(
+      tieuHanBranchIndex,
+      lMonth,
+      birthCanChiHour.branch,
+    );
+    const annualAge = getAnnualAgeAtBranch(birthCanChiYear.branch, input.gender, branchIndex);
 
     return {
       index: branchIndex,
@@ -388,8 +389,8 @@ export function generateNatalChart(input: BirthInput): NatalChart {
       minorStars,
       decade,
       annualAge,
-      isAnnualLimit: annualAge === (ageNow % 12 || 12),
-      lunarMonth: ((branchIndex - BRANCHES.indexOf(hourBranch) + 12) % 12) + 1,
+      isAnnualLimit: branchIndex === tieuHanBranchIndex,
+      lunarMonth: ((branchIndex - firstMonthBranchIndex + 12) % 12) + 1,
       transformations: {},
       tuan: tuanTrietBranches.tuan.includes(branchIndex),
       triet: tuanTrietBranches.triet.includes(branchIndex),
