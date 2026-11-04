@@ -1,0 +1,8 @@
+services:
+  tu-hoa:
+    build: .
+    image: thisilaso1/tuhoa:latest
+    container_name: tu-hoa-kham-thien
+    restart: unless-stopped
+    ports:
+      - "8088:80"
