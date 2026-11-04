@@ -30,6 +30,7 @@ interface PalaceCellProps {
 }
 
 const BRIGHTNESS_SHORT: Record<string, string> = { Miếu: 'M', Vượng: 'V', Đắc: 'Đ', Hãm: 'H', Bình: 'B' };
+const TRANG_SINH_STAGES = new Set(['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng']);
 const BRANCH_ELEMENT: Record<string, string> = {
   Tý: 'Thủy', Sửu: 'Thổ', Dần: 'Mộc', Mão: 'Mộc', Thìn: 'Thổ', Tỵ: 'Hỏa',
   Ngọ: 'Hỏa', Mùi: 'Thổ', Thân: 'Kim', Dậu: 'Kim', Tuất: 'Thổ', Hợi: 'Thủy',
@@ -62,7 +63,11 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   palaceAgeMapping,
   school,
 }) => {
-  const { majorStars: displayedMajorStars, minorStars: displayedMinorStars } = getDisplayedPalaceStars(palace, school);
+  const { majorStars: displayedMajorStars, minorStars: allDisplayedMinorStars } = getDisplayedPalaceStars(palace, school);
+  const trangSinhStage = school === 'nam_phai' ? allDisplayedMinorStars.find((star) => TRANG_SINH_STAGES.has(star.name)) : undefined;
+  const displayedMinorStars = school === 'nam_phai'
+    ? allDisplayedMinorStars.filter((star) => !TRANG_SINH_STAGES.has(star.name))
+    : allDisplayedMinorStars;
   const auspiciousStars = displayedMinorStars.filter((star) => star.category !== 'bad');
   const adverseStars = displayedMinorStars.filter((star) => star.category === 'bad');
 
@@ -206,11 +211,10 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
 
       {showAnnual && school === 'nam_phai' && (annualStars.length > 0 || annualHuas.length > 0) && (
         <div className="palace-annual-star-list" aria-label={`Sao Lưu Niên ${annualYear}`}>
-          <span className="palace-annual-star-heading">LƯU NIÊN {annualYear}</span>
           <div className="palace-annual-star-items">
             {annualStars.map((item) => (
               <span key={item.id} className="palace-annual-star" data-element={item.element} title={`${item.name} · ${item.branch} · Độ sáng: Không quy định · ${item.placementRuleId}`}>
-                <small>L.</small>{item.name.replace(/^Lưu /, '')}
+                {item.name}
               </span>
             ))}
             {annualHuas.map((item) => (
@@ -219,6 +223,12 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {trangSinhStage && (
+        <div className="palace-trang-sinh-stage" aria-label={`Vòng Tràng Sinh: ${trangSinhStage.name}`}>
+          {trangSinhStage.name}
         </div>
       )}
 

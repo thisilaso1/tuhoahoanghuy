@@ -983,16 +983,20 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; margin-left: 40px; }
 .chart-theme .chart-subject-slogan { grid-column: 1 / -1; grid-row: 3; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
 .chart-theme .palace-minor-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; line-height: 1.25; }
-.chart-theme .palace-annual-star-list { display: grid; gap: 3px; margin-top: 2px; padding: 4px 5px; border: 1px solid color-mix(in srgb, var(--chart-accent) 22%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--chart-cell-alt) 78%, transparent); }
-.chart-theme .palace-annual-star-heading { color: var(--chart-accent); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
-.chart-theme .palace-annual-star-items { display: flex; flex-wrap: wrap; gap: 3px 6px; }
-.chart-theme .palace-annual-star { color: var(--chart-element-color, var(--chart-ink)); font-size: 9px; line-height: 1.25; }
-.chart-theme .palace-annual-star small { color: var(--chart-muted); font-size: 8px; font-weight: 700; }
-.chart-theme .palace-annual-hua { padding: 1px 3px; border-radius: 4px; font-size: 8px; font-weight: 700; white-space: nowrap; }
-.chart-theme .palace-annual-hua.hua-loc { color: #087f5b; background: rgba(16,185,129,.1); }
-.chart-theme .palace-annual-hua.hua-quyen { color: #9a6700; background: rgba(245,158,11,.12); }
-.chart-theme .palace-annual-hua.hua-khoa { color: #0759a5; background: rgba(37,99,235,.1); }
-.chart-theme .palace-annual-hua.hua-ky { color: #be123c; background: rgba(244,63,94,.1); }
+.chart-theme .palace-annual-star-list { display: block; margin-top: 1px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.chart-theme .palace-annual-star-items { display: flex; flex-wrap: wrap; gap: 2px 6px; }
+.chart-theme .palace-annual-star, .chart-theme .palace-annual-hua { color: var(--chart-element-color, var(--chart-muted)); font-size: 11px; font-weight: 600; line-height: 1.25; white-space: normal; }
+.chart-theme .palace-annual-star[data-element="Kim"] { color: var(--element-kim); }
+.chart-theme .palace-annual-star[data-element="Mộc"] { color: var(--element-moc); }
+.chart-theme .palace-annual-star[data-element="Thủy"] { color: var(--element-thuy); }
+.chart-theme .palace-annual-star[data-element="Hỏa"] { color: var(--element-hoa); }
+.chart-theme .palace-annual-star[data-element="Thổ"] { color: var(--element-tho); }
+.chart-theme .palace-annual-hua { padding: 0; border-radius: 0; }
+.chart-theme .palace-annual-hua.hua-loc { color: #087f5b; background: transparent; }
+.chart-theme .palace-annual-hua.hua-quyen { color: #9a6700; background: transparent; }
+.chart-theme .palace-annual-hua.hua-khoa { color: #0759a5; background: transparent; }
+.chart-theme .palace-annual-hua.hua-ky { color: #be123c; background: transparent; }
+.chart-theme .palace-trang-sinh-stage { align-self: center; margin-top: auto; padding-top: 3px; color: var(--chart-accent); font-size: 11px; font-weight: 800; line-height: 1.2; text-align: center; }
 .chart-theme .palace-auspicious-stars { display: flex; min-width: 0; flex-wrap: wrap; align-content: start; gap: 2px 5px; }
 .chart-theme .palace-adverse-stars { display: flex; max-width: 64px; flex-direction: column; align-items: flex-end; gap: 2px; padding-left: 4px; border-left: 1px solid color-mix(in srgb, var(--chart-border) 80%, transparent); text-align: right; }
 .chart-theme .palace-minor-star[data-element], .chart-theme .palace-good-star[data-element] { color: var(--chart-element-color, var(--chart-ink)); }

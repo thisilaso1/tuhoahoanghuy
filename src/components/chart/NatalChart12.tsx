@@ -148,10 +148,14 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
           const otherAffected = chart.palaces.filter((palace) => palace[otherKind]);
           const sharesBoundary = otherAffected.length >= 2 && affected.slice(0, 2).every((palace) => otherAffected.slice(0, 2).some((other) => other.index === palace.index));
           const horizontalOffset = sharesBoundary ? (kind === 'tuan' ? -3.2 : 3.2) : 0;
+          const spansHorizontalBoundary = BRANCH_GRID[affected[0].index][0] === BRANCH_GRID[affected[1].index][0];
+          // Triệt sits toward the lower corner of two side-by-side palaces,
+          // away from the star names near the palace headers.
+          const verticalOffset = kind === 'triet' && spansHorizontalBoundary ? 8 : 0;
           return [<span
             key={kind}
             className={`palace-boundary-badge palace-boundary-${kind}`}
-            style={{ left: `${position.left + horizontalOffset}%`, top: `${position.top}%` }}
+            style={{ left: `${position.left + horizontalOffset}%`, top: `${position.top + verticalOffset}%` }}
             aria-label={`${label} án hai cung ${affected[0].name} và ${affected[1].name}`}
             title={`${label}: ${affected[0].name} · ${affected[1].name}`}
           >{label}</span>];
