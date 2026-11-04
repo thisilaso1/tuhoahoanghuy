@@ -141,58 +141,30 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
           >{label}</span>];
         })}
 
-        {/* Thiên Bàn / Trung Cung (Central Chamber) */}
-        <div className="center-chamber">
-          {/* Yin-Yang Taiji Symbol with subtle rotation */}
-          <div className="chart-center-symbol mb-2 text-2xl sm:text-3xl select-none opacity-85">
-            ☯
+        {/* The subject profile sits in the central field; SVG paths paint above it. */}
+        <section className="center-chamber" aria-label="Thông tin đương số">
+          <div className="chart-subject-panel">
+            <div className="chart-subject-heading">
+              <div className="chart-center-symbol select-none" aria-hidden="true">☯</div>
+              <div>
+                <div className="chart-center-eyebrow text-[10px] uppercase tracking-widest">ĐƯƠNG SỐ</div>
+                <h2 className="chart-center-name font-serif font-bold">{chart.name}</h2>
+                <div className="chart-center-meta">{chart.gender} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}</div>
+              </div>
+            </div>
+            <div className="chart-center-data space-y-1.5 rounded-xl p-3 text-left text-xs">
+              <div className="flex justify-between"><span className="chart-data-label">Dương lịch:</span><span className="chart-data-value">{chart.solarDate} ({chart.time})</span></div>
+              <div className="flex justify-between"><span className="chart-data-label">Âm lịch:</span><span className="chart-data-value">{chart.lunarDate.day}/{chart.lunarDate.month}/{chart.lunarDate.year} ({chart.birthCanChi.hour.stem} {chart.birthCanChi.hour.branch} thời)</span></div>
+              <div className="flex justify-between"><span className="chart-data-label">Bản Mệnh:</span><span className="chart-data-emphasis">{chart.napAm}</span></div>
+              <div className="flex justify-between"><span className="chart-data-label">Cục Số:</span><span className="chart-data-emphasis">{chart.cuc.name}</span></div>
+              <div className="flex justify-between"><span className="chart-data-label">Năm xem:</span><span className="chart-data-forecast">{chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}</span></div>
+            </div>
+            <div className="chart-center-foot flex items-center gap-1.5 text-[9px] tracking-wider uppercase"><span>懷月閣</span><span>·</span><span>Khâm Thiên Tứ Hóa</span></div>
+            <p className="chart-subject-slogan">“Nhất phiến cố nguyệt, vạn cổ nhân duyên.”</p>
           </div>
+        </section>
 
-          <div className="chart-center-eyebrow text-[10px] uppercase tracking-widest">
-            ĐƯƠNG SỐ
-          </div>
-          <h2 className="chart-center-name font-serif text-2xl sm:text-3xl font-bold">
-            {chart.name}
-          </h2>
-          <div className="chart-center-meta my-1 text-xs">
-            {chart.gender} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}
-          </div>
-
-          <div className="chart-center-data mt-2 w-full max-w-[340px] space-y-1.5 rounded-xl p-3 text-left text-xs">
-            <div className="flex justify-between">
-              <span className="chart-data-label">Dương lịch:</span>
-              <span className="chart-data-value">{chart.solarDate} ({chart.time})</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="chart-data-label">Âm lịch:</span>
-              <span className="chart-data-value">
-                {chart.lunarDate.day}/{chart.lunarDate.month}/{chart.lunarDate.year} ({chart.birthCanChi.hour.stem} {chart.birthCanChi.hour.branch} thời)
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="chart-data-label">Bản Mệnh:</span>
-              <span className="chart-data-emphasis">{chart.napAm}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="chart-data-label">Cục Số:</span>
-              <span className="chart-data-emphasis">{chart.cuc.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="chart-data-label">Năm xem:</span>
-              <span className="chart-data-forecast">
-                {chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}
-              </span>
-            </div>
-          </div>
-
-          <div className="chart-center-foot mt-3 flex items-center gap-1.5 text-[9px] tracking-wider uppercase">
-            <span>懷月閣</span>
-            <span>·</span>
-            <span>Khâm Thiên Tứ Hóa</span>
-          </div>
-        </div>
-
-        {/* SVG Tứ Hóa Flow Lines Overlay */}
+      {/* SVG Tứ Hóa Flow Lines Overlay */}
         <svg
           className="tuhoa-svg-overlay"
           viewBox="0 0 1000 1000"

@@ -81,7 +81,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
               className="palace-heading-age"
               title={`Đại hạn ${palace.decade.startAge}–${palace.decade.endAge} tuổi`}
             >
-              ĐH {palace.decade.startAge}–{palace.decade.endAge}
+              {palace.decade.startAge} tuổi
             </span>
             {birthYearTransformations.length > 0 && (
               <div className="palace-birth-hua-row" aria-label="Sinh Niên Tứ Hóa">
@@ -147,7 +147,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
                   data-element={star.element}
                   className="palace-brightness-badge"
                 >
-                  {BRIGHTNESS_SHORT[star.brightness] || star.brightness}
+                  ({BRIGHTNESS_SHORT[star.brightness] || star.brightness})
                 </span>
               )}
             </div>

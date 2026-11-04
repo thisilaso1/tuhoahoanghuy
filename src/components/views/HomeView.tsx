@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SealStamp } from '../common/SealStamp';
 import { Sparkles, Compass, Grid, Layers, BookOpen, ArrowRight, ShieldCheck } from 'lucide-react';
+import { HomePoemSection } from './HomePoemSection';
 
 export const HomeView: React.FC = () => {
   const { navigateTo, sendMessageToThienCo, activeChart } = useApp();
@@ -134,6 +135,8 @@ export const HomeView: React.FC = () => {
           </button>
         </div>
       </section>
+
+      <HomePoemSection />
 
       {/* The Scholar's Ethos Story (Inspired by Image 2) */}
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6">

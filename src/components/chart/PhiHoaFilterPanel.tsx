@@ -60,10 +60,15 @@ export const PhiHoaFilterPanel: React.FC<PhiHoaFilterPanelProps> = ({ visibility
   const setAll = (enabled: boolean) => onChange({ Lộc: enabled, Quyền: enabled, Khoa: enabled, Kỵ: enabled });
 
   return <aside ref={panelRef} className={`phi-hoa-filter ${open ? 'is-open' : ''}`} aria-label="Tiện ích lá số">
-    <button ref={triggerRef} className="phi-hoa-filter-trigger" type="button" aria-label="Tiện ích lá số" title="Tiện ích" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((value) => !value)}>
+    <div className="phi-hoa-filter-actions-top">
+    <button ref={triggerRef} className="phi-hoa-filter-trigger" type="button" aria-label="Bộ lọc Phi Hóa" title="Bộ lọc Phi Hóa" aria-expanded={open} aria-haspopup="dialog" onClick={() => { setActiveTab('filter'); setOpen((value) => !value); }}>
       <Settings2 size={18} />
       {!allEnabled && <span className="phi-hoa-filter-active-dot" aria-label="Đang lọc" />}
     </button>
+    <button className={`phi-hoa-table-trigger ${open && activeTab === 'table' ? 'is-active' : ''}`} type="button" aria-label="Mở Bảng Tứ Hóa" title="Tra cứu Bảng Tứ Hóa" aria-expanded={open && activeTab === 'table'} onClick={() => { setActiveTab('table'); setOpen(true); }}>
+      <BookOpen size={15} /><span>Bảng Tứ Hóa</span>
+    </button>
+    </div>
     {open && <div className={`phi-hoa-filter-content ${activeTab === 'table' ? 'is-table-tab' : ''}`} role="dialog" aria-label="Tiện ích lá số">
       <header className="phi-hoa-filter-heading"><span><Settings2 size={14} /> TIỆN ÍCH LÁ SỐ</span><button className="phi-hoa-filter-close" type="button" aria-label="Đóng tiện ích" onClick={() => { setOpen(false); triggerRef.current?.focus(); }}><X size={15} /></button></header>
       <div className="phi-hoa-tool-tabs" role="tablist" aria-label="Tiện ích lá số">
