@@ -378,6 +378,7 @@ h1, h2, h3, h4, .font-serif {
 .landing-hero h1 em { color: #d9e8f5; font-weight: 400; text-shadow: 0 0 26px rgba(204,226,245,.2); }
 .landing-intro { max-width: 570px; margin: 24px auto 0; color: rgba(249,246,237,.86); font-family: var(--font-serif); font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.65; text-shadow: 0 2px 16px rgba(0,0,0,.55); }
 .landing-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 13px; margin-top: 34px; }
+.landing-hero-tagline { margin: 17px auto -8px; color: rgba(226,237,246,.86); font-family: var(--font-serif); font-size: clamp(13px, 1.55vw, 16px); font-style: italic; letter-spacing: .025em; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
 .landing-primary, .landing-secondary { min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 22px; border-radius: 999px; cursor: pointer; font: 600 13px var(--font-sans); transition: transform .2s ease, background .2s ease, border-color .2s ease; }
 .landing-primary { border: 1px solid rgba(238,246,255,.78); color: #101b29; background: linear-gradient(135deg, #f5f8fc, #b9cede); box-shadow: 0 10px 34px rgba(3,8,14,.35), 0 0 28px rgba(210,232,255,.14); }
 .landing-primary:hover { transform: translateY(-2px); background: #fff; }
@@ -839,7 +840,7 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .palace-birth-hua-row .chart-birth-hua-prominent { width: 21px; height: 21px; font-size: 12px; }
 .chart-theme .palace-heading-stem .palace-stem { font-size: 11px; }
 .chart-theme .palace-stem { white-space: nowrap; }
-.chart-theme .palace-boundary-badge { position: absolute; z-index: 20; display: inline-flex; min-width: 34px; height: 17px; align-items: center; justify-content: center; padding: 0 4px; border: 1px solid #9aabb8; border-radius: 4px; color: #243748; background: #edf2f6; box-shadow: 0 1px 4px rgba(20,35,48,.2); font-family: "Be Vietnam Pro", sans-serif; font-size: 7px; font-weight: 800; line-height: 1; letter-spacing: .02em; pointer-events: none; transform: translate(-50%, -50%); white-space: nowrap; }
+.chart-theme .palace-boundary-badge { position: absolute; z-index: 20; display: inline-flex; min-width: 44px; height: 22px; align-items: center; justify-content: center; padding: 0 5px; border: 1px solid #75899a; border-radius: 5px; color: #152333; background: #fff; box-shadow: 0 2px 7px rgba(20,35,48,.24); font-family: "Be Vietnam Pro", sans-serif; font-size: 9px; font-weight: 850; line-height: 1; letter-spacing: .025em; pointer-events: none; transform: translate(-50%, -50%); white-space: nowrap; }
 .chart-theme-night .palace-boundary-badge { border-color: #000; color: #fff; background: #05080d; box-shadow: 0 1px 5px rgba(0,0,0,.55); }
 .chart-theme .palace-name, .chart-theme .palace-major { color: var(--chart-ink); }
 .chart-theme .palace-name:hover { color: var(--chart-accent); }
@@ -1145,6 +1146,8 @@ h1, h2, h3, h4, .font-serif {
 .qi-network-node:hover rect, .qi-network-node:focus rect { stroke: #e4edf3; stroke-width: 2.4; }
 .qi-network-node-name { fill: #e6eef4; font-family: "Newsreader", Georgia, serif; font-size: 16px; text-anchor: middle; pointer-events: none; }
 .qi-network-node-meta { fill: #9aafbe; font-size: 10px; text-anchor: middle; pointer-events: none; }
+.qi-network-node-order circle { fill: #0b2234; stroke: #90c8e8; stroke-width: 1.4; }
+.qi-network-node-order text { fill: #e7f6ff; font: 700 10px "Be Vietnam Pro", sans-serif; text-anchor: middle; pointer-events: none; }
 .qi-network-terminal circle { fill: rgba(145,73,91,.27); stroke: #f17c8d; stroke-width: 1.7; vector-effect: non-scaling-stroke; }
 .qi-network-terminal text { fill: #ffb4bf; font-size: 8px; font-weight: 800; letter-spacing: .06em; text-anchor: middle; }
 .qi-network-hint { position: absolute; right: 12px; bottom: 9px; color: #8198a9; font-size: 9px; pointer-events: none; }

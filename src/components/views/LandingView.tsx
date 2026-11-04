@@ -3,6 +3,7 @@ import {
   ArrowDown, ArrowRight, BookOpen, Calendar, Compass, Grid2X2, Layers, Sparkles,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { HomePoemSection } from './HomePoemSection';
 
 /* ─── Moon-phase calculation ─────────────────────────────────── */
 const SYNODIC_MS = 29.530588853 * 86_400_000;
@@ -253,6 +254,7 @@ export const LandingView: React.FC = () => {
               Khám phá tính năng <ArrowDown size={16} />
             </button>
           </div>
+          <p className="landing-hero-tagline">“Nhất phiến cố nguyệt, vạn cổ nhân duyên.”</p>
           <span className="landing-sky-note">
             {isDaytime
               ? 'ÁNH DƯƠNG · BAN NGÀY'
@@ -268,6 +270,8 @@ export const LandingView: React.FC = () => {
           CUỘN ĐỂ KHÁM PHÁ <ArrowDown size={14} />
         </span>
       </section>
+
+      <HomePoemSection />
 
       {/* ══════════════ FEATURE SECTION ══════════════ */}
       <section id="tinh-nang" className="landing-features">

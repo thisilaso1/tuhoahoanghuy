@@ -47,13 +47,17 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
     if (selectedPalaceIndices) setLocalSelected(selectedPalaceIndices);
   }, [selectedPalaceIndices?.join(',')]);
   const selectedIds = new Set(selected.map((index) => `palace-${index}`));
+  const selectedOrder = new Map(selected.map((index, order) => [index, order + 1]));
   const eligible = useMemo(() => allEdges.filter((edge) => {
     if (visibility && !visibility[codeToType[edge.transformation]]) return false;
     return !visibility && (filter === 'all' || edge.transformation === filter) || Boolean(visibility);
   }), [allEdges, visibility, filter]);
   const scoped = useMemo(() => scopeQiGraph(eligible, selected.map((index) => `palace-${index}`), palaceNames.map((_, index) => `palace-${index}`), mode), [eligible, mode, selected.join(','), palaceNames.length]);
+  const scopedNodeIds = [...scoped.nodes];
+  const sourceOrder = new Map(scopedNodeIds.map((id, index) => [id, index]));
+  const graphEdges = useMemo(() => [...scoped.edges].sort((a, b) => (sourceOrder.get(a.sourcePalaceId) ?? Number.MAX_SAFE_INTEGER) - (sourceOrder.get(b.sourcePalaceId) ?? Number.MAX_SAFE_INTEGER) || (sourceOrder.get(a.targetPalaceId) ?? Number.MAX_SAFE_INTEGER) - (sourceOrder.get(b.targetPalaceId) ?? Number.MAX_SAFE_INTEGER)), [scoped.edges, scopedNodeIds.join(',')]);
   const autoExpanded = new Set(mode === 'follow' ? [...scoped.nodes].filter((id) => !selectedIds.has(id)) : []);
-  const analysis = useMemo(() => analyzeQiGraph(scoped.edges), [scoped.edges]);
+  const analysis = useMemo(() => analyzeQiGraph(graphEdges), [graphEdges]);
   const visibleCycles = analysis.cycles;
   const cyclesToRender = showAllCycles ? visibleCycles : visibleCycles.slice(0, 4);
   const visibleFlows = analysis.flowEdges.filter((edge) => !visibleCycles.some((cycle) => cycle.edges.some((cycleEdge) => cycleEdge.id === edge.id)));
@@ -63,20 +67,20 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
     : setLocalSelected((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index]);
 
   useEffect(() => {
-    if (!playing || !scoped.edges.length) return;
+    if (!playing || !graphEdges.length) return;
     const timer = window.setInterval(() => setReplayIndex((current) => {
-      if (current + 1 >= scoped.edges.length) { setPlaying(false); return -1; }
+      if (current + 1 >= graphEdges.length) { setPlaying(false); return -1; }
       return current + 1;
     }), 760 / Number(speed));
     return () => window.clearInterval(timer);
-  }, [playing, speed, scoped.edges]);
+  }, [playing, speed, graphEdges]);
   useEffect(() => {
     setPlaying(false);
     setReplayIndex(-1);
     setActiveEdge(null);
     setActiveNodeIndex(null);
     setShowAllCycles(false);
-  }, [scoped.edges]);
+  }, [graphEdges]);
 
   const handlePngExport = async () => {
     if (!graphRef.current) return;
@@ -97,13 +101,14 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
     const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'so-do-khi-van-phi-hoa.svg'; link.click(); URL.revokeObjectURL(url);
   };
 
-  const nodeIds = [...scoped.nodes].sort((a, b) => Number(a.replace('palace-', '')) - Number(b.replace('palace-', '')));
+  // scopeQiGraph preserves click order for selected palaces, then appends nodes reached by the flow.
+  const nodeIds = scopedNodeIds;
   const center = { x: 600, y: 410 };
   const positions = layoutQiGraph(nodeIds, analysis.flowEdges, analysis.cycles);
   const outgoingTargets = new Map<string, Set<string>>();
   analysis.flowEdges.forEach((edge) => { if (!outgoingTargets.has(edge.sourcePalaceId)) outgoingTargets.set(edge.sourcePalaceId, new Set()); outgoingTargets.get(edge.sourcePalaceId)?.add(edge.targetPalaceId); });
   const transformGroup = `translate(${center.x * (1 - zoom) + pan.x} ${center.y * (1 - zoom) + pan.y}) scale(${zoom})`;
-  const showCarrierLabels = scoped.edges.length <= 28;
+  const showCarrierLabels = graphEdges.length <= 28;
 
   return (
     <section ref={graphRef} className="qi-graph-panel qi-flow-schematic" aria-label="Sơ đồ Khí Vận Phi Hóa Xuyến Liên">
@@ -118,8 +123,8 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
         </div>
         <div className="qi-control-side">
           {!visibility && <label>Loại hóa <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)}><option value="all">Tất cả</option>{(['LOC', 'QUYEN', 'KHOA', 'KY'] as const).map((kind) => <option key={kind} value={kind}>{typeName[kind]}</option>)}</select></label>}
-          <button className={`qi-play-button ${playing ? 'active' : ''}`} disabled={!scoped.edges.length} onClick={() => { if (playing) setPlaying(false); else { setReplayIndex((index) => index < 0 || index >= scoped.edges.length ? 0 : index); setPlaying(true); } }}>{playing ? <Pause size={14} /> : <Play size={14} />}{playing ? 'Tạm dừng' : 'Phát dòng khí'}</button>
-          <button className="qi-icon-button" aria-label="Phát lại từ đầu" title="Phát lại" disabled={!scoped.edges.length} onClick={() => { setReplayIndex(0); setPlaying(true); }}><RotateCcw size={14} /></button>
+          <button className={`qi-play-button ${playing ? 'active' : ''}`} disabled={!graphEdges.length} onClick={() => { if (playing) setPlaying(false); else { setReplayIndex((index) => index < 0 || index >= graphEdges.length ? 0 : index); setPlaying(true); } }}>{playing ? <Pause size={14} /> : <Play size={14} />}{playing ? 'Tạm dừng' : 'Phát dòng khí'}</button>
+          <button className="qi-icon-button" aria-label="Phát lại từ đầu" title="Phát lại" disabled={!graphEdges.length} onClick={() => { setReplayIndex(0); setPlaying(true); }}><RotateCcw size={14} /></button>
           <button className="qi-icon-button" aria-label="Đặt lại sơ đồ" title="Đặt lại sơ đồ" onClick={() => { setPlaying(false); setReplayIndex(-1); setZoom(1); setPan({ x: 0, y: 0 }); }}><Maximize size={14} /></button>
           <label>Tốc độ <select value={speed} onChange={(event) => setSpeed(event.target.value)}><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option></select></label>
           <div className="qi-zoom-controls" aria-label="Thu phóng sơ đồ"><button className="qi-icon-button" aria-label="Thu nhỏ" onClick={() => setZoom((value) => Math.max(.7, value - .15))}><ZoomOut size={14} /></button><span>{Math.round(zoom * 100)}%</span><button className="qi-icon-button" aria-label="Phóng to" onClick={() => setZoom((value) => Math.min(1.8, value + .15))}><ZoomIn size={14} /></button></div>
@@ -140,13 +145,13 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
         {analysis.patterns.map((pattern) => <span key={pattern} className="qi-pattern-chip">{patternLabel[pattern]}</span>)}
       </div>
 
-      {scoped.edges.length > 0 ? <>
+      {graphEdges.length > 0 ? <>
         <div className="qi-network-stage" aria-label="Đồ thị Phi Hóa tương tác">
           <svg ref={svgRef} viewBox="0 0 1200 850" role="img" aria-label="Sơ đồ các cung và luồng Phi Hóa" onPointerDown={(event) => { const target = event.target as SVGElement; if (target === event.currentTarget || target.classList.contains('qi-network-background')) { setDrag({ x: event.clientX, y: event.clientY, originX: pan.x, originY: pan.y }); event.currentTarget.setPointerCapture(event.pointerId); } }} onPointerMove={(event) => { if (drag) { const scale = 1200 / event.currentTarget.getBoundingClientRect().width; setPan({ x: drag.originX + (event.clientX - drag.x) * scale, y: drag.originY + (event.clientY - drag.y) * scale }); } }} onPointerUp={() => setDrag(null)} onPointerCancel={() => setDrag(null)} style={{ cursor: drag ? 'grabbing' : 'grab' }}>
             <defs><linearGradient id="qi-node-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#243b4e" /><stop offset="1" stopColor="#101e2c" /></linearGradient>{(['LOC', 'QUYEN', 'KHOA', 'KY'] as const).map((kind) => <marker key={kind} id={`${graphId}-arrow-${kind}`} markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" className={typeClass[kind]} /></marker>)}</defs>
             <rect className="qi-network-background" width="1200" height="850" rx="18" />
             <g transform={transformGroup}>
-              {scoped.edges.map((edge, index) => {
+              {graphEdges.map((edge, index) => {
                 const source = positions.get(edge.sourcePalaceId);
                 if (!source) return null;
                 const isExit = edge.isLyTam;
@@ -164,7 +169,7 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
                 } else if (target) {
                   const dx = target.x - source.x; const dy = target.y - source.y; const length = Math.hypot(dx, dy) || 1;
                   const nx = -dy / length; const ny = dx / length;
-                  const peers = scoped.edges.filter((item) => !item.isLyTam && ((item.sourcePalaceId === edge.sourcePalaceId && item.targetPalaceId === edge.targetPalaceId) || (item.sourcePalaceId === edge.targetPalaceId && item.targetPalaceId === edge.sourcePalaceId)));
+                  const peers = graphEdges.filter((item) => !item.isLyTam && ((item.sourcePalaceId === edge.sourcePalaceId && item.targetPalaceId === edge.targetPalaceId) || (item.sourcePalaceId === edge.targetPalaceId && item.targetPalaceId === edge.sourcePalaceId)));
                   const lane = (peers.findIndex((item) => item.id === edge.id) - (peers.length - 1) / 2) * 28;
                   const reverseLane = edge.sourcePalaceId.localeCompare(edge.targetPalaceId) > 0 ? 15 : 0;
                   const sx = source.x + dx / length * 72; const sy = source.y + dy / length * 58;
@@ -188,6 +193,7 @@ export const QiFlowGraph: React.FC<QiFlowGraphProps> = ({ transformations, palac
                   <rect x={point.x - 74} y={point.y - 31} width="148" height="62" rx="13" />
                   <text x={point.x} y={point.y - 3} className="qi-network-node-name">{palaceNames[index]}</text>
                   <text x={point.x} y={point.y + 16} className="qi-network-node-meta">{palace ? `${palace.stem} ${palace.branch}` : ''}{convergent ? ' · Hội tụ' : ''}{divergent ? ' · Phân nhánh' : ''}</text>
+                  {selectedOrder.has(index) && <g className="qi-network-node-order"><circle cx={point.x - 62} cy={point.y - 18} r="10" /><text x={point.x - 62} y={point.y - 14}>{selectedOrder.get(index)}</text></g>}
                 </g>;
               })}
             </g>

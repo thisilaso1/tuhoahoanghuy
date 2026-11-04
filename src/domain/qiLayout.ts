@@ -2,12 +2,37 @@ import { QiCycle, QiEdge } from './qiGraph';
 
 export interface QiPoint { x: number; y: number }
 
+function separateOverlappingNodes(nodeIds: string[], positions: Map<string, QiPoint>, fixedIds: Set<string> = new Set()) {
+  const placed: QiPoint[] = [];
+  nodeIds.filter((id) => fixedIds.has(id)).forEach((id) => { const point = positions.get(id); if (point) placed.push(point); });
+  const offsets = [0, -90, 90, -180, 180, -270, 270, -360, 360, -450, 450, -540, 540, -630, 630];
+  const shiftedColumns = [0, -180, 180, -360, 360, -540, 540];
+  nodeIds.filter((id) => !fixedIds.has(id)).forEach((id) => {
+    const original = positions.get(id);
+    if (!original) return;
+    let candidate: QiPoint | null = null;
+    for (const xOffset of shiftedColumns) {
+      for (const yOffset of offsets) {
+        const point = { x: original.x + xOffset, y: original.y + yOffset };
+        if (point.x < 80 || point.x > 1120 || point.y < 65 || point.y > 785) continue;
+        const overlaps = placed.some((other) => Math.abs(point.x - other.x) < 166 && Math.abs(point.y - other.y) < 80);
+        if (!overlaps) { candidate = point; break; }
+      }
+      if (candidate) break;
+    }
+    const resolved = candidate ?? original;
+    positions.set(id, resolved);
+    placed.push(resolved);
+  });
+}
+
 /** Responsive graph layout: directed chains use layers; cycles stay grouped in a central loop. */
 export function layoutQiGraph(nodeIds: string[], edges: QiEdge[], cycles: QiCycle[]): Map<string, QiPoint> {
   const positions = new Map<string, QiPoint>();
   if (!nodeIds.length) return positions;
   const center = { x: 600, y: 410 };
-  const cycleNodes = [...new Set(cycles.flatMap((cycle) => cycle.palaceIds))].filter((id) => nodeIds.includes(id));
+  const nodeOrder = new Map(nodeIds.map((id, index) => [id, index]));
+  const cycleNodes = [...new Set(cycles.flatMap((cycle) => cycle.palaceIds))].filter((id) => nodeIds.includes(id)).sort((a, b) => (nodeOrder.get(a) ?? 0) - (nodeOrder.get(b) ?? 0));
 
   if (cycleNodes.length) {
     const rx = cycleNodes.length > 7 ? 330 : cycleNodes.length > 3 ? 285 : 205;
@@ -41,7 +66,7 @@ export function layoutQiGraph(nodeIds: string[], edges: QiEdge[], cycles: QiCycl
     const incomingMax = Math.max(1, ...incomingNodes.map((id) => incomingDistance.get(id) ?? 1));
     const outgoingMax = Math.max(1, ...outgoingNodes.map((id) => outgoingDistance.get(id) ?? 1));
     const placeBranch = (ids: string[], distances: Map<string, number>, side: 'left' | 'right', maxDepth: number) => {
-      const maxOffset = center.x - rx - 95;
+      const maxOffset = center.x - rx - 80;
       const spacing = maxOffset / maxDepth;
       const layers = new Map<number, string[]>();
       ids.forEach((id) => { const depth = distances.get(id) ?? 1; layers.set(depth, [...(layers.get(depth) ?? []), id]); });
@@ -55,6 +80,7 @@ export function layoutQiGraph(nodeIds: string[], edges: QiEdge[], cycles: QiCycl
     placeBranch(outgoingNodes, outgoingDistance, 'right', outgoingMax);
     const detached = nodeIds.filter((id) => !positions.has(id));
     detached.forEach((id, index) => positions.set(id, { x: 100 + index * (1000 / Math.max(1, detached.length - 1)), y: 790 }));
+    separateOverlappingNodes(nodeIds, positions, cycleSet);
     return positions;
   }
 
@@ -85,5 +111,6 @@ export function layoutQiGraph(nodeIds: string[], edges: QiEdge[], cycles: QiCycl
     const y = ids.length === 1 ? center.y : 90 + index * (670 / Math.max(1, ids.length - 1));
     positions.set(id, { x, y });
   }));
+  separateOverlappingNodes(nodeIds, positions);
   return positions;
 }

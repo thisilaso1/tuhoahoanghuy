@@ -132,10 +132,14 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
           if (affected.length < 2) return [];
           const position = getPalacePairMidpoint(affected[0].index, affected[1].index);
           const label = kind === 'tuan' ? 'TUẦN' : 'TRIỆT';
+          const otherKind = kind === 'tuan' ? 'triet' : 'tuan';
+          const otherAffected = chart.palaces.filter((palace) => palace[otherKind]);
+          const sharesBoundary = otherAffected.length >= 2 && affected.slice(0, 2).every((palace) => otherAffected.slice(0, 2).some((other) => other.index === palace.index));
+          const horizontalOffset = sharesBoundary ? (kind === 'tuan' ? -3.2 : 3.2) : 0;
           return [<span
             key={kind}
             className={`palace-boundary-badge palace-boundary-${kind}`}
-            style={{ left: `${position.left}%`, top: `${position.top}%` }}
+            style={{ left: `${position.left + horizontalOffset}%`, top: `${position.top}%` }}
             aria-label={`${label} án hai cung ${affected[0].name} và ${affected[1].name}`}
             title={`${label}: ${affected[0].name} · ${affected[1].name}`}
           >{label}</span>];
