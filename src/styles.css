@@ -953,7 +953,7 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .palace-empty, .chart-theme .palace-minor-star, .chart-theme .palace-month, .chart-theme .palace-count { color: var(--chart-muted); }
 .chart-theme .palace-good-star, .chart-theme .palace-annual, .chart-theme .palace-brightness-bright { color: var(--chart-good); }
 .chart-theme .palace-decade { color: var(--chart-accent); }
-.chart-theme .center-chamber { z-index: 5; color: var(--chart-ink); border-color: var(--chart-border); background: linear-gradient(145deg, var(--chart-center), var(--chart-paper)); backdrop-filter: none; padding: 12px; }
+.chart-theme .center-chamber { z-index: 5; color: var(--chart-ink); border-color: var(--chart-border); background: var(--chart-cell); backdrop-filter: none; padding: 10px; }
 .chart-theme .chart-center-symbol, .chart-theme .chart-center-eyebrow, .chart-theme .chart-data-emphasis { color: var(--chart-accent); }
 .chart-theme .chart-center-name { color: var(--chart-ink); }
 .chart-theme .chart-center-meta { color: var(--chart-muted); }
@@ -962,14 +962,14 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-data-label { color: var(--chart-muted); font-size: 11px; }
 .chart-theme .chart-data-value { color: var(--chart-ink); font-size: 12px; font-weight: 600; }
 .chart-theme .chart-data-emphasis, .chart-theme .chart-data-forecast { color: var(--chart-good); font-size: 12px; font-weight: 700; }
-.chart-theme .chart-subject-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 6px 14px; width: min(100%, 680px); margin: 0 auto; padding: 12px 14px; border: 1px solid var(--chart-border); border-radius: 12px; color: var(--chart-ink); background: linear-gradient(135deg, var(--chart-cell), var(--chart-cell-alt)); }
+.chart-theme .chart-subject-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; align-items: center; gap: 6px 14px; width: 100%; height: 100%; max-width: none; margin: 0 auto; padding: 8px; border: 0; border-radius: 8px; color: var(--chart-ink); background: var(--chart-cell); }
 .chart-theme .chart-subject-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .chart-theme .chart-subject-heading .chart-center-symbol { font-size: 30px; line-height: 1; }
 .chart-theme .chart-subject-heading .chart-center-name { margin: 2px 0; font-size: 22px; line-height: 1.15; }
 .chart-theme .chart-subject-heading .chart-center-meta { font-size: 11px; }
-.chart-theme .chart-subject-panel .chart-center-data { grid-column: 2; grid-row: 1 / span 2; width: 100%; max-width: none; padding: 8px 10px; font-size: 11px; }
+.chart-theme .chart-subject-panel .chart-center-data { display: flex; flex-direction: column; justify-content: center; grid-column: 2; grid-row: 1 / span 2; align-self: center; width: 100%; max-width: none; padding: 8px 10px; font-size: 11px; background: var(--chart-cell-alt); }
 .chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; margin-left: 40px; }
-.chart-theme .chart-subject-slogan { grid-column: 1 / -1; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
+.chart-theme .chart-subject-slogan { grid-column: 1 / -1; grid-row: 3; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
 .chart-theme .palace-minor-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; line-height: 1.25; }
 .chart-theme .palace-auspicious-stars { display: flex; min-width: 0; flex-wrap: wrap; align-content: start; gap: 2px 5px; }
 .chart-theme .palace-adverse-stars { display: flex; max-width: 64px; flex-direction: column; align-items: flex-end; gap: 2px; padding-left: 4px; border-left: 1px solid color-mix(in srgb, var(--chart-border) 80%, transparent); text-align: right; }
@@ -1010,7 +1010,7 @@ h1, h2, h3, h4, .font-serif {
 
 /* Five element colors are tied to the chart theme, never to a palace or Hua label. */
 .chart-theme {
-  --element-kim: #8A5A00;
+  --element-kim: #71808D;
   --element-moc: #166534;
   --element-thuy: #075985;
   --element-hoa: #B42318;
@@ -1018,7 +1018,7 @@ h1, h2, h3, h4, .font-serif {
   --star-glow: none;
 }
 .chart-theme.chart-theme-night {
-  --element-kim: #F5D47A;
+  --element-kim: #D7E0E8;
   --element-moc: #4ADE80;
   --element-thuy: #7DD3FC;
   --element-hoa: #FB7185;

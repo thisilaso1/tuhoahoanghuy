@@ -23,10 +23,10 @@ export const ELEMENT_LABEL: Record<ElementId, ElementLabel> = { KIM: 'Kim', MOC:
 export const ELEMENT_LABEL_ID: Record<string, ElementId> = { Kim: 'KIM', Mộc: 'MOC', Thủy: 'THUY', Hỏa: 'HOA', Thổ: 'THO' };
 export const ELEMENT_IDS: ElementId[] = ['KIM', 'MOC', 'THUY', 'HOA', 'THO'];
 export const DARK_ELEMENT_COLORS: Record<ElementId, string> = {
-  KIM: '#F5D47A', MOC: '#4ADE80', THUY: '#7DD3FC', HOA: '#FB7185', THO: '#E8B86D',
+  KIM: '#D7E0E8', MOC: '#4ADE80', THUY: '#7DD3FC', HOA: '#FB7185', THO: '#E8B86D',
 };
 export const LIGHT_ELEMENT_COLORS: Record<ElementId, string> = {
-  KIM: '#8A5A00', MOC: '#166534', THUY: '#075985', HOA: '#B42318', THO: '#87520C',
+  KIM: '#71808D', MOC: '#166534', THUY: '#075985', HOA: '#B42318', THO: '#87520C',
 };
 
 export function getStarPrimaryElement(starId: string): ElementId | undefined { return STAR_ELEMENTS[starId]?.primary; }

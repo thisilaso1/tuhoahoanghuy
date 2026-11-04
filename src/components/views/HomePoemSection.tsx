@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 
-const couplets = [
-  ['月滿中天雨未停', 'Nguyệt mãn trung thiên vũ vị đình'],
-  ['圓輪待分夢難成', 'Viên luân đãi phận mộng nan thành'],
-  ['他朝若得佳人許', 'Tha triêu nhược đắc giai nhân hứa'],
-  ['朗日高懸換閣名', 'Lãng nhật cao huyền hoán các danh'],
+const verses = [
+  'Nguyệt mãn trung thiên vũ vị đình',
+  'Viên luân đãi phận mộng nan thành',
+  'Tha triêu nhược đắc giai nhân hứa',
+  'Lãng nhật cao huyền hoán các danh',
 ];
 
 export const HomePoemSection: React.FC = () => {
@@ -31,16 +31,12 @@ export const HomePoemSection: React.FC = () => {
       <div className="home-poem-sky" aria-hidden="true"><span className="home-poem-moon" /><span className="home-poem-water" /><span className="home-poem-rain home-poem-rain-one" /><span className="home-poem-rain home-poem-rain-two" /></div>
       <div className="home-poem-card" key={replay}>
         <div className="home-poem-content">
-          <p className="home-poem-brand poem-reveal" style={{ '--poem-delay': '0ms' } as React.CSSProperties}>懷 月 閣 <i>·</i> HOÀI NGUYỆT CÁC</p>
+          <p className="home-poem-brand poem-reveal" style={{ '--poem-delay': '0ms' } as React.CSSProperties}>HOÀI NGUYỆT CÁC <i>·</i> KHÂM THIÊN TỨ HÓA</p>
           <header className="home-poem-heading poem-reveal" style={{ '--poem-delay': '160ms' } as React.CSSProperties}>
             <h2 id="home-poem-title">Nguyệt Mãn Vị Thành Danh</h2>
-            <p lang="zh-Hant">月滿未成名</p>
           </header>
-          <div className="home-poem-verses" lang="zh-Hant" aria-label="Bài thơ chữ Hán">
-            {couplets.map(([han, viet], index) => <p className="home-poem-han poem-reveal" style={{ '--poem-delay': `${300 + index * 180}ms` } as React.CSSProperties} key={han}>{han}</p>)}
-          </div>
-          <div className="home-poem-hanviet" aria-label="Phiên âm Hán Việt">
-            {couplets.map(([, viet], index) => <p className="poem-reveal" style={{ '--poem-delay': `${1050 + index * 120}ms` } as React.CSSProperties} key={viet}>{viet}</p>)}
+          <div className="home-poem-hanviet" aria-label="Bài thơ">
+            {verses.map((verse, index) => <p className="poem-reveal" style={{ '--poem-delay': `${300 + index * 180}ms` } as React.CSSProperties} key={verse}>{verse}</p>)}
           </div>
           <div className="home-poem-translation poem-reveal" style={{ '--poem-delay': '1650ms' } as React.CSSProperties}>
             <h3>DỊCH NGHĨA PHÓNG TÁC</h3>

@@ -163,7 +163,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               <div className="flex justify-between"><span className="chart-data-label">Cục Số:</span><span className="chart-data-emphasis">{chart.cuc.name}</span></div>
               <div className="flex justify-between"><span className="chart-data-label">Năm xem:</span><span className="chart-data-forecast">{chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}</span></div>
             </div>
-            <div className="chart-center-foot flex items-center gap-1.5 text-[9px] tracking-wider uppercase"><span>懷月閣</span><span>·</span><span>Khâm Thiên Tứ Hóa</span></div>
+            <div className="chart-center-foot flex items-center gap-1.5 text-[9px] tracking-wider uppercase"><span>Hoài Nguyệt Các</span><span>·</span><span>Khâm Thiên Tứ Hóa</span></div>
             <p className="chart-subject-slogan">“Nhất phiến cố nguyệt, vạn cổ nhân duyên.”</p>
           </div>
         </section>

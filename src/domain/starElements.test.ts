@@ -29,7 +29,7 @@ describe('Khâm Thiên natal star element metadata', () => {
     });
     expect(ELEMENT_IDS.map((element) => ELEMENT_LABEL[element])).toEqual(['Kim', 'Mộc', 'Thủy', 'Hỏa', 'Thổ']);
     expect(DARK_ELEMENT_COLORS).toEqual({ KIM: '#F5D47A', MOC: '#4ADE80', THUY: '#7DD3FC', HOA: '#FB7185', THO: '#E8B86D' });
-    expect(LIGHT_ELEMENT_COLORS).toEqual({ KIM: '#8A5A00', MOC: '#166534', THUY: '#075985', HOA: '#B42318', THO: '#87520C' });
+    expect(LIGHT_ELEMENT_COLORS).toEqual({ KIM: '#71808D', MOC: '#166534', THUY: '#075985', HOA: '#B42318', THO: '#87520C' });
   });
 
   it('preserves the 25/09/2000 chart placements while exposing the requested primary elements', () => {
