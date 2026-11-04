@@ -41,11 +41,14 @@ function App() {
   return (
     <main>
       <header className="hero">
+        <div className="hero-mist" />
+        <div className="moon-orbit"><span>☾</span></div>
         <div className="brand-mark">月</div>
-        <div>
+        <div className="hero-content">
           <p className="eyebrow">Tử vi Tứ Hóa Khâm Thiên</p>
-          <h1>Vọng Nguyệt <i>Các</i></h1>
+          <h1>Hoài Nguyệt <i>Các</i></h1>
           <p className="hero-copy">Lập mệnh bàn, quan sát phi hóa và tra cứu Lộc · Quyền · Khoa · Kỵ trên cùng một đồ hình.</p>
+          <div className="hero-meta"><span>十二宮 · 12 cung</span><span>四化 · Tứ hóa</span><span>流年 · Lưu niên</span></div>
         </div>
         <div className="seal">KHÂM<br />THIÊN</div>
       </header>
@@ -119,7 +122,7 @@ function App() {
         <div className="table-wrap"><table><thead><tr><th>Thiên Can</th><th>Hóa Lộc</th><th>Hóa Quyền</th><th>Hóa Khoa</th><th>Hóa Kỵ</th></tr></thead><tbody>{STEMS.map((stem) => <tr key={stem} className={stem === forecastCanChi.stem ? 'selected' : ''}><th>{stem}</th><td>{TU_HOA[stem].Lộc}</td><td>{TU_HOA[stem].Quyền}</td><td>{TU_HOA[stem].Khoa}</td><td>{TU_HOA[stem].Kỵ}</td></tr>)}</tbody></table></div>
         <div className="search-hint"><Search size={18} /><span>Dòng <b>{forecastCanChi.stem}</b> đang được đánh dấu theo năm xem {chartInput.forecastYear}.</span></div>
       </section>
-      <footer className="site-footer">Vọng Nguyệt Các · Tứ Hóa Khâm Thiên · Công cụ nghiên cứu và tham khảo học thuật</footer>
+      <footer className="site-footer">Hoài Nguyệt Các · Tứ Hóa Khâm Thiên · Công cụ nghiên cứu và tham khảo học thuật</footer>
     </main>
   );
 }

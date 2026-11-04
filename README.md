@@ -1,4 +1,4 @@
-# Vọng Nguyệt Các
+# Hoài Nguyệt Các
 
 Website lập và tra cứu lá số Tử Vi Tứ Hóa Khâm Thiên. Giao diện gồm mệnh bàn 12 cung, giờ/phút sinh nhập tay, đường phi hóa, tự hóa ly tâm/hướng tâm, đại hạn, tiểu hạn, nguyệt hạn, bảng tra cứu và xuất PNG/PDF.
 
