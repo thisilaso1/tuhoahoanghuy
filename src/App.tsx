@@ -8,6 +8,21 @@ const GRID: Record<number, [number, number]> = {
   3: [3, 1], 10: [3, 4], 2: [4, 1], 1: [4, 2], 0: [4, 3], 11: [4, 4],
 };
 
+const HOA_SYMBOL = { Lộc: 'A', Quyền: 'B', Khoa: 'C', Kỵ: 'D' } as const;
+
+function palacePoint(index: number) {
+  const [row, column] = GRID[index];
+  return { x: (column - .5) * 250, y: (row - .5) * 250 };
+}
+
+function outerPoint(index: number) {
+  const point = palacePoint(index);
+  const dx = point.x - 500;
+  const dy = point.y - 500;
+  const scale = 485 / Math.max(Math.abs(dx), Math.abs(dy));
+  return { x: 500 + dx * scale, y: 500 + dy * scale };
+}
+
 const defaultInput: BirthInput = {
   name: 'Nguyễn Minh An', date: '1992-08-18', time: '09:30', gender: 'Nam', calendar: 'solar', forecastYear: new Date().getFullYear(),
 };
@@ -17,14 +32,20 @@ function App() {
   const [chartInput, setChartInput] = useState(defaultInput);
   const [showAnnual, setShowAnnual] = useState(true);
   const [visibleLayers, setVisibleLayers] = useState({ flying: true, centrifugal: true, centripetal: true });
+  const [focusedPalace, setFocusedPalace] = useState<number | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const chart = buildChart(chartInput);
   const birthYear = Number(chartInput.date.slice(0, 4));
   const birthCanChi = canChiYear(birthYear);
   const forecastCanChi = canChiYear(chartInput.forecastYear);
-  const lines = transformationLines(chart, chartInput.forecastYear);
-  const flying = lines.filter((line) => line.layer === 'flying');
-  const visibleLines = lines.filter((line) => visibleLayers[line.layer]);
+  const lines = transformationLines(chart);
+  const defaultSources = new Set(chart.filter((palace) => ['Mệnh', 'Tài Bạch', 'Quan Lộc'].includes(palace.name)).map((palace) => palace.index));
+  const visibleLines = lines.filter((line) => {
+    if (!visibleLayers[line.layer]) return false;
+    if (line.layer === 'centrifugal') return true;
+    return focusedPalace === null ? defaultSources.has(line.source) : line.source === focusedPalace;
+  });
+  const focusedName = focusedPalace === null ? null : chart.find((palace) => palace.index === focusedPalace)?.name;
 
   const update = <K extends keyof BirthInput>(key: K, value: BirthInput[K]) => setForm((current) => ({ ...current, [key]: value }));
   const toggleLayer = (layer: keyof typeof visibleLayers) => setVisibleLayers((current) => ({ ...current, [layer]: !current[layer] }));
@@ -87,7 +108,7 @@ function App() {
           <div className="chart-frame" ref={chartRef}>
             <div className="chart-grid">
               {chart.map((palace) => (
-                <article className="palace" key={palace.branch} style={{ gridRow: GRID[palace.index][0], gridColumn: GRID[palace.index][1] }}>
+                <article className={`palace ${focusedPalace === palace.index ? 'focused' : ''}`} key={palace.branch} style={{ gridRow: GRID[palace.index][0], gridColumn: GRID[palace.index][1] }} onMouseEnter={() => setFocusedPalace(palace.index)} onMouseLeave={() => setFocusedPalace(null)} onClick={() => setFocusedPalace((current) => current === palace.index ? null : palace.index)}>
                   <header><b>{palace.name}</b><em>{palace.stem} {palace.branch}</em></header>
                   <div className="stars major">{palace.majorStars.map((star) => <span key={star}>{star}</span>)}</div>
                   <div className="stars support">{palace.supportStars.map((star) => <span key={star}>{star}</span>)}</div>
@@ -102,17 +123,17 @@ function App() {
               <svg className="arrows" viewBox="0 0 1000 1000" aria-label="Đường Tứ Hóa">
                 <defs>{lines.map(({ kind, layer }, index) => <marker key={`${layer}-${kind}-${index}`} id={`arrow-${layer}-${kind}`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" className={`fill-${kind}`} /></marker>)}</defs>
                 {visibleLines.map(({ kind, target, source, layer, star }, index) => {
-                  const [targetRow, targetColumn] = GRID[target];
-                  const targetX = (targetColumn - .5) * 250; const targetY = (targetRow - .5) * 250;
-                  const sourceGrid = source === null ? null : GRID[source];
-                  const sourceX = sourceGrid ? (sourceGrid[1] - .5) * 250 : 460 + index * 18;
-                  const sourceY = sourceGrid ? (sourceGrid[0] - .5) * 250 : 490 + index * 12;
-                  return <path key={`${layer}-${kind}-${source}-${target}-${star}`} d={`M ${sourceX} ${sourceY} Q 500 500, ${targetX} ${targetY}`} className={`arrow arrow-${kind} layer-${layer}`} markerEnd={`url(#arrow-${layer}-${kind})`} />;
+                  const start = palacePoint(source);
+                  const end = layer === 'centrifugal' ? outerPoint(source) : palacePoint(target);
+                  const badgeX = start.x + (end.x - start.x) * .82;
+                  const badgeY = start.y + (end.y - start.y) * .82;
+                  const path = layer === 'centrifugal' ? `M ${start.x} ${start.y} L ${end.x} ${end.y}` : `M ${start.x} ${start.y} Q 500 500, ${end.x} ${end.y}`;
+                  return <g key={`${layer}-${kind}-${source}-${target}-${star}`} className="hoa-line"><path d={path} className={`arrow arrow-${kind} layer-${layer}`} markerEnd={`url(#arrow-${layer}-${kind})`} /><circle cx={badgeX} cy={badgeY} r="15" className={`hoa-badge badge-${kind}`} /><text x={badgeX} y={badgeY + 5} className="hoa-letter">{HOA_SYMBOL[kind]}</text></g>;
                 })}
               </svg>
             </div>
-            <div className="legend transformations"><b>Phi hóa năm xem</b>{flying.map(({ kind, star }) => <span key={kind} className={`tag tag-${kind}`}><i /> {kind}: {star}</span>)}</div>
-            <div className="line-legend"><span className="sample flying" /> Phi hóa <span className="sample centrifugal" /> Tự hóa ly tâm <span className="sample centripetal" /> Tự hóa hướng tâm</div>
+            <div className="legend transformations"><b>{focusedName ? `Phi hóa cung ${focusedName}` : 'Phi hóa Mệnh · Tài · Quan'}</b><span className="symbol-key">A · Lộc</span><span className="symbol-key">B · Quyền</span><span className="symbol-key">C · Khoa</span><span className="symbol-key">D · Kỵ</span></div>
+            <div className="line-legend"><span className="sample flying" /> Phi tinh giữa các cung <span className="sample centrifugal" /> Tự hóa ly tâm ra rìa lá số <span className="sample centripetal" /> Tự hóa hướng tâm</div>
           </div>
         </section>
       </section>

@@ -96,20 +96,18 @@ export interface TransformationLine {
   layer: 'flying' | 'centrifugal' | 'centripetal';
   kind: Transformation;
   star: string;
-  source: number | null;
+  source: number;
   target: number;
 }
 
-export function transformationLines(chart: PalaceData[], year: number): TransformationLine[] {
-  const flying = transformationTargets(chart, year).map((item) => ({ ...item, layer: 'flying' as const, source: null }));
-  const selfLines = chart.flatMap((palace) => {
+export function transformationLines(chart: PalaceData[]): TransformationLine[] {
+  return chart.flatMap((palace) => {
     const rules = TU_HOA[palace.stem];
     return (Object.entries(rules) as [Transformation, string][]).flatMap(([kind, star]) => {
       const target = chart.find((item) => [...item.majorStars, ...item.supportStars].includes(star));
-      if (!target || target.index === palace.index) return [];
-      const outward = ((target.index - palace.index + 12) % 12) <= 6;
+      if (!target) return [];
       return [{
-        layer: outward ? 'centrifugal' as const : 'centripetal' as const,
+        layer: target.index === palace.index ? 'centrifugal' as const : 'flying' as const,
         kind,
         star,
         source: palace.index,
@@ -117,5 +115,4 @@ export function transformationLines(chart: PalaceData[], year: number): Transfor
       }];
     });
   });
-  return [...flying, ...selfLines];
 }
