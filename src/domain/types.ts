@@ -24,7 +24,7 @@ export const PALACE_NAMES = [
 ] as const;
 export type PalaceName = (typeof PALACE_NAMES)[number];
 
-export type StarBrightness = 'Miếu' | 'Vượng' | 'Đắc' | 'Hãm' | 'Bình';
+export type StarBrightness = 'Miếu' | 'Vượng' | 'Đắc' | 'Hãm' | 'Bình' | 'UNSPECIFIED';
 
 export interface Star {
   name: string;

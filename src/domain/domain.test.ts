@@ -5,12 +5,15 @@ import { PalaceCell } from '../components/chart/PalaceCell';
 import { NatalChart12 } from '../components/chart/NatalChart12';
 import { getYearCanChi, getHourBranch, NAP_AM_TABLE, solarToLunar, lunarToSolar, getDayCanChi } from './lunarCalendar';
 import { calculateCuc, findMenhAndThan, generateNatalChart, getTuanTrietBranches, placeMajorStars, placeMinorStars, placeTuVi } from './tuViEngine';
-import { calculateAllFlyingTransformations, getBirthYearTransformations, getPalaceTransformationProfile, TU_HOA_CARRIER_STARS, TU_HOA_KHAM_THIEN, validateTransformationCarriers } from './tuHoaEngine';
+import { calculateAllFlyingTransformations, getAnnualTransformations, getBirthYearTransformations, getPalaceTransformationProfile, TU_HOA_CARRIER_STARS, TU_HOA_KHAM_THIEN, validateTransformationCarriers } from './tuHoaEngine';
 import { findHexagramByBinary, generateHexagramFromTosses } from './kinhDichEngine';
 import { DeterministicToolExecutor } from '../ai/tools';
 import { getPalaceAgeMappings, getSexagenaryYear } from './palaceAge';
 import { getDisplayedPalaceStars, KHAM_THIEN_VISIBLE_STARS } from './starVisibility';
 import { calculateAnnualLimitState, calculateTieuHanBranchIndex } from './annualLimits';
+import { calculateAnnualStars } from './annualStars';
+import { getStarBrightness, NAM_PHAI_BRIGHTNESS_DEFINITIONS, NAM_PHAI_FULL_PROFILE_ID } from './starBrightness';
+import { STAR_ID_BY_NAME } from './starElements';
 
 describe('Domain Astrology & I Ching Engines', () => {
   it('calculates lunar calendar and Can Chi correctly', () => {
@@ -93,6 +96,55 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(placeMinorStars('Canh', 'Thìn', 8, 'Tỵ')).toMatchObject({
       'Văn Xương': 5, 'Văn Khúc': 9, 'Tả Phù': 11, 'Hữu Bật': 3,
     });
+  });
+
+  it('builds the full verified 168-cell Nam Phai main-star brightness table', () => {
+    expect(NAM_PHAI_BRIGHTNESS_DEFINITIONS).toHaveLength(168);
+    expect(new Set(NAM_PHAI_BRIGHTNESS_DEFINITIONS.map(({ starId, branch }) => `${starId}:${branch}`)).size).toBe(168);
+    expect(NAM_PHAI_BRIGHTNESS_DEFINITIONS.every(({ verified, sourceReference }) => verified && sourceReference.includes('somenh.vn'))).toBe(true);
+    expect(getStarBrightness('TU_VI', 'Tý', NAM_PHAI_FULL_PROFILE_ID)).toBe('Đắc');
+    expect(getStarBrightness('THIEN_CO', 'Dần', NAM_PHAI_FULL_PROFILE_ID)).toBe('Hãm');
+    expect(getStarBrightness('VU_KHUC', 'Thìn', NAM_PHAI_FULL_PROFILE_ID)).toBe('Miếu');
+    expect(getStarBrightness('THAI_DUONG', 'Tỵ', NAM_PHAI_FULL_PROFILE_ID)).toBe('Miếu');
+    expect(getStarBrightness('VU_KHUC', 'Thìn', 'KHAM_THIEN_V1')).toBe('UNSPECIFIED');
+  });
+
+  it('applies the Nam Phai brightness profile without changing Khâm Thiên star brightness', () => {
+    const chart = generateNatalChart({ name: 'Brightness profile', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const palace = chart.palaces.find((item) => item.majorStars.length > 0)!;
+    const original = palace.majorStars[0];
+    const khamThienStar = getDisplayedPalaceStars(palace, 'kham_thien').majorStars.find((star) => star.name === original.name)!;
+    const namPhaiStar = getDisplayedPalaceStars(palace, 'nam_phai').majorStars.find((star) => star.name === original.name)!;
+    expect(khamThienStar.brightness).toBe(original.brightness);
+    expect(namPhaiStar.brightness).toBe(getStarBrightness(STAR_ID_BY_NAME[original.name], palace.branch, NAM_PHAI_FULL_PROFILE_ID));
+  });
+
+  it('places both configured Nam Phai twelve-star cycles using Cục and polarity direction', () => {
+    const forward = placeMinorStars('Canh', 'Thìn', 8, 'Tỵ', 'Nam', 4);
+    const reverse = placeMinorStars('Canh', 'Thìn', 8, 'Tỵ', 'Nữ', 4);
+    const bacSiRing = ['Bác Sĩ', 'Lực Sĩ', 'Thanh Long', 'Tiểu Hao', 'Tướng Quân', 'Tấu Thư', 'Phi Liêm', 'Hỷ Thần', 'Bệnh Phù', 'Đại Hao', 'Phục Binh', 'Quan Phủ'];
+    const trangSinhRing = ['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng'];
+    expect(bacSiRing.map((star) => forward[star])).toEqual(Array.from({ length: 12 }, (_, index) => (8 + index) % 12));
+    expect(bacSiRing.map((star) => reverse[star])).toEqual(Array.from({ length: 12 }, (_, index) => (8 - index + 12) % 12));
+    expect(trangSinhRing.map((star) => forward[star])).toEqual(Array.from({ length: 12 }, (_, index) => (5 + index) % 12));
+    expect(trangSinhRing.map((star) => reverse[star])).toEqual(Array.from({ length: 12 }, (_, index) => (5 - index + 12) % 12));
+  });
+
+  it('places the nine core annual stars and re-keys the data when the forecast year changes', () => {
+    const chart = generateNatalChart({ name: 'Annual test', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const annual2026 = calculateAnnualStars(chart, 2026);
+    expect(annual2026.map(({ name, branch }) => [name, branch])).toEqual([
+      ['Lưu Thái Tuế', 'Ngọ'], ['Lưu Tang Môn', 'Thân'], ['Lưu Bạch Hổ', 'Dần'],
+      ['Lưu Thiên Khốc', 'Tý'], ['Lưu Thiên Hư', 'Tý'], ['Lưu Lộc Tồn', 'Tỵ'],
+      ['Lưu Kình Dương', 'Ngọ'], ['Lưu Đà La', 'Thìn'], ['Lưu Thiên Mã', 'Thân'],
+    ]);
+    expect(annual2026.every(({ brightness, annualYear, id }) => brightness === 'UNSPECIFIED' && annualYear === 2026 && id.startsWith('ANNUAL:2026:'))).toBe(true);
+    expect(getAnnualTransformations(chart, 2026, 'nam_phai').map(({ type, star }) => [type, star])).toEqual([
+      ['Lộc', 'Thiên Đồng'], ['Quyền', 'Thiên Cơ'], ['Khoa', 'Văn Xương'], ['Kỵ', 'Liêm Trinh'],
+    ]);
+    const annual2027 = calculateAnnualStars(chart, 2027);
+    expect(annual2027.every(({ annualYear, id }) => annualYear === 2027 && id.startsWith('ANNUAL:2027:'))).toBe(true);
+    expect(annual2027.map(({ branch }) => branch)).not.toEqual(annual2026.map(({ branch }) => branch));
   });
 
   it('maps palace ages through the full 60-year Can Chi cycle and branch-only mode', () => {
@@ -300,6 +352,9 @@ describe('Domain Astrology & I Ching Engines', () => {
         annualLimitYear: chart.forecastYear,
         isSelectedLunarMonth: false,
         birthYearTransformations: birthHua.filter((item) => item.palaceIndex === palace.index),
+        annualStars: [],
+        annualHuas: [],
+        annualYear: chart.forecastYear,
         palaceAgeMapping: null,
         school,
       }));

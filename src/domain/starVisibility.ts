@@ -1,5 +1,6 @@
 import type { Palace } from './types';
 import { STAR_ID_BY_NAME } from './starElements';
+import { getStarBrightness, NAM_PHAI_FULL_PROFILE_ID } from './starBrightness';
 
 export type TuViSchool = 'kham_thien' | 'nam_phai';
 
@@ -24,7 +25,12 @@ export function getDisplayedPalaceStars(palace: Palace, school: TuViSchool) {
     : new Set(['Văn Xương', 'Văn Khúc']);
   return {
     majorStars: [
-      ...palace.majorStars.filter((star) => showStar(star.name)),
+      ...palace.majorStars.filter((star) => showStar(star.name)).map((star) => {
+        if (school !== 'nam_phai') return star;
+        const starId = STAR_ID_BY_NAME[star.name];
+        const brightness = starId ? getStarBrightness(starId, palace.branch, NAM_PHAI_FULL_PROFILE_ID) : 'UNSPECIFIED';
+        return { ...star, brightness: brightness === 'UNSPECIFIED' ? undefined : brightness };
+      }),
       ...palace.minorStars.filter((star) => promotedAuxiliaryStars.has(star.name) && showStar(star.name)),
     ],
     minorStars: palace.minorStars.filter((star) => !promotedAuxiliaryStars.has(star.name) && showStar(star.name)),

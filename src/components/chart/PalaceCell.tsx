@@ -5,6 +5,7 @@ import type { BirthYearTransformation } from '../../domain/tuHoaEngine';
 import type { PalaceAgeMapping } from '../../domain/palaceAge';
 import { getDisplayedPalaceStars } from '../../domain/starVisibility';
 import type { TuHoaSchool } from '../../domain/tuHoaEngine';
+import type { AnnualStar } from '../../domain/annualStars';
 import { STAR_ID_BY_NAME } from '../../domain/starElements';
 import { StarName } from './StarName';
 
@@ -21,6 +22,9 @@ interface PalaceCellProps {
   annualLimitYear: number;
   isSelectedLunarMonth: boolean;
   birthYearTransformations: BirthYearTransformation[];
+  annualStars: AnnualStar[];
+  annualHuas: Array<{ type: TransformationType; star: string }>;
+  annualYear: number;
   palaceAgeMapping: PalaceAgeMapping | null;
   school: TuHoaSchool;
 }
@@ -52,6 +56,9 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   annualLimitYear,
   isSelectedLunarMonth,
   birthYearTransformations,
+  annualStars,
+  annualHuas,
+  annualYear,
   palaceAgeMapping,
   school,
 }) => {
@@ -196,6 +203,24 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
           ))}
         </div>
       </div>
+
+      {showAnnual && school === 'nam_phai' && (annualStars.length > 0 || annualHuas.length > 0) && (
+        <div className="palace-annual-star-list" aria-label={`Sao Lưu Niên ${annualYear}`}>
+          <span className="palace-annual-star-heading">LƯU NIÊN {annualYear}</span>
+          <div className="palace-annual-star-items">
+            {annualStars.map((item) => (
+              <span key={item.id} className="palace-annual-star" data-element={item.element} title={`${item.name} · ${item.branch} · Độ sáng: Không quy định · ${item.placementRuleId}`}>
+                <small>L.</small>{item.name.replace(/^Lưu /, '')}
+              </span>
+            ))}
+            {annualHuas.map((item) => (
+              <span key={`annual-hua:${item.type}:${item.star}`} className={`palace-annual-hua hua-${item.type === 'Lộc' ? 'loc' : item.type === 'Quyền' ? 'quyen' : item.type === 'Khoa' ? 'khoa' : 'ky'}`} title={`Lưu Hóa ${item.type} gắn với sao nguyên bàn ${item.star}`}>
+                L.Hóa {item.type} · {item.star}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ══ FOOTER: Nguyệt hạn + Tiểu Hạn ══ */}
       <div className="palace-cell-footer">

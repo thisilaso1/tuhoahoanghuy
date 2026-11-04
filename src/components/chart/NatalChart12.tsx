@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { NatalChart } from '../../domain/types';
 import { PalaceCell } from './PalaceCell';
-import { calculateAllFlyingTransformations, FlyingTransformation, getBirthYearTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
+import { calculateAllFlyingTransformations, FlyingTransformation, getAnnualTransformations, getBirthYearTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
+import { calculateAnnualStars } from '../../domain/annualStars';
 import { getPalaceAgeMappings, PalaceAgeOptions } from '../../domain/palaceAge';
 import { ELEMENT_IDS, ELEMENT_LABEL } from '../../domain/starElements';
 import { PhiHoaVisibility } from './PhiHoaFilterPanel';
@@ -92,6 +93,10 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const allTransformations = calculateAllFlyingTransformations(chart, school);
   const birthYearTransformations = getBirthYearTransformations(chart, school);
+  const annualStars = school === 'nam_phai' && layers.showAnnual ? calculateAnnualStars(chart, chart.forecastYear) : [];
+  const annualTransformations = school === 'nam_phai' && layers.showAnnual
+    ? getAnnualTransformations(chart, chart.forecastYear, school)
+    : [];
   const palaceAgeMappings = getPalaceAgeMappings(chart.palaces, chart.lunarDate.year, palaceAgeOptions);
 
   // Lọc đường Tứ Hóa hiển thị
@@ -122,6 +127,9 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               annualLimitYear={chart.forecastYear}
               isSelectedLunarMonth={palace.lunarMonth === selectedLunarMonth}
               birthYearTransformations={birthYearTransformations.filter((item) => item.palaceIndex === palace.index)}
+              annualStars={annualStars.filter((item) => item.branchIndex === palace.index)}
+              annualHuas={annualTransformations.filter((item) => item.palaceIndex === palace.index)}
+              annualYear={chart.forecastYear}
               palaceAgeMapping={palaceAgeMappings.find((item) => item.palaceId === `palace-${palace.index}`) ?? null}
               school={school}
               gridRow={row}

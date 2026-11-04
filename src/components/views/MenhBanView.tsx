@@ -167,7 +167,7 @@ export const MenhBanView: React.FC = () => {
           <div className="chart-theme-picker chart-school-picker" role="group" aria-label="Trường phái Tứ Hóa">
             <span className="chart-school-label">Phái</span>
             <button onClick={() => changeSchool('kham_thien')} className={school === 'kham_thien' ? 'selected' : ''} aria-pressed={school === 'kham_thien'}>Khâm Thiên</button>
-            <button type="button" className="maintenance-option" disabled title="Tính năng Nam Phái đang bảo trì" aria-label="Nam Phái đang bảo trì">Nam Phái <small>Đang bảo trì</small></button>
+            <button type="button" onClick={() => changeSchool('nam_phai')} className={school === 'nam_phai' ? 'selected' : ''} aria-pressed={school === 'nam_phai'} title="Nam Phái V1 · 14 chính tinh, các phụ tinh đã có phép an, ba vòng sao và 9 sao Lưu Niên">Nam Phái <small>V1</small></button>
           </div>
           <label className={`chart-age-toggle ${palaceAgeOptions.enabled ? 'active' : ''}`}>
             <input
@@ -216,7 +216,7 @@ export const MenhBanView: React.FC = () => {
                 : 'border-slate-800 bg-slate-900 text-stone-500'
             }`}
           >
-            {layers.showAnnual ? <Eye size={13} /> : <EyeOff size={13} />} Tiểu Hạn
+            {layers.showAnnual ? <Eye size={13} /> : <EyeOff size={13} />} Sao Lưu · Tiểu Hạn
           </button>
 
 

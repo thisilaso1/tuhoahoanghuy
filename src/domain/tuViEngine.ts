@@ -60,7 +60,19 @@ const MINOR_STAR_ELEMENTS: Record<string, 'Kim' | 'Mộc' | 'Thủy' | 'Hỏa' |
   'Bạch Hổ': 'Kim', 'Phúc Đức': 'Thổ', 'Điếu Khách': 'Hỏa', 'Trực Phù': 'Hỏa',
 };
 const AUSPICIOUS_MINOR_STARS = ['Tả Phù', 'Hữu Bật', 'Văn Xương', 'Văn Khúc', 'Thiên Khôi', 'Thiên Việt', 'Lộc Tồn', 'Thiên Mã', 'Hoa Cái', 'Long Đức', 'Phúc Đức', 'Thiếu Dương'];
-const ADVERSE_MINOR_STARS = ['Kình Dương', 'Đà La', 'Địa Không', 'Địa Kiếp', 'Hỏa Tinh', 'Linh Tinh', 'Tang Môn', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Bạch Hổ', 'Điếu Khách'];
+const ADVERSE_MINOR_STARS = ['Kình Dương', 'Đà La', 'Địa Không', 'Địa Kiếp', 'Hỏa Tinh', 'Linh Tinh', 'Tang Môn', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Bạch Hổ', 'Điếu Khách', 'Tiểu Hao', 'Phi Liêm', 'Bệnh Phù', 'Đại Hao', 'Phục Binh', 'Quan Phủ'];
+export const LOC_TON_POSITION_BY_STEM: Record<Stem, number> = {
+  Giáp: 2, Ất: 3, Bính: 5, Đinh: 7, Mậu: 5, Kỷ: 7, Canh: 8, Tân: 9, Nhâm: 11, Quý: 0,
+};
+const THIEN_MA_POSITION_BY_BRANCH_GROUP: Record<number, number> = { 0: 2, 1: 11, 2: 8, 3: 5 };
+const BAC_SI_RING = ['Bác Sĩ', 'Lực Sĩ', 'Thanh Long', 'Tiểu Hao', 'Tướng Quân', 'Tấu Thư', 'Phi Liêm', 'Hỷ Thần', 'Bệnh Phù', 'Đại Hao', 'Phục Binh', 'Quan Phủ'];
+const TRANG_SINH_RING = ['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng'];
+const TRANG_SINH_START_BY_CUC: Record<number, number> = { 2: 8, 3: 11, 4: 5, 5: 8, 6: 2 };
+
+export function getLocTonBranchIndex(yearStem: Stem): number { return LOC_TON_POSITION_BY_STEM[yearStem]; }
+export function getThienMaBranchIndex(yearBranch: Branch): number {
+  return THIEN_MA_POSITION_BY_BRANCH_GROUP[BRANCHES.indexOf(yearBranch) % 4];
+}
 
 const mod = (value: number, size: number) => ((value % size) + size) % size;
 
@@ -173,6 +185,8 @@ export function placeMinorStars(
   yearBranch: Branch,
   lunarMonth: number,
   hourBranch: Branch,
+  gender?: Gender,
+  cucNumber?: number,
 ): Record<string, number> {
   const minor: Record<string, number> = {};
   const hourIdx = BRANCHES.indexOf(hourBranch);
@@ -186,19 +200,7 @@ export function placeMinorStars(
   minor['Văn Khúc'] = (4 + hourIdx) % 12;
 
   // Lộc Tồn, Kình Dương, Đà La theo Can năm
-  const locTonMap: Record<Stem, number> = {
-    Giáp: 2, // Dần
-    Ất: 3,   // Mão
-    Bính: 5, // Tỵ
-    Đinh: 7, // Ngọ
-    Mậu: 5,  // Tỵ
-    Kỷ: 7,   // Ngọ
-    Canh: 8, // Thân
-    Tân: 9,  // Dậu
-    Nhâm: 11,// Hợi
-    Quý: 0,  // Tý
-  };
-  const locTonPos = locTonMap[yearStem];
+  const locTonPos = getLocTonBranchIndex(yearStem);
   minor['Lộc Tồn'] = locTonPos;
   minor['Kình Dương'] = (locTonPos + 1) % 12;
   minor['Đà La'] = (locTonPos - 1 + 12) % 12;
@@ -235,8 +237,7 @@ export function placeMinorStars(
   minor['Đào Hoa'] = daoHoaMap[branchIdx % 4];
 
   // Thiên Mã
-  const maMap: Record<number, number> = { 0: 2, 1: 11, 2: 8, 3: 5 };
-  minor['Thiên Mã'] = maMap[branchIdx % 4];
+  minor['Thiên Mã'] = getThienMaBranchIndex(yearBranch);
 
   // Hoa Cái theo tam hợp năm sinh: Thân Tý Thìn tại Thìn, Dần Ngọ Tuất tại Tuất,
   // Tỵ Dậu Sửu tại Sửu, Hợi Mão Mùi tại Mùi.
@@ -246,6 +247,16 @@ export function placeMinorStars(
   // Vòng Thái Tuế: 12 sao đi thuận, độc lập với chiều giới tính.
   const thaiTueRing = ['Thái Tuế', 'Thiếu Dương', 'Tang Môn', 'Thiếu Âm', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Long Đức', 'Bạch Hổ', 'Phúc Đức', 'Điếu Khách', 'Trực Phù'];
   thaiTueRing.forEach((star, offset) => { minor[star] = (branchIdx + offset) % 12; });
+
+  if (gender && cucNumber) {
+    const isYangYear = ['Giáp', 'Bính', 'Mậu', 'Canh', 'Nhâm'].includes(yearStem);
+    const forward = (isYangYear && gender === 'Nam') || (!isYangYear && gender === 'Nữ');
+    const direction = forward ? 1 : -1;
+    BAC_SI_RING.forEach((star, offset) => { minor[star] = mod(locTonPos + direction * offset, 12); });
+    const trangSinhStart = TRANG_SINH_START_BY_CUC[cucNumber];
+    if (trangSinhStart === undefined) throw new RangeError(`Không có vị trí Tràng Sinh cho Cục ${cucNumber}.`);
+    TRANG_SINH_RING.forEach((star, offset) => { minor[star] = mod(trangSinhStart + direction * offset, 12); });
+  }
 
   return minor;
 }
@@ -321,6 +332,8 @@ export function generateNatalChart(input: BirthInput): NatalChart {
     birthCanChiYear.branch,
     lMonth,
     hourBranch,
+    input.gender,
+    cuc.number,
   );
   const tuanTrietBranches = getTuanTrietBranches(birthCanChiYear.stem, birthCanChiYear.branch);
 
