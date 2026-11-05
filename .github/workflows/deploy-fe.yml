@@ -48,8 +48,13 @@ jobs:
           DEPLOY_VM_USER: ${{ vars.DEPLOY_VM_USER || secrets.DEPLOY_VM_USER || 'nguyenquanghung' }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/tuhoa_deploy
+          if [[ "$DEPLOY_SSH_PRIVATE_KEY" == *"-----BEGIN OPENSSH PRIVATE KEY-----"* ]]; then
+            printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/tuhoa_deploy
+          else
+            printf '%s' "$DEPLOY_SSH_PRIVATE_KEY" | base64 --decode > ~/.ssh/tuhoa_deploy
+          fi
           chmod 600 ~/.ssh/tuhoa_deploy
+          ssh-keygen -y -f ~/.ssh/tuhoa_deploy > /dev/null
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           cat > ~/.ssh/config <<EOF_SSH
           Host tuhoa-bastion
