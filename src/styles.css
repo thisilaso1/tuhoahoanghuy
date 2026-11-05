@@ -766,6 +766,10 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme-picker button { padding: 5px 8px; border-radius: 7px; color: #aebdca; font-size: 10px; transition: .2s ease; white-space: nowrap; }
 .chart-theme-picker button:hover { color: #f3f8fc; background: rgba(183, 211, 234, .1); }
 .chart-theme-picker button.selected { color: #112034; background: linear-gradient(135deg, #f5f8fb, #b5cbdc); }
+.chart-school-switch { display: grid; justify-items: center; gap: 5px; color: #c5d7e6; font-size: 13px; font-weight: 600; }
+.chart-school-switch .chart-school-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 360px); gap: 4px; padding: 4px; }
+.chart-school-switch .chart-school-picker button { min-height: 44px; padding: 6px; font-size: clamp(13px, 3.5vw, 16px); }
+.chart-school-switch .chart-school-picker button.selected small { color: inherit; border-color: currentColor; }
 .chart-school-picker button.maintenance-option { display: inline-flex; align-items: center; gap: 5px; color: #93a5b4; opacity: .82; cursor: not-allowed; }
 .chart-school-picker button.maintenance-option small { padding: 2px 5px; border: 1px solid rgba(246,189,96,.25); border-radius: 999px; color: #e6c17b; font-size: 8px; }
 .chart-school-picker button small { margin-left: 3px; padding: 2px 5px; border: 1px solid rgba(125,211,252,.25); border-radius: 999px; color: #9ccde8; font-size: 8px; }
