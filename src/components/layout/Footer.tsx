@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
               </div>
             </div>
             <p className="max-w-md text-xs leading-relaxed text-stone-400">
-              Công trình kết tinh giữa học thuật cổ điển Đông Phương (Tử Vi Đẩu Số, Khâm Thiên Tứ Hóa, Kinh Dịch) và kiến trúc trí tuệ nhân tạo hiện đại. Tôn vinh tinh thần tri mệnh, hiểu người, thấu suốt nhân duyên và tự cường tu dưỡng.
+              Công cụ tiện ích phục vụ cộng đồng học thuật huyền học, góp phần gìn giữ và phát triển tinh hoa trí tuệ cổ nhân. Hoài Nguyệt Các khuyến khích bạn đóng góp ý tưởng để chúng tôi tiếp tục hoàn thiện sản phẩm.
             </p>
             <blockquote className="border-l-2 border-amber-600/40 pl-3 text-xs italic text-amber-300/80">
               "Nguyệt hữu âm tình viên khuyết. Nhân sinh tự hữu định số."
