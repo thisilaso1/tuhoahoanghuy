@@ -45,6 +45,7 @@ export const MenhBanView: React.FC = () => {
       ? solarToLunar(now.getDate(), now.getMonth() + 1, now.getFullYear()).lMonth
       : 1;
   });
+  const [showDefaultPhiHoa, setShowDefaultPhiHoa] = useState(true);
   const [phiHoaVisibility, setPhiHoaVisibility] = useState<PhiHoaVisibility>(DEFAULT_PHI_HOA_VISIBILITY);
   const [palaceAgeOptions, setPalaceAgeOptions] = useState<PalaceAgeOptions>({
     enabled: false,
@@ -295,6 +296,7 @@ export const MenhBanView: React.FC = () => {
             theme={chartTheme}
             school={school}
             phiHoaVisibility={phiHoaVisibility}
+            showDefaultPhiHoa={showDefaultPhiHoa}
           />
           {focusedPalaceIndex !== null && <PalaceInspector
             palace={activeChart.palaces[focusedPalaceIndex]}
@@ -316,7 +318,7 @@ export const MenhBanView: React.FC = () => {
           namPhaiLayoutMode={namPhaiLayoutMode}
           onNamPhaiLayoutChange={setNamPhaiDensity}
         />}
-        {school === 'kham_thien' && <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />}
+        {school === 'kham_thien' && <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} showDefaultPhiHoa={showDefaultPhiHoa} onShowDefaultPhiHoaChange={setShowDefaultPhiHoa} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />}
 
         {/* One selected palace gets four focused Hóa views; multiple selections use the cycle graph. */}
         {school === 'kham_thien' && selectedPhiPalaceIndices.length === 1 && <SinglePalaceQiTabs palaceIndex={selectedPhiPalaceIndices[0]} transformations={natalFlows} visibility={phiHoaVisibility} />}

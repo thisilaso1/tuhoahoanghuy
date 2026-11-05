@@ -26,6 +26,7 @@ interface NatalChart12Props {
   palaceAgeOptions: PalaceAgeOptions;
   selectedLunarMonth: number;
   phiHoaVisibility: PhiHoaVisibility;
+  showDefaultPhiHoa?: boolean;
   namPhaiRelationOptions?: { tamHop: boolean; xungChieu: boolean; giapCung: boolean; lines: boolean; highlight: boolean; laiNhan: boolean };
   namPhaiLayoutMode?: 'auto' | 'compact' | 'wide';
   onClearPalaceSelection?: () => void;
@@ -99,6 +100,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   palaceAgeOptions,
   selectedLunarMonth,
   phiHoaVisibility,
+  showDefaultPhiHoa = true,
   namPhaiRelationOptions = { tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true },
   namPhaiLayoutMode = 'auto',
   onClearPalaceSelection,
@@ -135,7 +137,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
 
   // Lọc đường Tứ Hóa hiển thị
   const visibleTransformations = school === 'kham_thien' ? allTransformations.filter((t) =>
-    t.mode !== 'flying' || selectedPhiPalaceIndices.includes(t.sourcePalaceIndex),
+    (showDefaultPhiHoa && t.mode !== 'flying') || selectedPhiPalaceIndices.includes(t.sourcePalaceIndex),
   ) : [];
 
   return (
@@ -265,10 +267,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
           {visibleTransformations.map((t, index) => {
             const isCentrifugal = t.mode === 'ly_tam';
             const isSelf = t.sourcePalaceIndex === t.targetPalaceIndex;
-            // Self/opposite-palace transformations are core chart annotations,
-            // not ordinary flying lines; keep them visible regardless of the
-            // optional Phi Hóa type filters.
-            const isAlwaysVisibleTransformation = t.mode !== 'flying';
+            const isAlwaysVisibleTransformation = showDefaultPhiHoa && t.mode !== 'flying';
             const isFilteredOut = !isAlwaysVisibleTransformation && !phiHoaVisibility[t.type];
             // Multiple self-transformations can leave the same palace (for
             // example Tân: Thái Dương Quyền and Văn Xương Kỵ). Give each line

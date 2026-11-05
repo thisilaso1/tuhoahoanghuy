@@ -26,6 +26,8 @@ interface PhiHoaFilterPanelProps {
   onChange: (visibility: PhiHoaVisibility) => void;
   school: TuHoaSchool;
   birthStem: Stem;
+  showDefaultPhiHoa?: boolean;
+  onShowDefaultPhiHoaChange?: (show: boolean) => void;
   selectedPalaceStems: Array<{ name: string; stem: Stem }>;
   namPhaiRelationOptions?: NamPhaiRelationOptions;
   onNamPhaiRelationChange?: (options: NamPhaiRelationOptions) => void;
@@ -33,7 +35,7 @@ interface PhiHoaFilterPanelProps {
   onNamPhaiLayoutChange?: (mode: NamPhaiLayoutMode) => void;
 }
 
-export const PhiHoaFilterPanel: React.FC<PhiHoaFilterPanelProps> = ({ visibility, onChange, school, birthStem, selectedPalaceStems, namPhaiRelationOptions, onNamPhaiRelationChange, namPhaiLayoutMode, onNamPhaiLayoutChange }) => {
+export const PhiHoaFilterPanel: React.FC<PhiHoaFilterPanelProps> = ({ visibility, onChange, school, birthStem, showDefaultPhiHoa = true, onShowDefaultPhiHoaChange, selectedPalaceStems, namPhaiRelationOptions, onNamPhaiRelationChange, namPhaiLayoutMode, onNamPhaiLayoutChange }) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'filter' | 'table'>('filter');
   const panelRef = useRef<HTMLElement>(null);
@@ -76,7 +78,7 @@ export const PhiHoaFilterPanel: React.FC<PhiHoaFilterPanelProps> = ({ visibility
     <div className="phi-hoa-filter-actions-top">
     <button ref={triggerRef} className="phi-hoa-filter-trigger" type="button" aria-label={school === 'nam_phai' ? 'Tiện ích Nam Phái' : 'Bộ lọc Phi Hóa'} title={school === 'nam_phai' ? 'Tiện ích Nam Phái' : 'Bộ lọc Phi Hóa'} aria-expanded={open} aria-haspopup="dialog" onClick={() => { setActiveTab('filter'); setOpen((value) => !value); }}>
       <Settings2 size={18} />
-      {(school === 'nam_phai' ? hasDisabledNamPhaiSetting : !allEnabled) && <span className="phi-hoa-filter-active-dot" aria-label="Đang tùy chỉnh" />}
+      {(school === 'nam_phai' ? hasDisabledNamPhaiSetting : !allEnabled || !showDefaultPhiHoa) && <span className="phi-hoa-filter-active-dot" aria-label="Đang tùy chỉnh" />}
     </button>
     {school === 'kham_thien' && <button className={`phi-hoa-table-trigger ${open && activeTab === 'table' ? 'is-active' : ''}`} type="button" aria-label="Mở Bảng Tứ Hóa" title="Tra cứu Bảng Tứ Hóa" aria-expanded={open && activeTab === 'table'} onClick={() => { setActiveTab('table'); setOpen(true); }}>
       <BookOpen size={15} /><span>Bảng Tứ Hóa</span>
@@ -102,7 +104,11 @@ export const PhiHoaFilterPanel: React.FC<PhiHoaFilterPanelProps> = ({ visibility
           </select>
         </label>
       </div> : activeTab === 'filter' ? <div className="phi-hoa-tool-panel" role="tabpanel" aria-label="Bộ lọc Phi Hóa">
-      <p className="phi-hoa-filter-note">Chỉ lọc đường và sơ đồ</p>
+      {onShowDefaultPhiHoaChange && <label className="phi-hoa-filter-option">
+        <input type="checkbox" checked={showDefaultPhiHoa} onChange={(event) => onShowDefaultPhiHoaChange(event.target.checked)} />
+        <span>Hiện đường Phi Hóa mặc định</span>
+      </label>}
+      <p className="phi-hoa-filter-note">Lọc đường Phi Hóa từ cung đã chọn và sơ đồ</p>
       <div className="phi-hoa-filter-options">
         {OPTIONS.map(({ type, symbol }) => <label key={type} className={`phi-hoa-filter-option phi-hoa-${type === 'Lộc' ? 'loc' : type === 'Quyền' ? 'quyen' : type === 'Khoa' ? 'khoa' : 'ky'}`}>
           <input type="checkbox" checked={visibility[type]} onChange={(event) => onChange({ ...visibility, [type]: event.target.checked })} />

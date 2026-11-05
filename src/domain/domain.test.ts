@@ -623,7 +623,7 @@ describe('Domain Astrology & I Ching Engines', () => {
   it('keeps Ly Tam and Huong Tam arrows visible with no selected palace and all phi filters off', () => {
     const chart = generateNatalChart({ name: 'Arrow check', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
     const transformations = calculateAllFlyingTransformations(chart).filter((flow) => flow.mode !== 'flying');
-    const markup = renderToStaticMarkup(React.createElement(NatalChart12, {
+    const render = (options: Partial<React.ComponentProps<typeof NatalChart12>> = {}) => renderToStaticMarkup(React.createElement(NatalChart12, {
       chart,
       focusedPalaceIndex: null,
       selectedPhiPalaceIndices: [],
@@ -634,8 +634,20 @@ describe('Domain Astrology & I Ching Engines', () => {
       palaceAgeOptions: { enabled: false, mode: 'FULL_CAN_CHI', startYear: 1920, endYear: 2030, nearestToBirthYearOnly: false },
       selectedLunarMonth: 1,
       phiHoaVisibility: { Lộc: false, Quyền: false, Khoa: false, Kỵ: false },
+      ...options,
     }));
-    expect((markup.match(/aria-hidden="false"/g) ?? [])).toHaveLength(transformations.length);
+    const countVisible = (markup: string) => (markup.match(/aria-hidden="false"/g) ?? []).length;
+    expect(countVisible(render())).toBe(transformations.length);
+    expect(countVisible(render({ showDefaultPhiHoa: false }))).toBe(0);
+
+    const { sourcePalaceIndex, type } = transformations[0];
+    const selected = { showDefaultPhiHoa: false, selectedPhiPalaceIndices: [sourcePalaceIndex] };
+    expect(countVisible(render(selected))).toBe(0);
+    expect(countVisible(render({
+      ...selected,
+      phiHoaVisibility: { Lộc: false, Quyền: false, Khoa: false, Kỵ: false, [type]: true },
+    }))).toBe(1);
+    expect(countVisible(render({ showDefaultPhiHoa: true }))).toBe(transformations.length);
   });
 
   it('renders natal Kình Dương at Dậu as Hãm in Nam Phái', () => {
