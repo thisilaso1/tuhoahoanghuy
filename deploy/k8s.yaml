@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: thisilaso1/tuhoabe:2026.11.05-e3b77af
+          image: thisilaso1/tuhoabe:2026.11.05-f66e6d4
           imagePullPolicy: Always
           ports:
             - name: http
