@@ -2,6 +2,7 @@ import { Branch, NatalChart, Palace, Stem, STEMS, TransformationType } from './t
 
 export type TuHoaSchool = 'kham_thien' | 'nam_phai';
 export type TransformationProfileId = 'KHAM_THIEN_V1' | 'NAM_PHAI_CLASSIC_V1';
+export type NatalTuHoaProfileId = 'KHAM_THIEN_V1' | 'NAM_PHAI_TU_HOA_V1';
 
 export function getTransformationProfileId(school: TuHoaSchool): TransformationProfileId {
   return school === 'kham_thien' ? 'KHAM_THIEN_V1' : 'NAM_PHAI_CLASSIC_V1';
@@ -41,8 +42,11 @@ export const TU_HOA_NAM_PHAI: Record<Stem, Record<TransformationType, string>> =
   Quý: { Lộc: 'Phá Quân', Quyền: 'Cự Môn', Khoa: 'Thái Âm', Kỵ: 'Tham Lang' },
 };
 
+// Locked, separately versioned natal Hua table for the Nam Phái profile.
+export const NAM_PHAI_TU_HOA_V1 = TU_HOA_NAM_PHAI;
+
 export function getTuHoaRules(school: TuHoaSchool = 'kham_thien'): Record<Stem, Record<TransformationType, string>> {
-  return school === 'kham_thien' ? TU_HOA_KHAM_THIEN : TU_HOA_NAM_PHAI;
+  return school === 'kham_thien' ? TU_HOA_KHAM_THIEN : NAM_PHAI_TU_HOA_V1;
 }
 
 export interface FlyingTransformation {
@@ -66,7 +70,7 @@ export interface FlyingTransformation {
 
 export interface BirthYearTransformation {
   id: string;
-  profileId: TransformationProfileId;
+  profileId: NatalTuHoaProfileId;
   layer: 'NATAL';
   type: TransformationType;
   yearStem: Stem;
@@ -120,6 +124,7 @@ export function getBirthYearTransformations(
 ): BirthYearTransformation[] {
   assertTransformationInputs(chart);
   const rules = getTuHoaRules(school)[chart.birthCanChi.year.stem];
+  const profileId: NatalTuHoaProfileId = school === 'kham_thien' ? 'KHAM_THIEN_V1' : 'NAM_PHAI_TU_HOA_V1';
   const results: BirthYearTransformation[] = [];
 
   const typeMeanings: Record<TransformationType, string> = {
@@ -134,8 +139,8 @@ export function getBirthYearTransformations(
     // Tìm cung nào chứa star này
     const { palace: targetPalace, carrierStarId } = locateCarrierStar(chart, star);
     results.push({
-      id: `${getTransformationProfileId(school)}:NATAL:${chart.birthCanChi.year.stem}:${type}:${star}`,
-      profileId: getTransformationProfileId(school),
+      id: `${profileId}:NATAL:${chart.birthCanChi.year.stem}:${type}:${star}`,
+      profileId,
       layer: 'NATAL',
       type,
       yearStem: chart.birthCanChi.year.stem,

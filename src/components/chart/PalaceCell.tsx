@@ -80,11 +80,19 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   const auspiciousStars = displayedMinorStars.filter((star) => star.category === 'good');
   const adverseStars = displayedMinorStars.filter((star) => star.category === 'bad');
   const neutralStars = displayedMinorStars.filter((star) => star.category === 'other');
-  const namPhaiItems: RenderableNamPhaiStar<Star | AnnualStar>[] = school === 'nam_phai' ? [
+  const namPhaiItems: RenderableNamPhaiStar<Star | AnnualStar | BirthYearTransformation>[] = school === 'nam_phai' ? [
     ...displayedMinorStars.flatMap((star) => {
       const rule = getNatalDisplayRule(star.name);
       return rule ? [{ id: rule.starId, name: star.name, layer: 'NATAL' as const, displayColumn: rule.displayColumn, displayOrder: rule.order, data: star }] : [];
     }),
+    ...birthYearTransformations.map((transformation, index) => ({
+      id: transformation.id,
+      name: `Hóa ${transformation.type}`,
+      layer: 'NATAL' as const,
+      displayColumn: transformation.type === 'Kỵ' ? 'RIGHT_HUNG' as const : 'LEFT_CATS' as const,
+      displayOrder: 1000 + index,
+      data: transformation,
+    })),
     ...(showAnnual ? annualStars.flatMap((star) => {
       const rule = getAnnualDisplayRule(star.name);
       return rule ? [{ id: star.id, name: star.name, layer: 'ANNUAL' as const, displayColumn: rule.displayColumn, displayOrder: rule.order, data: star }] : [];
@@ -232,6 +240,9 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
             <div className="palace-auxiliary-column palace-left-column">
               <div className="palace-auxiliary-star-list">
                 {namPhaiGroups.leftNatal.map(({ data }) => {
+                  if ('carrierStarId' in data) {
+                    return <span key={data.id} className="palace-good-star">Hóa {data.type}</span>;
+                  }
                   const star = data as Star;
                   return renderMinorStar(star, star.category === 'bad' ? 'palace-minor-star' : star.category === 'other' ? 'palace-neutral-star' : 'palace-good-star');
                 })}
@@ -249,6 +260,9 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
             <div className="palace-auxiliary-column palace-right-column">
               <div className="palace-auxiliary-star-list">
                 {namPhaiGroups.rightNatal.map(({ data }) => {
+                  if ('carrierStarId' in data) {
+                    return <span key={data.id} className="palace-minor-star">Hóa {data.type}</span>;
+                  }
                   const star = data as Star;
                   return renderMinorStar(star, star.category === 'good' ? 'palace-good-star' : 'palace-minor-star');
                 })}
