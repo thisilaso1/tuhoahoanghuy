@@ -19,7 +19,7 @@ export const Header: React.FC = () => {
 
   const navItems: Array<{ route: AppRoute; label: string; icon: React.ReactNode }> = [
     { route: '/', label: 'An Sao Lá Số', icon: <Grid size={15} /> },
-    ...(authenticatedUser ? [{ route: '/menh-ban' as AppRoute, label: 'Lá Số Của Bạn', icon: <Grid size={15} /> }] : []),
+    ...(authenticatedUser ? [{ route: '/ho-so' as AppRoute, label: 'Lá Số Của Bạn', icon: <Grid size={15} /> }] : []),
     { route: '/thien-co', label: 'AI Thiên Cơ', icon: <Sparkles size={15} /> },
     { route: '/tu-hoa', label: 'Tứ Hóa', icon: <Layers size={15} /> },
     { route: '/kinh-dich', label: 'Kinh Dịch', icon: <Compass size={15} /> },
@@ -66,7 +66,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-3">
           {authenticatedUser ? (
             <button
-              onClick={() => navigateTo('/menh-ban')}
+              onClick={() => navigateTo('/ho-so')}
               className="flex items-center gap-2 rounded-full border border-amber-900/40 bg-slate-900/90 px-3 py-1 text-xs text-amber-200 transition hover:border-amber-500/60"
               title={`Mở lá số tự an theo hồ sơ của ${authenticatedUser.name}`}
             >
@@ -88,7 +88,7 @@ export const Header: React.FC = () => {
             <User size={16} />
           </button>}
 
-          <button
+          {currentRoute !== '/ho-so' && <button
             onClick={() => navigateTo('/cai-dat')}
             className={`hidden rounded-full p-2 text-stone-300 transition hover:bg-slate-800 hover:text-amber-200 sm:block ${
               currentRoute === '/cai-dat' ? 'bg-amber-500/20 text-amber-200' : ''
@@ -96,7 +96,7 @@ export const Header: React.FC = () => {
             title="Cài đặt & Quyền riêng tư"
           >
             <Settings size={16} />
-          </button>
+          </button>}
 
           {/* Traditional Seal Stamp */}
           <div className="hidden sm:block">

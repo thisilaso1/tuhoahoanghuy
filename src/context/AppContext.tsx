@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { BirthInput, NatalChart } from '../domain/types';
 import { generateNatalChart } from '../domain/tuViEngine';
 import { getYearCanChi, solarToLunar } from '../domain/lunarCalendar';
@@ -44,6 +44,7 @@ interface AppContextType {
   currentRoute: AppRoute;
   navigateTo: (route: AppRoute) => void;
   activeChart: NatalChart;
+  profileChart: NatalChart | null;
   savedCharts: NatalChart[];
   authenticatedUser: AuthenticatedUserProfile | null;
   setAuthenticatedUser: (user: AuthenticatedUserProfile | null) => void;
@@ -174,20 +175,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('hoai-nguyet:auth-changed', onAuthChange);
   }, []);
 
-  // A signed-in profile with complete birth data gets a chart calculated by the same engine as manual entry.
-  useEffect(() => {
-    if (!authenticatedUser?.birthDate || !authenticatedUser.birthTime || !authenticatedUser.gender) return;
-    const profileChart = generateNatalChart({
-      name: authenticatedUser.name,
-      date: authenticatedUser.birthDate,
-      time: authenticatedUser.birthTime,
-      gender: authenticatedUser.gender,
-      calendar: authenticatedUser.calendar ?? 'solar',
-      isLeapMonth: authenticatedUser.isLeapMonth ?? false,
-      forecastYear: new Date().getFullYear(),
-    });
-    setActiveChart(profileChart);
+  const profileChart = useMemo(() => {
+    if (!authenticatedUser?.birthDate || !authenticatedUser.birthTime || !authenticatedUser.gender) return null;
+    const today = new Date();
+    const lunarYear = solarToLunar(today.getDate(), today.getMonth() + 1, today.getFullYear()).lYear;
+    try {
+      return generateNatalChart({
+        name: authenticatedUser.name,
+        date: authenticatedUser.birthDate,
+        time: authenticatedUser.birthTime,
+        gender: authenticatedUser.gender,
+        calendar: authenticatedUser.calendar ?? 'solar',
+        isLeapMonth: authenticatedUser.isLeapMonth ?? false,
+        forecastYear: lunarYear,
+      });
+    } catch {
+      return null;
+    }
   }, [authenticatedUser]);
+
+  const lastProfileChartId = useRef<string | null>(null);
+  useEffect(() => {
+    if (profileChart) {
+      lastProfileChartId.current = profileChart.id;
+      setActiveChart(profileChart);
+      return;
+    }
+    const previousId = lastProfileChartId.current;
+    lastProfileChartId.current = null;
+    if (previousId) {
+      setActiveChart((current) => current.id === previousId ? savedCharts[0] ?? initialChart : current);
+    }
+  }, [profileChart]);
 
   const [focusedPalaceIndex, setFocusedPalaceIndex] = useState<number | null>(null);
 
@@ -387,6 +406,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentRoute,
         navigateTo,
         activeChart,
+        profileChart,
         savedCharts,
         authenticatedUser,
         setAuthenticatedUser,

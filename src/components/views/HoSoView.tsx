@@ -1,32 +1,25 @@
 import React, { useState } from 'react';
+import { NatalChart12 } from '../chart/NatalChart12';
+import { DEFAULT_PHI_HOA_VISIBILITY } from '../chart/PhiHoaFilterPanel';
+import { ProfileLimitEvents } from './ProfileLimitEvents';
+import { AccountBirthProfile } from './AccountBirthProfile';
 import { useApp } from '../../context/AppContext';
-import { User, Trash2, Plus, Download, Upload, ShieldCheck, FileText, CheckCircle } from 'lucide-react';
+import { User, Trash2, Plus, Download, Upload, CheckCircle } from 'lucide-react';
 
 export const HoSoView: React.FC = () => {
   const {
+    authenticatedUser,
+    profileChart,
     savedCharts,
     activeChart,
     selectChart,
     deleteChart,
     personalNotes,
-    addPersonalNote,
-    deletePersonalNote,
     navigateTo,
   } = useApp();
 
-  const [noteTitle, setNoteTitle] = useState('');
-  const [noteContent, setNoteContent] = useState('');
-  const [showAddNote, setShowAddNote] = useState(false);
   const [importNotice, setImportNotice] = useState('');
-
-  const handleAddNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!noteTitle.trim() && !noteContent.trim()) return;
-    addPersonalNote(noteTitle, noteContent);
-    setNoteTitle('');
-    setNoteContent('');
-    setShowAddNote(false);
-  };
+  const [profileFocus, setProfileFocus] = useState<number | null>(null);
 
   const handleExportData = () => {
     const backupData = {
@@ -77,7 +70,7 @@ export const HoSoView: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-stone-400 mt-1">
-            Quản lý các mệnh bàn đã lưu, ghi chép nghiên cứu và kiểm soát dữ liệu riêng tư.
+            Xem lá số của bạn và đánh dấu các sự kiện theo ngày, tháng âm lịch.
           </p>
         </div>
 
@@ -103,6 +96,25 @@ export const HoSoView: React.FC = () => {
           {importNotice}
         </div>
       )}
+
+      <section className="mb-8" aria-labelledby="profile-chart-heading">
+        <h2 id="profile-chart-heading" className="mb-3 font-serif text-lg font-bold text-amber-200">Lá số cá nhân</h2>
+        {profileChart ? <>
+          <NatalChart12 chart={profileChart} focusedPalaceIndex={profileFocus} selectedPhiPalaceIndices={[]}
+            onSelectPalace={(index) => setProfileFocus(index === profileFocus ? null : index)}
+            onClearPalaceSelection={() => setProfileFocus(null)}
+            layers={{ showBirthYear: true, showAnnual: true }} theme="paper" school="kham_thien"
+            palaceAgeOptions={{ enabled: false, mode: 'FULL_CAN_CHI', startYear: 1920, endYear: 2030, nearestToBirthYearOnly: false }}
+            selectedLunarMonth={0} phiHoaVisibility={DEFAULT_PHI_HOA_VISIBILITY} showDefaultPhiHoa={false} />
+          <button type="button" className="mt-3 text-sm font-semibold text-amber-300"
+            onClick={() => { selectChart(profileChart); navigateTo('/menh-ban'); }}>Mở Mệnh bàn để tra hạn →</button>
+        </> : <p className="text-sm text-stone-300">Lưu ngày sinh, giờ sinh và giới tính bên dưới để tự an lá số.</p>}
+      </section>
+
+      {authenticatedUser && <>
+        <AccountBirthProfile key={authenticatedUser.id} user={authenticatedUser} />
+        <ProfileLimitEvents key={authenticatedUser.id} userId={authenticatedUser.id} chart={profileChart} />
+      </>}
 
       {/* Saved Charts Section */}
       <section className="mb-10 rounded-2xl border border-amber-900/30 bg-slate-900/80 p-6 shadow-xl">
@@ -173,93 +185,6 @@ export const HoSoView: React.FC = () => {
         </div>
       </section>
 
-      {/* Personal Research Notes */}
-      <section className="mb-10 rounded-2xl border border-amber-900/30 bg-slate-900/80 p-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-amber-900/20 pb-3 mb-4">
-          <h2 className="font-serif text-lg font-bold text-amber-200 flex items-center gap-2">
-            <FileText size={16} className="text-amber-400" />
-            Ghi Chép Chiêm Nghiệm Cá Nhân ({personalNotes.length})
-          </h2>
-          <button
-            onClick={() => setShowAddNote(!showAddNote)}
-            className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 font-semibold"
-          >
-            <Plus size={14} /> Thêm ghi chép mới
-          </button>
-        </div>
-
-        {showAddNote && (
-          <form onSubmit={handleAddNote} className="mb-6 rounded-xl border border-amber-900/40 bg-slate-950 p-4 space-y-3">
-            <input
-              type="text"
-              placeholder="Tiêu đề ghi chép (ví dụ: Nghiệm lý hạn năm 2026)"
-              value={noteTitle}
-              onChange={(e) => setNoteTitle(e.target.value)}
-              className="w-full rounded-lg border border-amber-900/30 bg-slate-900 px-3 py-1.5 text-xs text-amber-100 focus:outline-none"
-            />
-            <textarea
-              rows={3}
-              placeholder="Nội dung đúc kết hoặc phát hiện chiêm tinh..."
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              className="w-full rounded-lg border border-amber-900/30 bg-slate-900 px-3 py-1.5 text-xs text-amber-100 focus:outline-none"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAddNote(false)}
-                className="rounded-lg px-3 py-1 text-xs text-stone-400 hover:bg-slate-900"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-amber-600 px-4 py-1 text-xs font-semibold text-slate-950 hover:bg-amber-500"
-              >
-                Lưu Ghi Chép
-              </button>
-            </div>
-          </form>
-        )}
-
-        <div className="space-y-3">
-          {personalNotes.map((note) => (
-            <div
-              key={note.id}
-              className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs space-y-1.5"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-sm font-bold text-amber-200">
-                  {note.title}
-                </h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-stone-500">
-                    {new Date(note.createdAt).toLocaleDateString('vi-VN')}
-                  </span>
-                  <button
-                    onClick={() => deletePersonalNote(note.id)}
-                    className="text-stone-500 hover:text-rose-400"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-              <p className="text-stone-300 leading-relaxed whitespace-pre-wrap">
-                {note.content}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Privacy Guarantee Statement */}
-      <div className="rounded-2xl border border-emerald-900/30 bg-emerald-950/20 p-5 text-xs text-emerald-200 leading-relaxed flex items-start gap-3">
-        <ShieldCheck size={20} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div>
-          <strong className="block text-emerald-300 font-semibold mb-0.5">Cam Kết Quyền Riêng Tư & An Toàn Bản Mệnh</strong>
-          Mọi dữ liệu ngày giờ sinh và ghi chép cá nhân được lưu trữ trực tiếp trên trình duyệt của quý vị (Local Storage). Hoài Nguyệt Các không thu thập, bán hay chia sẻ thông tin lá số của quý vị cho bất kỳ bên thứ ba nào.
-        </div>
-      </div>
     </div>
   );
 };

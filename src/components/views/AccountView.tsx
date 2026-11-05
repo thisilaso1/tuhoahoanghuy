@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { AccountBirthDateField } from '../common/AccountBirthDateField';
+import { parseBirthDateInput } from '../../domain/birthDateInput';
 import { ArrowRight, Moon } from 'lucide-react';
 import { useApp, type AuthenticatedUserProfile } from '../../context/AppContext';
 
@@ -10,6 +12,7 @@ const GOOGLE_ERRORS: Record<string, string> = {
 
 export function AccountView({ mode }: { mode: 'login' | 'register' }) {
   const { currentRoute, navigateTo, setAuthenticatedUser, authenticatedUser } = useApp();
+  const [birthDateText, setBirthDateText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(() => {
     const status = new URLSearchParams(window.location.search).get('google');
@@ -32,6 +35,14 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const fields = new FormData(event.currentTarget);
+    if (registering) {
+      const birthDate = parseBirthDateInput(birthDateText, 'solar');
+      if (!birthDate) {
+        setError('Vui lòng nhập ngày sinh dương lịch hợp lệ theo DD-MM-YYYY.');
+        return;
+      }
+      fields.set('birthDate', birthDate);
+    }
     setBusy(true);
     setError('');
 
@@ -50,7 +61,8 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
         return;
       }
       if (response.status === 400) {
-        setError('Vui lòng kiểm tra lại thông tin tài khoản.');
+        const { error: code } = await response.json();
+        setError(code === 'invalid_birth_date' ? 'Ngày sinh không hợp lệ hoặc nằm trong tương lai.' : 'Vui lòng kiểm tra lại thông tin tài khoản.');
         return;
       }
       if (!response.ok) throw new Error();
@@ -90,6 +102,7 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
                 <label htmlFor="account-name">Họ và tên</label>
                 <input id="account-name" name="name" autoComplete="name" required maxLength={120} className="w-full px-3" />
               </div>}
+              {registering && <AccountBirthDateField value={birthDateText} onChange={setBirthDateText} />}
               <div>
                 <label htmlFor="account-email">Email (tên đăng nhập)</label>
                 <input id="account-email" name="email" type="email" autoComplete="username" required maxLength={254} aria-describedby={registering ? 'account-email-hint' : undefined} className="w-full px-3" />
