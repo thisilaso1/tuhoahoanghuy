@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { NatalChart } from '../../domain/types';
 import { PalaceCell } from './PalaceCell';
 import { calculateAllFlyingTransformations, FlyingTransformation, getAnnualTransformations, getBirthYearTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
@@ -6,6 +6,8 @@ import { calculateAnnualStars } from '../../domain/annualStars';
 import { getPalaceAgeMappings, PalaceAgeOptions } from '../../domain/palaceAge';
 import { ELEMENT_IDS, ELEMENT_LABEL } from '../../domain/starElements';
 import { PhiHoaVisibility } from './PhiHoaFilterPanel';
+import { NamPhaiRelationOverlay } from './NamPhaiRelationOverlay';
+import { findNamPhaiLaiNhanPalace, getNamPhaiPalaceRelations } from '../../domain/namPhaiPalaceRelationEngine';
 
 export interface ChartLayerVisibility {
   showBirthYear: boolean;
@@ -24,6 +26,9 @@ interface NatalChart12Props {
   palaceAgeOptions: PalaceAgeOptions;
   selectedLunarMonth: number;
   phiHoaVisibility: PhiHoaVisibility;
+  namPhaiRelationOptions?: { tamHop: boolean; xungChieu: boolean; giapCung: boolean; lines: boolean; highlight: boolean; laiNhan: boolean };
+  namPhaiLayoutMode?: 'auto' | 'compact' | 'wide';
+  onClearPalaceSelection?: () => void;
 }
 
 // Tọa độ lưới 4x4 truyền thống
@@ -36,6 +41,11 @@ const BRANCH_GRID: Record<number, [number, number]> = {
 };
 
 const HOA_SYMBOL = { Lộc: 'A', Quyền: 'B', Khoa: 'C', Kỵ: 'D' } as const;
+
+function formatDateDDMMYYYY(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return year && month && day ? `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}` : isoDate;
+}
 
 function getPalaceCenterPoint(index: number) {
   const [row, column] = BRANCH_GRID[index];
@@ -89,23 +99,49 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   palaceAgeOptions,
   selectedLunarMonth,
   phiHoaVisibility,
+  namPhaiRelationOptions = { tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true },
+  namPhaiLayoutMode = 'auto',
+  onClearPalaceSelection,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const allTransformations = calculateAllFlyingTransformations(chart, school);
+  const [hoveredPalaceIndex, setHoveredPalaceIndex] = useState<number | null>(null);
+  const allTransformations = school === 'kham_thien' ? calculateAllFlyingTransformations(chart, school) : [];
   const birthYearTransformations = getBirthYearTransformations(chart, school);
   const annualStars = school === 'nam_phai' && layers.showAnnual ? calculateAnnualStars(chart, chart.forecastYear) : [];
   const annualTransformations = school === 'nam_phai' && layers.showAnnual
     ? getAnnualTransformations(chart, chart.forecastYear, school)
     : [];
   const palaceAgeMappings = getPalaceAgeMappings(chart.palaces, chart.lunarDate.year, palaceAgeOptions);
+  const laiNhan = school === 'nam_phai' && namPhaiRelationOptions.laiNhan ? findNamPhaiLaiNhanPalace(chart) : null;
+  const laiNhanInfo = findNamPhaiLaiNhanPalace(chart);
+  const menhBranch = chart.palaces.find((palace) => palace.index === chart.menhPalaceIndex)?.branch;
+  const menhChuByBranch: Record<string, string> = {
+    Tý: 'Tham Lang', Sửu: 'Cự Môn', Dần: 'Lộc Tồn', Mão: 'Văn Khúc',
+    Thìn: 'Liêm Trinh', Tỵ: 'Vũ Khúc', Ngọ: 'Phá Quân', Mùi: 'Vũ Khúc',
+    Thân: 'Liêm Trinh', Dậu: 'Văn Khúc', Tuất: 'Lộc Tồn', Hợi: 'Cự Môn',
+  };
+  const menhChu = menhBranch ? menhChuByBranch[menhBranch] : '—';
+  const laiNhanName = laiNhanInfo.status === 'FOUND'
+    ? `${laiNhanInfo.palace.name} (${laiNhanInfo.palace.stem} ${laiNhanInfo.branch})`
+    : 'Chưa xác định';
+  const relationFocus = hoveredPalaceIndex ?? focusedPalaceIndex;
+  const relations = relationFocus === null ? null : getNamPhaiPalaceRelations(relationFocus);
+  const relationRole = (index: number): 'self' | 'tam-hop' | 'xung-chieu' | 'giap-cung' | null => {
+    if (school !== 'nam_phai' || !relations || !namPhaiRelationOptions.highlight) return null;
+    if (index === relations.self) return 'self';
+    if (namPhaiRelationOptions.tamHop && relations.tamHop.includes(index)) return 'tam-hop';
+    if (namPhaiRelationOptions.xungChieu && relations.xungChieu === index) return 'xung-chieu';
+    if (namPhaiRelationOptions.giapCung && relations.giapCung.includes(index)) return 'giap-cung';
+    return null;
+  };
 
   // Lọc đường Tứ Hóa hiển thị
-  const visibleTransformations = allTransformations.filter((t) =>
+  const visibleTransformations = school === 'kham_thien' ? allTransformations.filter((t) =>
     t.mode !== 'flying' || selectedPhiPalaceIndices.includes(t.sourcePalaceIndex),
-  );
+  ) : [];
 
   return (
-    <div className={`chart-theme chart-theme-${theme} chart-export-frame ${school === 'nam_phai' ? 'chart-school-nam-phai' : ''} relative w-full overflow-visible rounded-2xl p-2 sm:p-4 shadow-2xl`}>
+    <div className={`chart-theme chart-theme-${theme} chart-export-frame ${school === 'nam_phai' ? `chart-school-nam-phai nam-phai-layout-${namPhaiLayoutMode}` : ''} relative w-full overflow-visible rounded-2xl p-2 sm:p-4 shadow-2xl`}>
       <div className="star-element-legend" aria-label="Chú giải Ngũ Hành tinh diệu">
         <span className="star-element-legend-title">NGŨ HÀNH TINH DIỆU</span>
         {ELEMENT_IDS.map((element) => <span className="star-element-legend-item" data-element={element} key={element}><i />{ELEMENT_LABEL[element]}</span>)}
@@ -119,8 +155,12 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               key={palace.index}
               palace={palace}
               isFocused={focusedPalaceIndex === palace.index}
-              isPhiSelected={selectedPhiPalaceIndices.includes(palace.index)}
+              isPhiSelected={school === 'kham_thien' && selectedPhiPalaceIndices.includes(palace.index)}
               onSelect={() => onSelectPalace(palace.index)}
+              onHoverPalace={school === 'nam_phai' ? setHoveredPalaceIndex : undefined}
+              onClearPalaceSelection={onClearPalaceSelection}
+              isLaiNhan={laiNhan?.status === 'FOUND' && laiNhan.palace.index === palace.index}
+              relationRole={relationRole(palace.index)}
               showAnnual={layers.showAnnual}
               theme={theme}
               annualLimitAge={chart.forecastYear - chart.lunarDate.year + 1}
@@ -129,7 +169,6 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               birthYearTransformations={birthYearTransformations.filter((item) => item.palaceIndex === palace.index)}
               annualStars={annualStars.filter((item) => item.branchIndex === palace.index)}
               annualHuas={annualTransformations.filter((item) => item.palaceIndex === palace.index)}
-              annualYear={chart.forecastYear}
               palaceAgeMapping={palaceAgeMappings.find((item) => item.palaceId === `palace-${palace.index}`) ?? null}
               school={school}
               gridRow={row}
@@ -137,6 +176,8 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
             />
           );
         })}
+
+        {school === 'nam_phai' && <NamPhaiRelationOverlay containerRef={chartRef} selectedIndex={relationFocus} enabled={namPhaiRelationOptions} />}
 
         {/* Tuần / Triệt belong to the boundary between their two affected palaces. */}
         {(['tuan', 'triet'] as const).flatMap((kind) => {
@@ -164,28 +205,32 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
         {/* The subject profile sits in the central field; SVG paths paint above it. */}
         <section className="center-chamber" aria-label="Thông tin đương số">
           <div className="chart-subject-panel">
-            <div className="chart-subject-heading">
+            <div className="chart-center-brand">
               <div className="chart-center-symbol select-none" aria-hidden="true">☯</div>
-              <div>
-                <div className="chart-center-eyebrow text-[10px] uppercase tracking-widest">ĐƯƠNG SỐ</div>
-                <h2 className="chart-center-name font-serif font-bold">{chart.name}</h2>
-                <div className="chart-center-meta">{chart.gender} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}</div>
-              </div>
+              <div className="chart-center-brand-name">HOÀI NGUYỆT CÁC</div>
+              <div className="chart-center-eyebrow">LÁ SỐ TỬ VI · {school === 'nam_phai' ? 'NAM PHÁI' : 'KHÂM THIÊN TỨ HÓA'}</div>
             </div>
-            <div className="chart-center-data space-y-1.5 rounded-xl p-3 text-left text-xs">
-              <div className="flex justify-between"><span className="chart-data-label">Dương lịch:</span><span className="chart-data-value">{chart.solarDate} ({chart.time})</span></div>
-              <div className="flex justify-between"><span className="chart-data-label">Âm lịch:</span><span className="chart-data-value">{chart.lunarDate.day}/{chart.lunarDate.month}/{chart.lunarDate.year} ({chart.birthCanChi.hour.stem} {chart.birthCanChi.hour.branch} thời)</span></div>
-              <div className="flex justify-between"><span className="chart-data-label">Bản Mệnh:</span><span className="chart-data-emphasis">{chart.napAm}</span></div>
-              <div className="flex justify-between"><span className="chart-data-label">Cục Số:</span><span className="chart-data-emphasis">{chart.cuc.name}</span></div>
-              <div className="flex justify-between"><span className="chart-data-label">Năm xem:</span><span className="chart-data-forecast">{chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}</span></div>
+            <div className="chart-center-name-row">
+              <span className="chart-data-label">Họ và tên</span>
+              <strong className="chart-center-name">{chart.name}</strong>
             </div>
-            <div className="chart-center-foot flex items-center gap-1.5 text-[9px] tracking-wider uppercase"><span>Hoài Nguyệt Các</span><span>·</span><span>Khâm Thiên Tứ Hóa</span></div>
+            <div className="chart-center-meta">{chart.gender} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}</div>
+            <div className="chart-center-data">
+              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh dương</span><strong className="chart-data-value">{formatDateDDMMYYYY(chart.solarDate)} · {chart.time}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh âm lịch</span><strong className="chart-data-value">{String(chart.lunarDate.day).padStart(2, '0')}/{String(chart.lunarDate.month).padStart(2, '0')}/{chart.lunarDate.year}{chart.lunarDate.isLeap ? ' (nhuận)' : ''} · {chart.birthCanChi.hour.stem} {chart.birthCanChi.hour.branch}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Lai nhân cung</span><strong className="chart-data-value">{laiNhanName}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Bản mệnh</span><strong className="chart-data-emphasis">{chart.napAm}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Cục số</span><strong className="chart-data-emphasis">{chart.cuc.name}</strong></div>
+              <div className="chart-info-row chart-info-row-menh-chu"><span className="chart-data-label">Chủ mệnh</span><strong className="chart-data-emphasis">{menhChu}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Năm xem</span><strong className="chart-data-forecast">{chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}</strong></div>
+            </div>
+            <div className="chart-center-foot">HOÀI NGUYỆT CÁC <span>·</span> {school === 'nam_phai' ? 'TỬ VI NAM PHÁI' : 'KHÂM THIÊN TỨ HÓA'}</div>
             <p className="chart-subject-slogan">“Nhất phiến cố nguyệt, vạn cổ nhân duyên.”</p>
           </div>
         </section>
 
       {/* SVG Tứ Hóa Flow Lines Overlay */}
-        <svg
+        {school === 'kham_thien' && <svg
           className="tuhoa-svg-overlay"
           viewBox="0 0 1000 1000"
           preserveAspectRatio="none"
@@ -226,10 +271,28 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
             // optional Phi Hóa type filters.
             const isAlwaysVisibleTransformation = t.mode !== 'flying';
             const isFilteredOut = !isAlwaysVisibleTransformation && !phiHoaVisibility[t.type];
-            const start = getPalaceEdgePoint(t.sourcePalaceIndex, isCentrifugal ? 'outer' : 'inner');
-            const end = isCentrifugal
+            // Multiple self-transformations can leave the same palace (for
+            // example Tân: Thái Dương Quyền and Văn Xương Kỵ). Give each line
+            // its own anchor along that palace edge so their arrows and A/B/C/D
+            // badges do not paint directly on top of one another.
+            const centrifugalSiblings = isCentrifugal
+              ? visibleTransformations.filter((other) => other.mode === 'ly_tam' && other.sourcePalaceIndex === t.sourcePalaceIndex)
+              : [];
+            const siblingIndex = centrifugalSiblings.findIndex((other) => other.id === t.id);
+            const edgeOffset = centrifugalSiblings.length > 1
+              ? (siblingIndex - (centrifugalSiblings.length - 1) / 2) * 22
+              : 0;
+            const palaceGridPosition = BRANCH_GRID[t.sourcePalaceIndex];
+            const offsetAlongEdge = (point: { x: number; y: number }) => {
+              if (palaceGridPosition[0] === 1 || palaceGridPosition[0] === 4) return { ...point, x: point.x + edgeOffset };
+              return { ...point, y: point.y + edgeOffset };
+            };
+            const startBase = getPalaceEdgePoint(t.sourcePalaceIndex, isCentrifugal ? 'outer' : 'inner');
+            const endBase = isCentrifugal
               ? getCentrifugalOuterPoint(t.sourcePalaceIndex)
               : getPalaceEdgePoint(t.targetPalaceIndex, 'inner');
+            const start = isCentrifugal ? offsetAlongEdge(startBase) : startBase;
+            const end = isCentrifugal ? offsetAlongEdge(endBase) : endBase;
 
             // Tọa độ đặt huy hiệu ký hiệu A, B, C, D
             const badgeX = start.x + (end.x - start.x) * (isCentrifugal ? 0.55 : 0.82);
@@ -295,20 +358,20 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               </g>
             );
           })}
-        </svg>
+        </svg>}
       </div>
 
       {/* Legend Bar */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/20 pt-2 text-[11px] text-stone-400">
         <div className="flex items-center gap-3">
           <span className="font-serif font-medium text-amber-200">
-            {focusedPalaceIndex !== null
+            {school === 'nam_phai' ? (relationFocus !== null ? `Quan hệ cung: ${chart.palaces[relationFocus].name}` : 'Chọn cung để xem Tam Phương Tứ Chính và Giáp Cung') : focusedPalaceIndex !== null
               ? `Đang soi chiếu: Cung ${chart.palaces[focusedPalaceIndex].name}`
               : selectedPhiPalaceIndices.length > 0
                 ? `Phi Hóa từ ${selectedPhiPalaceIndices.map((index) => chart.palaces[index].name).join(', ')}`
                 : 'Chọn một hoặc nhiều cung để xem Phi Hóa'}
           </span>
-          <div className="flex items-center gap-2">
+          {school === 'kham_thien' && <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 text-emerald-400">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> A: Hóa Lộc
             </span>
@@ -321,14 +384,14 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
             <span className="flex items-center gap-1 text-rose-400">
               <span className="inline-block h-2 w-2 rounded-full bg-rose-400" /> D: Hóa Kỵ
             </span>
-          </div>
+          </div>}
         </div>
 
-        <div className="flex items-center gap-3 text-[10px] text-stone-500">
+        {school === 'kham_thien' ? <div className="flex items-center gap-3 text-[10px] text-stone-500">
           <span>─ ─ Phi Tinh</span>
           <span>· · · Tự Hóa Ly Tâm</span>
           <span>─ · ─ Hướng Tâm</span>
-        </div>
+        </div> : <div className="flex items-center gap-3 text-[10px] text-stone-500"><span>— Tam Hợp</span><span>– – Xung Chiếu</span><span>··· Giáp Cung</span>{laiNhan?.status === 'NOT_UNIQUE' && <span className="text-rose-600">Không xác định được duy nhất Lai Nhân Cung</span>}</div>}
       </div>
     </div>
   );

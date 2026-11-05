@@ -27,11 +27,18 @@ export const TU_HOA_KHAM_THIEN: Record<Stem, Record<TransformationType, string>>
   Quý: { Lộc: 'Phá Quân', Quyền: 'Cự Môn', Khoa: 'Thái Âm', Kỵ: 'Tham Lang' },
 };
 
-// Bảng Tứ Hóa Nam Phái (Toàn Thư - Canh: Nhật Vũ Đồng Âm, Tân: Cự Dương Khúc Xương, Nhâm: Lương Tử Phủ Vũ)
+// NAM_PHAI_CLASSIC_V1: profile-specific table locked by the selected Nam Phái rules.
 export const TU_HOA_NAM_PHAI: Record<Stem, Record<TransformationType, string>> = {
-  ...TU_HOA_KHAM_THIEN,
-  Canh: { Lộc: 'Thái Dương', Quyền: 'Vũ Khúc', Khoa: 'Thiên Đồng', Kỵ: 'Thái Âm' },
-  Nhâm: { Lộc: 'Thiên Lương', Quyền: 'Tử Vi', Khoa: 'Thiên Phủ', Kỵ: 'Vũ Khúc' },
+  Giáp: { Lộc: 'Liêm Trinh', Quyền: 'Phá Quân', Khoa: 'Vũ Khúc', Kỵ: 'Thái Dương' },
+  Ất: { Lộc: 'Thiên Cơ', Quyền: 'Thiên Lương', Khoa: 'Tử Vi', Kỵ: 'Thái Âm' },
+  Bính: { Lộc: 'Thiên Đồng', Quyền: 'Thiên Cơ', Khoa: 'Văn Xương', Kỵ: 'Liêm Trinh' },
+  Đinh: { Lộc: 'Thái Âm', Quyền: 'Thiên Đồng', Khoa: 'Thiên Cơ', Kỵ: 'Cự Môn' },
+  Mậu: { Lộc: 'Tham Lang', Quyền: 'Thái Âm', Khoa: 'Hữu Bật', Kỵ: 'Thiên Cơ' },
+  Kỷ: { Lộc: 'Vũ Khúc', Quyền: 'Tham Lang', Khoa: 'Thiên Lương', Kỵ: 'Văn Khúc' },
+  Canh: { Lộc: 'Thái Dương', Quyền: 'Vũ Khúc', Khoa: 'Thái Âm', Kỵ: 'Thiên Đồng' },
+  Tân: { Lộc: 'Cự Môn', Quyền: 'Thái Dương', Khoa: 'Văn Khúc', Kỵ: 'Văn Xương' },
+  Nhâm: { Lộc: 'Thiên Lương', Quyền: 'Tử Vi', Khoa: 'Tả Phù', Kỵ: 'Vũ Khúc' },
+  Quý: { Lộc: 'Phá Quân', Quyền: 'Cự Môn', Khoa: 'Thái Âm', Kỵ: 'Tham Lang' },
 };
 
 export function getTuHoaRules(school: TuHoaSchool = 'kham_thien'): Record<Stem, Record<TransformationType, string>> {
@@ -64,17 +71,19 @@ export interface BirthYearTransformation {
   type: TransformationType;
   yearStem: Stem;
   star: string;
+  carrierStarId: string;
+  branch: Branch;
+  palaceId: string;
   targetBranch: Branch;
   palaceIndex: number;
   palaceName: string;
   meaning: string;
 }
 
-function locateCarrierStar(chart: NatalChart, starName: string): Palace {
-  const matches = chart.palaces.filter((palace) =>
-    palace.majorStars.some((star) => star.name === starName)
-    || palace.minorStars.some((star) => star.name === starName)
-  );
+function locateCarrierStar(chart: NatalChart, starName: string): { palace: Palace; carrierStarId: string } {
+  const matches = chart.palaces.flatMap((palace) => [...palace.majorStars, ...palace.minorStars]
+    .filter((star) => star.name === starName)
+    .map((star) => ({ palace, carrierStarId: star.id ?? `NATAL:${starName}` })));
   if (matches.length !== 1) {
     throw new Error(`Khâm Thiên Tứ Hóa cần đúng một sao mang hóa “${starName}”; tìm thấy ${matches.length}.`);
   }
@@ -123,7 +132,7 @@ export function getBirthYearTransformations(
   for (const [typeStr, star] of Object.entries(rules)) {
     const type = typeStr as TransformationType;
     // Tìm cung nào chứa star này
-    const targetPalace = locateCarrierStar(chart, star);
+    const { palace: targetPalace, carrierStarId } = locateCarrierStar(chart, star);
     results.push({
       id: `${getTransformationProfileId(school)}:NATAL:${chart.birthCanChi.year.stem}:${type}:${star}`,
       profileId: getTransformationProfileId(school),
@@ -131,6 +140,9 @@ export function getBirthYearTransformations(
       type,
       yearStem: chart.birthCanChi.year.stem,
       star,
+      carrierStarId,
+      branch: targetPalace.branch,
+      palaceId: `palace-${targetPalace.index}`,
       targetBranch: targetPalace.branch,
       palaceIndex: targetPalace.index,
       palaceName: targetPalace.name,
@@ -149,18 +161,23 @@ export function getAnnualTransformations(
 ): Array<{
   type: TransformationType;
   star: string;
+  layer: 'ANNUAL';
+  annualYear: number;
+  carrierStarId: string;
+  branch: Branch;
+  palaceId: string;
   palaceIndex: number;
   palaceName: string;
 }> {
   assertTransformationInputs(chart);
   const stem = STEMS[(forecastYear + 6) % 10];
   const rules = getTuHoaRules(school)[stem];
-  const results: Array<{ type: TransformationType; star: string; palaceIndex: number; palaceName: string }> = [];
+  const results: Array<{ type: TransformationType; star: string; layer: 'ANNUAL'; annualYear: number; carrierStarId: string; branch: Branch; palaceId: string; palaceIndex: number; palaceName: string }> = [];
 
   for (const [typeStr, star] of Object.entries(rules)) {
     const type = typeStr as TransformationType;
-    const targetPalace = locateCarrierStar(chart, star);
-    results.push({ type, star, palaceIndex: targetPalace.index, palaceName: targetPalace.name });
+    const { palace: targetPalace, carrierStarId } = locateCarrierStar(chart, star);
+    results.push({ type, star, layer: 'ANNUAL', annualYear: forecastYear, carrierStarId, branch: targetPalace.branch, palaceId: `palace-${targetPalace.index}`, palaceIndex: targetPalace.index, palaceName: targetPalace.name });
   }
 
   return results;
@@ -181,7 +198,7 @@ export function calculateAllFlyingTransformations(
 
     (Object.entries(rules) as [TransformationType, string][]).forEach(([type, star]) => {
       // Tìm xem sao này đang ngự tại cung nào
-      const targetPalace = locateCarrierStar(chart, star);
+      const { palace: targetPalace } = locateCarrierStar(chart, star);
 
       const isSelf = targetPalace.index === sourcePalace.index;
       // Cung đối chiếu: cách 6 cung (Xung chiếu)

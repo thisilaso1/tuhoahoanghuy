@@ -23,6 +23,7 @@ import {
   solarToLunar,
 } from './lunarCalendar';
 import { getStarPrimaryElementLabel, STAR_ID_BY_NAME } from './starElements';
+import { getStarBrightness, NAM_PHAI_BRIGHTNESS_PROFILE_ID } from './starBrightness';
 import { calculateFirstMonthlyLimitBranchIndex, calculateTieuHanBranchIndex, getAnnualAgeAtBranch } from './annualLimits';
 import { getNamPhaiStarIdForName, NAM_PHAI_PROFILE_ID, NAM_PHAI_STAR_REGISTRY } from './namPhaiStarRegistry';
 
@@ -65,14 +66,17 @@ const MINOR_STAR_ELEMENTS: Record<string, 'Kim' | 'Mộc' | 'Thủy' | 'Hỏa' |
   'Thái Tuế': 'Hỏa', 'Thiếu Dương': 'Hỏa', 'Tang Môn': 'Mộc', 'Thiếu Âm': 'Thủy',
   'Quan Phù': 'Hỏa', 'Tử Phù': 'Hỏa', 'Tuế Phá': 'Hỏa', 'Long Đức': 'Thủy',
   'Bạch Hổ': 'Kim', 'Phúc Đức': 'Thổ', 'Điếu Khách': 'Hỏa', 'Trực Phù': 'Hỏa',
+  'Thiên Quan': 'Hỏa', 'Thiên Phúc': 'Thổ', 'Thiên Trù': 'Thổ', 'Lưu Hà': 'Thủy',
+  'Lưu Niên Văn Tinh': 'Kim', 'Thiên Giải': 'Hỏa', 'Địa Giải': 'Thổ', 'Giải Thần': 'Mộc',
 };
 const NAM_PHAI_DEFINITION_BY_NAME = new Map(NAM_PHAI_STAR_REGISTRY.map((definition) => [definition.displayName, definition]));
 export const LOC_TON_POSITION_BY_STEM: Record<Stem, number> = {
-  Giáp: 2, Ất: 3, Bính: 5, Đinh: 7, Mậu: 5, Kỷ: 7, Canh: 8, Tân: 9, Nhâm: 11, Quý: 0,
+  Giáp: 2, Ất: 3, Bính: 5, Đinh: 6, Mậu: 5, Kỷ: 6, Canh: 8, Tân: 9, Nhâm: 11, Quý: 0,
 };
 const THIEN_MA_POSITION_BY_BRANCH_GROUP: Record<number, number> = { 0: 2, 1: 11, 2: 8, 3: 5 };
 const BAC_SI_RING = ['Bác Sĩ', 'Lực Sĩ', 'Thanh Long', 'Tiểu Hao', 'Tướng Quân', 'Tấu Thư', 'Phi Liêm', 'Hỷ Thần', 'Bệnh Phù', 'Đại Hao', 'Phục Binh', 'Quan Phủ'];
 const TRANG_SINH_RING = ['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng'];
+export const THAI_TUE_CYCLE = ['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù'] as const;
 const TRANG_SINH_START_BY_CUC: Record<number, number> = { 2: 8, 3: 11, 4: 5, 5: 8, 6: 2 };
 
 export function getLocTonBranchIndex(yearStem: Stem): number { return LOC_TON_POSITION_BY_STEM[yearStem]; }
@@ -81,6 +85,19 @@ export function getThienMaBranchIndex(yearBranch: Branch): number {
 }
 
 const mod = (value: number, size: number) => ((value % size) + size) % size;
+
+export function calculateThaiTueCycle(birthYearBranchIndex: number) {
+  if (!Number.isInteger(birthYearBranchIndex) || birthYearBranchIndex < 0 || birthYearBranchIndex > 11) {
+    throw new RangeError('Birth year branch index must be 0..11.');
+  }
+  return THAI_TUE_CYCLE.map((starName, offset) => ({
+    starName,
+    starId: getNamPhaiStarIdForName(starName),
+    branchIndex: mod(birthYearBranchIndex + offset, 12),
+    layer: 'NATAL' as const,
+    cycleId: 'THAI_TUE' as const,
+  }));
+}
 
 // Tìm Cung Mệnh & Cung Thân:
 // Khởi từ Dần (index 2), đếm thuận đến tháng sinh.
@@ -235,15 +252,17 @@ export function placeMinorStars(
   minor['Địa Không'] = ((11 - hourIdx) % 12 + 12) % 12;
   minor['Địa Kiếp'] = (11 + hourIdx) % 12;
 
-  // Hỏa Tinh & Linh Tinh: year-group start branches, counted by birth hour and polarity.
+  // Nam Phái profile locks the classical year-trine start table. Both stars
+  // count forward from the Tý-hour start to the birth hour (gender independent).
   const branchIdx = BRANCHES.indexOf(yearBranch);
-  const fireBellBase: Record<number, [number, number]> = { 0: [2, 10], 1: [3, 10], 2: [1, 3], 3: [2, 10] };
-  const [fireStart, bellStart] = fireBellBase[branchIdx % 4];
-  const isYangYear = ['Giáp', 'Bính', 'Mậu', 'Canh', 'Nhâm'].includes(yearStem);
-  const forwardForFire = gender ? ((isYangYear && gender === 'Nam') || (!isYangYear && gender === 'Nữ')) : true;
-  const directionForFire = forwardForFire ? 1 : -1;
-  minor['Hỏa Tinh'] = mod(fireStart + directionForFire * hourIdx, 12);
-  minor['Linh Tinh'] = mod(bellStart - directionForFire * hourIdx, 12);
+  const fireBellBase: Record<Branch, [number, number]> = {
+    Tý: [2, 10], Sửu: [3, 10], Dần: [1, 3], Mão: [9, 10],
+    Thìn: [2, 10], Tỵ: [3, 10], Ngọ: [1, 3], Mùi: [9, 10],
+    Thân: [2, 10], Dậu: [3, 10], Tuất: [1, 3], Hợi: [9, 10],
+  };
+  const [fireStart, bellStart] = fireBellBase[yearBranch];
+  minor['Hỏa Tinh'] = mod(fireStart + hourIdx, 12);
+  minor['Linh Tinh'] = mod(bellStart + hourIdx, 12);
 
   // Đào Hoa
   const daoHoaMap: Record<number, number> = { 0: 9, 1: 6, 2: 3, 3: 0 };
@@ -254,14 +273,16 @@ export function placeMinorStars(
 
   // Hoa Cái theo tam hợp năm sinh: Thân Tý Thìn tại Thìn, Dần Ngọ Tuất tại Tuất,
   // Tỵ Dậu Sửu tại Sửu, Hợi Mão Mùi tại Mùi.
-  const hoaCaiMap: Record<number, number> = { 0: 4, 1: 10, 2: 1, 3: 7 };
+  const hoaCaiMap: Record<number, number> = { 0: 4, 1: 1, 2: 10, 3: 7 };
   minor['Hoa Cái'] = hoaCaiMap[branchIdx % 4];
 
   minor['Hồng Loan'] = mod(3 - branchIdx, 12);
   minor['Thiên Hỷ'] = mod(minor['Hồng Loan'] + 6, 12);
-  const branchGroupIndex = Math.floor(branchIdx / 3);
+  const branchGroupIndex = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 0][branchIdx];
   minor['Cô Thần'] = [2, 5, 8, 11][branchGroupIndex];
   minor['Quả Tú'] = [10, 1, 4, 7][branchGroupIndex];
+  // Thiên Không is a distinct star at the same branch as Thiếu Dương.
+  minor['Thiên Không'] = mod(branchIdx + 1, 12);
   minor['Thiên Đức'] = mod(9 + branchIdx, 12);
   minor['Nguyệt Đức'] = mod(5 + branchIdx, 12);
   minor['Kiếp Sát'] = ({ 0: 5, 1: 2, 2: 11, 3: 8 } as Record<number, number>)[branchIdx % 4];
@@ -276,26 +297,56 @@ export function placeMinorStars(
   minor['Thiên Riêu'] = mod(1 + lunarMonth - 1, 12);
   minor['Thiên Y'] = minor['Thiên Riêu'];
 
+  // Stem-based auxiliary stars, locked to the selected traditional table.
+  const stemBranches: Record<Stem, [Branch, Branch]> = {
+    Giáp: ['Mùi', 'Dậu'], Ất: ['Thìn', 'Thân'], Bính: ['Tỵ', 'Tý'],
+    Đinh: ['Dần', 'Hợi'], Mậu: ['Mão', 'Mão'], Kỷ: ['Dậu', 'Dần'],
+    Canh: ['Hợi', 'Ngọ'], Tân: ['Dậu', 'Tỵ'], Nhâm: ['Tuất', 'Ngọ'], Quý: ['Ngọ', 'Tỵ'],
+  };
+  const [thienQuanBranch, thienPhucBranch] = stemBranches[yearStem];
+  minor['Thiên Quan'] = BRANCHES.indexOf(thienQuanBranch);
+  minor['Thiên Phúc'] = BRANCHES.indexOf(thienPhucBranch);
+  const thienTruByStem: Record<Stem, Branch> = {
+    Giáp: 'Tỵ', Ất: 'Ngọ', Bính: 'Tý', Đinh: 'Tỵ', Mậu: 'Ngọ',
+    Kỷ: 'Thân', Canh: 'Dần', Tân: 'Ngọ', Nhâm: 'Dậu', Quý: 'Hợi',
+  };
+  minor['Thiên Trù'] = BRANCHES.indexOf(thienTruByStem[yearStem]);
+  // Lưu Hà table selected from Tử Vi Khảo Luận; other schools vary at Đinh/Canh.
+  const luuHaByStem: Record<Stem, Branch> = {
+    Giáp: 'Dậu', Ất: 'Tuất', Bính: 'Mùi', Đinh: 'Thân', Mậu: 'Tỵ',
+    Kỷ: 'Ngọ', Canh: 'Mão', Tân: 'Thìn', Nhâm: 'Hợi', Quý: 'Dần',
+  };
+  minor['Lưu Hà'] = BRANCHES.indexOf(luuHaByStem[yearStem]);
+  // Lưu Niên Văn Tinh (also called Văn Tinh in this profile): from Lộc Tồn,
+  // move forward three palaces, skipping the two intervening palaces.
+  minor['Lưu Niên Văn Tinh'] = mod(locTonPos + 3, 12);
+
+  // Thiên Giải / Địa Giải start in Thân / Mùi and count forward by lunar month.
+  minor['Thiên Giải'] = mod(8 + lunarMonth - 1, 12);
+  minor['Địa Giải'] = mod(7 + lunarMonth - 1, 12);
+  minor['Giải Thần'] = minor['Phượng Các'];
+
   const safeLunarDay = Math.max(1, lunarDay ?? 1);
   minor['Tam Thai'] = mod(minor['Tả Phù'] + safeLunarDay - 1, 12);
   minor['Bát Tọa'] = mod(minor['Hữu Bật'] - safeLunarDay + 1, 12);
   minor['Ân Quang'] = mod(minor['Văn Xương'] + safeLunarDay - 2, 12);
-  minor['Thiên Quý'] = mod(minor['Văn Khúc'] - safeLunarDay + 2, 12);
-  minor['Thai Phụ'] = mod(minor['Văn Khúc'] - 1, 12);
-  minor['Phong Cáo'] = mod(minor['Văn Khúc'] + 1, 12);
+  minor['Thiên Quý'] = mod(minor['Văn Khúc'] - (safeLunarDay - 2), 12);
+  minor['Thai Phụ'] = mod(minor['Văn Khúc'] + 2, 12);
+  minor['Phong Cáo'] = mod(minor['Văn Khúc'] - 2, 12);
   if (menhIndex !== undefined) minor['Thiên Tài'] = mod(menhIndex + branchIdx, 12);
   if (thanIndex !== undefined) minor['Thiên Thọ'] = mod(thanIndex + branchIdx, 12);
   if (menhIndex !== undefined) {
-    minor['Thiên Thương'] = mod(menhIndex + 5, 12);
-    minor['Thiên Sứ'] = mod(menhIndex + 7, 12);
+    const nobocIndex = (menhIndex + 5) % 12;
+    const tatAchIndex = (menhIndex + 7) % 12;
+    minor['Thiên Thương'] = nobocIndex;
+    minor['Thiên Sứ'] = tatAchIndex;
   }
   minor['Thiên La'] = 4;
   minor['Địa Võng'] = 10;
   minor['Đẩu Quân'] = mod(branchIdx - (lunarMonth - 1) + hourIdx, 12);
 
   // Vòng Thái Tuế: 12 sao đi thuận, độc lập với chiều giới tính.
-  const thaiTueRing = ['Thái Tuế', 'Thiếu Dương', 'Tang Môn', 'Thiếu Âm', 'Quan Phù', 'Tử Phù', 'Tuế Phá', 'Long Đức', 'Bạch Hổ', 'Phúc Đức', 'Điếu Khách', 'Trực Phù'];
-  thaiTueRing.forEach((star, offset) => { minor[star] = (branchIdx + offset) % 12; });
+  calculateThaiTueCycle(branchIdx).forEach(({ starName, branchIndex }) => { minor[starName] = branchIndex; });
 
   if (gender && cucNumber) {
     const isYangYear = ['Giáp', 'Bính', 'Mậu', 'Canh', 'Nhâm'].includes(yearStem);
@@ -410,6 +461,9 @@ export function generateNatalChart(input: BirthInput): NatalChart {
           category: 'major',
           element: STAR_ID_BY_NAME[starName] ? getStarPrimaryElementLabel(STAR_ID_BY_NAME[starName]) : undefined,
           brightness: BRIGHTNESS_TABLE[starName]?.[branchIndex] || 'Đắc',
+          brightnessByProfile: {
+            [NAM_PHAI_BRIGHTNESS_PROFILE_ID]: getStarBrightness(starName, branch, NAM_PHAI_BRIGHTNESS_PROFILE_ID),
+          },
           placementRuleId: NAM_PHAI_DEFINITION_BY_NAME.get(starName)?.placementRuleId,
           placementDependencies: NAM_PHAI_DEFINITION_BY_NAME.get(starName)?.placementDependencies,
           schoolProfileId: NAM_PHAI_PROFILE_ID,
@@ -430,6 +484,9 @@ export function generateNatalChart(input: BirthInput): NatalChart {
           id: getNamPhaiStarIdForName(starName),
           name: starName,
           category,
+          brightnessByProfile: {
+            [NAM_PHAI_BRIGHTNESS_PROFILE_ID]: getStarBrightness(starName, branch, NAM_PHAI_BRIGHTNESS_PROFILE_ID),
+          },
           element: MINOR_STAR_ELEMENTS[starName] ?? definition?.element,
           placementRuleId: definition?.placementRuleId ?? `UNVERIFIED:${starName}`,
           placementDependencies: definition?.placementDependencies ?? [],

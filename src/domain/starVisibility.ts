@@ -28,11 +28,30 @@ export function getDisplayedPalaceStars(palace: Palace, school: TuViSchool) {
       ...palace.majorStars.filter((star) => showStar(star.name)).map((star) => {
         if (school !== 'nam_phai') return star;
         const starId = STAR_ID_BY_NAME[star.name];
-        const brightness = starId ? getStarBrightness(starId, palace.branch, NAM_PHAI_FULL_PROFILE_ID) : 'UNSPECIFIED';
-        return { ...star, brightness: brightness === 'UNSPECIFIED' ? undefined : brightness };
+        // Resolve from the selected profile and the palace's Earthly Branch
+        // every time. Saved charts may contain an older cached brightnessByProfile
+        // value, so that cache must not override the V2 registry.
+        const brightness = starId
+          ? getStarBrightness(starId, palace.branch, NAM_PHAI_FULL_PROFILE_ID)
+          : 'UNSPECIFIED';
+        return {
+          ...star,
+          brightness,
+          brightnessByProfile: { ...star.brightnessByProfile, [NAM_PHAI_FULL_PROFILE_ID]: brightness },
+        };
       }),
-      ...palace.minorStars.filter((star) => promotedAuxiliaryStars.has(star.name) && showStar(star.name)),
+      ...palace.minorStars
+        .filter((star) => promotedAuxiliaryStars.has(star.name) && showStar(star.name))
+        .map((star) => school !== 'nam_phai' ? star : {
+          ...star,
+          brightness: getStarBrightness(star.id ?? star.name, palace.branch, NAM_PHAI_FULL_PROFILE_ID),
+        }),
     ],
-    minorStars: palace.minorStars.filter((star) => !promotedAuxiliaryStars.has(star.name) && showStar(star.name)),
+    minorStars: palace.minorStars
+      .filter((star) => !promotedAuxiliaryStars.has(star.name) && showStar(star.name))
+      .map((star) => school !== 'nam_phai' ? star : {
+        ...star,
+        brightness: getStarBrightness(star.id ?? star.name, palace.branch, NAM_PHAI_FULL_PROFILE_ID),
+      }),
   };
 }

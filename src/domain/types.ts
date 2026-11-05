@@ -31,6 +31,7 @@ export interface Star {
   name: string;
   category: 'major' | 'good' | 'bad' | 'flow' | 'other' | 'cycle';
   brightness?: StarBrightness;
+  brightnessByProfile?: Record<string, StarBrightness>;
   element?: 'Kim' | 'Mộc' | 'Thủy' | 'Hỏa' | 'Thổ';
   description?: string;
   transformation?: TransformationType;

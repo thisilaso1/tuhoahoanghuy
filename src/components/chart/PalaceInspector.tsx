@@ -3,6 +3,7 @@ import { Palace, NatalChart } from '../../domain/types';
 import { getBirthYearTransformations, getPalaceTransformationProfile } from '../../domain/tuHoaEngine';
 import type { BirthYearTransformation, TuHoaSchool } from '../../domain/tuHoaEngine';
 import { getDisplayedPalaceStars } from '../../domain/starVisibility';
+import { findNamPhaiLaiNhanPalace } from '../../domain/namPhaiPalaceRelationEngine';
 import type { ChartLayerVisibility } from './NatalChart12';
 import { useApp } from '../../context/AppContext';
 import { Sparkles, X, ArrowUpRight, ArrowDownLeft, ShieldCheck } from 'lucide-react';
@@ -13,6 +14,7 @@ interface PalaceInspectorProps {
   onClose: () => void;
   school: TuHoaSchool;
   layers: ChartLayerVisibility;
+  showLaiNhan?: boolean;
 }
 
 export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
@@ -21,14 +23,17 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
   onClose,
   school,
   layers,
+  showLaiNhan = true,
 }) => {
   const { sendMessageToThienCo, navigateTo } = useApp();
   const { majorStars: displayedMajorStars, minorStars: displayedMinorStars } = getDisplayedPalaceStars(palace, school);
-  const profile = getPalaceTransformationProfile(chart, palace.index, school);
+  const profile = school === 'kham_thien' ? getPalaceTransformationProfile(chart, palace.index, school) : { outgoing: [], incoming: [] };
   const natalTransformations = getBirthYearTransformations(chart, school)
     .filter((item) => item.palaceIndex === palace.index);
   const visibleOutgoing = profile.outgoing;
   const visibleIncoming = profile.incoming;
+  const laiNhan = school === 'nam_phai' && showLaiNhan ? findNamPhaiLaiNhanPalace(chart) : null;
+  const isLaiNhan = laiNhan?.status === 'FOUND' && laiNhan.palace.index === palace.index;
 
   // Tam Phương Tứ Chính
   const oppositePalace = chart.palaces[(palace.index + 6) % 12];
@@ -57,6 +62,7 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
                 THÂN CƯ
               </span>
             )}
+            {isLaiNhan && <span className="rounded-full border border-violet-400/40 bg-violet-950/50 px-2 py-0.5 text-[10px] font-bold text-violet-200" title={`Lai Nhân: Can năm sinh ${laiNhan.birthYearStem} trùng Can cung ${palace.stem}`}>LAI NHÂN</span>}
           </div>
           <p className="text-xs text-stone-400 mt-0.5">
             Đại Hạn: {palace.decade.startAge}–{palace.decade.endAge} tuổi · Năm xem {chart.forecastYear} ·{' '}
@@ -144,7 +150,19 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
         </div>
       </div>
 
-      {/* Phi Hóa Cung Vị */}
+      {school === 'nam_phai' && <div className="my-2 rounded-lg border border-amber-900/20 bg-slate-950/50 p-3">
+        <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-300">Giáp Cung</h4>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {[chart.palaces[(palace.index + 11) % 12], chart.palaces[(palace.index + 1) % 12]].map((neighbor, offset) => <div key={neighbor.index} className="rounded border border-slate-800 bg-slate-900/70 p-2">
+            <div className="text-[10px] text-stone-400">{offset === 0 ? 'Giáp trước' : 'Giáp sau'}</div>
+            <div className="font-semibold text-amber-100">{neighbor.name}</div><div className="text-[10px] text-stone-400">{neighbor.stem} {neighbor.branch}</div>
+          </div>)}
+        </div>
+        {isLaiNhan && <div className="mt-2 text-xs text-violet-200">Lai Nhân · Can năm sinh {laiNhan.birthYearStem} trùng Can cung {palace.stem} tại {palace.branch}.</div>}
+      </div>}
+
+      {/* Khâm Thiên Phi Hóa is isolated from the Nam Phái screen. */}
+      {school === 'kham_thien' && <>
       <div className="my-3 space-y-2">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
           Khí Cơ Tứ Hóa Khâm Thiên
@@ -190,6 +208,7 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
           </div>
         )}
       </div>
+      </>}
 
       {/* Ask Copilot CTA */}
       <button

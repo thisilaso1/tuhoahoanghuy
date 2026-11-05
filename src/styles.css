@@ -775,7 +775,7 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme-parchment { --chart-paper: #efe4d0; --chart-ink: #342b20; --chart-muted: #776a57; --chart-accent: #786044; --chart-border: #c9b99d; --chart-grid: #d5c7ad; --chart-cell: #f7efdf; --chart-cell-alt: #f0e5d1; --chart-center: #e5d7bf; --chart-center-panel: rgba(255,250,239,.72); --chart-good: #43775a; --chart-bad: #a64f4e; --chart-shadow: rgba(56,43,26,.18); }
 .chart-theme-night { --chart-paper: #0a1422; --chart-ink: #e9f0f6; --chart-muted: #9eafbd; --chart-accent: #c2d8e9; --chart-border: #35485a; --chart-grid: #26394b; --chart-cell: #132235; --chart-cell-alt: #101d2c; --chart-center: #0c1929; --chart-center-panel: rgba(27,45,64,.78); --chart-good: #60c8a0; --chart-bad: #fb818c; --chart-shadow: rgba(0,0,0,.42); }
 /* Keep the SVG's Ly Tam arrows and badges visible beyond the outer palace edge. */
-.chart-theme .palace-grid { gap: 2px; border-color: var(--chart-border); background: var(--chart-grid); box-shadow: 0 16px 45px var(--chart-shadow); overflow: visible; }
+.chart-theme .palace-grid { position: relative; gap: 2px; border-color: var(--chart-border); background: var(--chart-grid); box-shadow: 0 16px 45px var(--chart-shadow); overflow: visible; }
 .chart-theme .palace-cell { min-height: 0; padding: 13px; color: var(--chart-ink); border: 0; background: linear-gradient(155deg, var(--chart-cell), var(--chart-cell-alt)); backdrop-filter: none; justify-content: flex-start; gap: 5px; }
 .chart-theme .palace-cell:nth-child(3n) { background: linear-gradient(155deg, var(--chart-cell-alt), var(--chart-cell)); }
 .chart-theme .palace-cell:hover, .chart-theme .palace-cell.focused { background: var(--chart-cell); box-shadow: inset 0 0 0 1.5px var(--chart-accent), 0 5px 16px var(--chart-shadow); }
@@ -982,12 +982,20 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-subject-panel .chart-center-data { display: flex; flex-direction: column; justify-content: center; grid-column: 2; grid-row: 1 / span 2; align-self: center; width: 100%; max-width: none; padding: 8px 10px; font-size: 11px; background: var(--chart-cell-alt); }
 .chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; margin-left: 40px; }
 .chart-theme .chart-subject-slogan { grid-column: 1 / -1; grid-row: 3; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
-.chart-theme .palace-minor-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; line-height: 1.25; }
+.chart-theme .palace-minor-columns { display: block; min-width: 0; line-height: 1.25; }
+.chart-theme .palace-auxiliary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 5px 10px; min-width: 0; }
+.chart-theme .palace-auxiliary-column { min-width: 0; }
+.chart-theme .palace-left-column { grid-column: 1; }
+.chart-theme .palace-right-column { grid-column: 2; border-left: 1px solid color-mix(in srgb, var(--chart-border) 72%, transparent); padding-left: 6px; }
+.chart-theme .palace-auxiliary-heading, .chart-theme .palace-annual-group-title { margin: 0 0 3px; color: var(--chart-muted); font-size: 8px; font-weight: 750; letter-spacing: .035em; line-height: 1.15; }
+.chart-theme .palace-annual-group-title { padding-top: 4px; border-top: 1px solid color-mix(in srgb, var(--chart-border) 55%, transparent); }
+.chart-theme .palace-auxiliary-star-list { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
+.chart-theme .palace-auxiliary-star-list > span { display: block; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
 .chart-theme .palace-minor-group-title { flex: 0 0 100%; width: 100%; color: var(--chart-muted); font-size: 9px; font-weight: 700; letter-spacing: .045em; line-height: 1.2; }
 .chart-theme .palace-neutral-stars { display: flex; flex-wrap: wrap; gap: 2px 6px; padding-top: 3px; border-top: 1px solid color-mix(in srgb, var(--chart-border) 55%, transparent); }
 .chart-theme .palace-neutral-star { color: var(--chart-muted); font-size: 11px; line-height: 1.25; }
-.chart-theme .palace-cycle-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; margin-top: 2px; padding-top: 3px; border-top: 1px solid color-mix(in srgb, var(--chart-border) 55%, transparent); color: var(--chart-muted); font-size: 9px; line-height: 1.2; }
-.chart-theme .palace-cycle-footer b { color: var(--chart-accent); font-weight: 700; }
+.chart-theme .palace-neutral-star[data-element] { color: var(--chart-element-color, var(--chart-ink)); }
+.chart-theme .palace-minor-brightness { color: inherit; font-size: 1em; font-weight: 800; }
 .chart-theme .palace-annual-star-list { display: block; margin-top: 1px; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .chart-theme .palace-annual-star-items { display: flex; flex-wrap: wrap; gap: 2px 6px; }
 .chart-theme .palace-annual-star, .chart-theme .palace-annual-hua { color: var(--chart-element-color, var(--chart-muted)); font-size: 11px; font-weight: 600; line-height: 1.25; white-space: normal; }
@@ -1005,6 +1013,68 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .palace-auspicious-stars { display: flex; min-width: 0; flex-wrap: wrap; align-content: start; gap: 2px 5px; }
 .chart-theme .palace-adverse-stars { display: flex; max-width: 64px; flex-direction: column; align-items: flex-end; gap: 2px; padding-left: 4px; border-left: 1px solid color-mix(in srgb, var(--chart-border) 80%, transparent); text-align: right; }
 .chart-theme .palace-minor-star[data-element], .chart-theme .palace-good-star[data-element] { color: var(--chart-element-color, var(--chart-ink)); }
+
+/* Central birth details: vertical reading order with a quiet Hoài Nguyệt Các watermark. */
+.chart-theme .center-chamber { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; padding: clamp(5px, 1vw, 12px); }
+.chart-theme .chart-subject-panel { position: relative; isolation: isolate; display: flex; width: min(100%, 450px); height: 100%; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; overflow: hidden; padding: clamp(8px, 1.5vw, 16px); border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 14px; background: transparent; box-shadow: 0 8px 22px var(--chart-shadow); }
+.chart-theme .chart-subject-panel::before { position: absolute; z-index: 0; inset: 0; content: ""; opacity: .13; background: linear-gradient(135deg, color-mix(in srgb, var(--chart-cell) 66%, transparent), color-mix(in srgb, var(--chart-center) 80%, transparent)), url("/art/moon-pavilion.png") center 48% / cover no-repeat; }
+.chart-theme .chart-subject-panel::after { position: absolute; z-index: 1; inset: 50% auto auto 50%; content: "HOÀI NGUYỆT CÁC"; color: color-mix(in srgb, var(--chart-accent) 9%, transparent); font-family: "Newsreader", Georgia, serif; font-size: clamp(19px, 3.2vw, 38px); font-weight: 700; letter-spacing: .09em; line-height: 1; white-space: nowrap; transform: translate(-50%, -50%) rotate(-8deg); pointer-events: none; }
+.chart-theme .chart-subject-panel > * { position: relative; z-index: 2; }
+.chart-theme .chart-center-brand { display: grid; justify-items: center; gap: 1px; margin-bottom: 2px; text-align: center; }
+.chart-theme .chart-center-brand .chart-center-symbol { font-size: 22px; line-height: 1; }
+.chart-theme .chart-center-brand-name { color: var(--chart-accent); font-family: "Newsreader", Georgia, serif; font-size: clamp(12px, 1.4vw, 16px); font-weight: 700; letter-spacing: .16em; }
+.chart-theme .chart-center-eyebrow { color: var(--chart-muted); font-size: 8px; font-weight: 700; letter-spacing: .13em; }
+.chart-theme .chart-center-name-row { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 3px; border-bottom: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); }
+.chart-theme .chart-center-name { min-width: 0; margin: 0; font-family: "Newsreader", Georgia, serif; font-size: clamp(14px, 1.8vw, 19px); font-weight: 700; line-height: 1.15; text-align: right; overflow-wrap: anywhere; }
+.chart-theme .chart-center-meta { color: var(--chart-muted); font-size: 9px; line-height: 1.2; }
+.chart-theme .chart-subject-panel .chart-center-data { display: grid; width: 100%; max-width: 390px; gap: 2px; margin: 0; padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--chart-cell) 82%, var(--chart-center)); box-shadow: 0 4px 12px color-mix(in srgb, var(--chart-shadow) 48%, transparent); }
+.chart-theme .chart-info-row { display: grid; grid-template-columns: minmax(84px, .72fr) minmax(0, 1.28fr); align-items: baseline; gap: 6px; min-width: 0; line-height: 1.2; }
+.chart-theme .chart-info-row .chart-data-label { font-size: 9px; }
+.chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { min-width: 0; font-size: 10px; text-align: right; overflow-wrap: anywhere; }
+.chart-theme .chart-center-foot { color: var(--chart-muted); font-size: 8px; font-weight: 700; letter-spacing: .09em; line-height: 1.2; text-align: center; }
+.chart-theme .chart-center-foot span { padding-inline: 3px; }
+.chart-theme .chart-subject-slogan { margin: 1px 0 0; font-size: 10px; }
+
+/* Keep all four columns inside the viewport; cells and labels shrink with the chart. */
+.chart-export-frame { width: 100%; max-width: 100%; min-width: 0; }
+.chart-export-frame .palace-grid { width: min(100%, 1160px); max-width: 100%; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.chart-export-frame.chart-school-nam-phai { width: 100%; max-width: 100%; min-width: 0; overflow-x: visible !important; }
+.chart-export-frame.chart-school-nam-phai .palace-grid { width: min(100%, 1160px); max-width: 100%; min-width: 0; }
+.chart-export-frame.chart-school-nam-phai.nam-phai-layout-wide .palace-grid { width: min(100%, 1160px); }
+
+@media (max-width: 700px) {
+  .chart-export-frame .palace-grid, .chart-export-frame.chart-school-nam-phai .palace-grid { width: 100%; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(126px, auto)); min-height: 0; gap: 1px; }
+  .chart-export-frame .palace-cell, .chart-export-frame.chart-school-nam-phai .palace-cell { min-width: 0; min-height: 126px; padding: 4px 3px; gap: 3px; }
+  .chart-export-frame .palace-heading-title { font-size: 10px; white-space: normal; line-height: 1.1; }
+  .chart-export-frame .palace-heading-age, .chart-export-frame .palace-heading-stem .palace-stem { font-size: 8px; }
+  .chart-export-frame .palace-major-star-entry .palace-major { font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
+  .chart-export-frame .palace-brightness-badge { font-size: 9px; }
+  .chart-export-frame.chart-school-nam-phai .palace-major-star-entry .palace-major { font-size: 10px; }
+  .chart-export-frame.chart-school-nam-phai .palace-good-star, .chart-export-frame.chart-school-nam-phai .palace-minor-star, .chart-export-frame.chart-school-nam-phai .palace-neutral-star, .chart-export-frame.chart-school-nam-phai .palace-annual-star { font-size: 8px; line-height: 1.15; }
+  .chart-export-frame.chart-school-nam-phai .palace-auxiliary-grid { gap: 3px; }
+  .chart-theme .center-chamber { padding: 3px; }
+  .chart-theme .chart-subject-panel { gap: 3px; padding: 5px; border-radius: 8px; }
+  .chart-theme .chart-center-brand .chart-center-symbol { font-size: 17px; }
+  .chart-theme .chart-center-brand-name { font-size: 10px; letter-spacing: .1em; }
+  .chart-theme .chart-center-eyebrow { font-size: 6px; letter-spacing: .08em; }
+  .chart-theme .chart-center-name-row { align-items: flex-start; gap: 3px; }
+  .chart-theme .chart-center-name-row .chart-data-label, .chart-theme .chart-info-row .chart-data-label { font-size: 7px; }
+  .chart-theme .chart-center-name { font-size: 11px; }
+  .chart-theme .chart-center-meta { font-size: 7px; }
+  .chart-theme .chart-subject-panel .chart-center-data { gap: 2px; padding: 4px; }
+  .chart-theme .chart-info-row { grid-template-columns: minmax(0, 1fr); gap: 0; line-height: 1.12; }
+  .chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { font-size: 8px; text-align: left; }
+  .chart-theme .chart-center-foot { font-size: 6px; letter-spacing: .04em; }
+  .chart-theme .chart-subject-slogan { font-size: 7px; }
+}
+.chart-theme .chart-info-row-menh-chu { align-items: center; margin-block: 3px; padding: 6px 9px; border: 1px solid color-mix(in srgb, var(--chart-accent) 30%, var(--chart-border)); border-radius: 8px; background: color-mix(in srgb, var(--chart-accent) 8%, var(--chart-cell)); }
+.chart-theme .chart-info-row-menh-chu .chart-data-label { color: var(--chart-accent); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.chart-theme .chart-info-row-menh-chu .chart-data-emphasis { color: var(--chart-accent); font-family: "Newsreader", Georgia, serif; font-size: 16px; font-weight: 800; line-height: 1.15; }
+@media (max-width: 700px) {
+  .chart-theme .chart-info-row-menh-chu { gap: 2px; padding: 4px 6px; }
+  .chart-theme .chart-info-row-menh-chu .chart-data-label { font-size: 7px; }
+  .chart-theme .chart-info-row-menh-chu .chart-data-emphasis { font-size: 12px; }
+}
 
 @media (max-width: 640px) {
   .chart-theme-picker { width: 100%; justify-content: center; order: -1; }
@@ -1028,8 +1098,31 @@ h1, h2, h3, h4, .font-serif {
   flex-direction: column;
 }
 .chart-export-frame.chart-school-nam-phai { overflow-x: auto !important; overscroll-behavior-x: contain; }
-.chart-export-frame.chart-school-nam-phai .palace-grid { min-width: 1180px; grid-template-rows: repeat(4, minmax(240px, auto)); min-height: 960px; }
-.chart-export-frame.chart-school-nam-phai .palace-cell { min-height: 240px; padding: 11px; gap: 4px; }
+.chart-export-frame.chart-school-nam-phai .palace-grid { box-sizing: border-box; width: min(100%, 1040px); min-width: 920px; margin-inline: auto; min-height: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(240px, max-content)); grid-auto-flow: row; align-items: stretch; }
+.chart-export-frame.chart-school-nam-phai .palace-cell { min-height: 240px; height: auto; padding: 11px; gap: 7px; justify-content: flex-start; overflow: visible; }
+.chart-export-frame.chart-school-nam-phai .palace-cell-heading { flex: 0 0 auto; }
+.chart-export-frame.chart-school-nam-phai .palace-major-stars-zone { margin-block: 6px; }
+.chart-export-frame.chart-school-nam-phai .palace-minor-columns { flex: 1 0 auto; }
+.chart-export-frame.chart-school-nam-phai.nam-phai-layout-compact .palace-cell { padding: 7px; gap: 3px; }
+.chart-export-frame.chart-school-nam-phai.nam-phai-layout-compact .palace-grid { width: min(100%, 960px); }
+.chart-export-frame.chart-school-nam-phai.nam-phai-layout-wide .palace-grid { width: min(100%, 1160px); }
+.chart-export-frame.chart-school-nam-phai .palace-cell { min-width: 0; }
+.chart-export-frame.chart-school-nam-phai .palace-major-star-entry, .chart-export-frame.chart-school-nam-phai .palace-good-star, .chart-export-frame.chart-school-nam-phai .palace-minor-star, .chart-export-frame.chart-school-nam-phai .palace-neutral-star, .chart-export-frame.chart-school-nam-phai .palace-annual-star { overflow-wrap: anywhere; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-overlay { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 6; overflow: visible; pointer-events: none; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-line { fill: none; stroke-width: 2.25px; vector-effect: non-scaling-stroke; opacity: .82; animation: nam-phai-relation-in .22s ease-out both; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-line.tam-hop { stroke: #10b981; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-line.tam-hop-bridge { stroke: #10b981; stroke-width: 2px; stroke-dasharray: 6 4; opacity: .62; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-line.xung-chieu { stroke: #2563eb; stroke-dasharray: 10 6; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-relation-line.giap-cung { stroke: #b7791f; stroke-width: 1.8px; stroke-dasharray: 2 5; }
+.chart-export-frame.chart-school-nam-phai .palace-cell.lai-nhan-palace { box-shadow: inset 0 0 0 2px #8b5cf6; }
+.chart-export-frame.chart-school-nam-phai .nam-phai-lai-nhan-badge { position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 6; border: 1px solid #8b5cf6; border-radius: 999px; padding: 2px 6px; color: #6d28d9; background: rgba(245, 243, 255, .95); font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.chart-export-frame.chart-school-nam-phai .palace-cell:focus-visible { outline: 3px solid #2563eb; outline-offset: -3px; }
+.chart-export-frame.chart-school-nam-phai .palace-cell.nam-phai-relation-self { box-shadow: inset 0 0 0 2px #0f172a, 0 0 0 2px #0f172a; }
+.chart-export-frame.chart-school-nam-phai .palace-cell.nam-phai-relation-tam-hop { background: color-mix(in srgb, var(--chart-cell) 84%, #10b981 16%); }
+.chart-export-frame.chart-school-nam-phai .palace-cell.nam-phai-relation-xung-chieu { background: color-mix(in srgb, var(--chart-cell) 84%, #2563eb 16%); }
+.chart-export-frame.chart-school-nam-phai .palace-cell.nam-phai-relation-giap-cung { background: color-mix(in srgb, var(--chart-cell) 88%, #b7791f 12%); }
+@keyframes nam-phai-relation-in { from { opacity: 0; } to { opacity: .82; } }
+@media (prefers-reduced-motion: reduce) { .chart-export-frame.chart-school-nam-phai .nam-phai-relation-line { animation: none; } }
 .chart-export-frame.chart-school-nam-phai .palace-major-star-entry .palace-major { font-size: 15px; }
 .chart-export-frame.chart-school-nam-phai .palace-good-star, .chart-export-frame.chart-school-nam-phai .palace-minor-star { font-size: 12px; font-weight: 450; }
 .chart-export-frame.chart-school-nam-phai .palace-auspicious-stars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 6px; }
@@ -1046,7 +1139,7 @@ h1, h2, h3, h4, .font-serif {
   .chart-export-frame .palace-heading-title { font-size: 12px; }
   .chart-export-frame .palace-major-star-entry .palace-major { font-size: 13px; }
   .chart-export-frame .palace-brightness-badge { font-size: 13px; }
-  .chart-export-frame.chart-school-nam-phai .palace-grid { min-width: 1180px; grid-template-rows: repeat(4, minmax(230px, auto)); min-height: 920px; }
+  .chart-export-frame.chart-school-nam-phai .palace-grid { width: 100%; min-width: 920px; grid-template-rows: repeat(4, minmax(230px, max-content)); min-height: 0; }
   .chart-export-frame.chart-school-nam-phai .palace-cell { min-height: 230px; }
 }
 
@@ -1069,19 +1162,24 @@ h1, h2, h3, h4, .font-serif {
 }
 .chart-theme .palace-major-star[data-element="Kim"],
 .chart-theme .palace-good-star[data-element="Kim"],
-.chart-theme .palace-minor-star[data-element="Kim"] { --chart-element-color: var(--element-kim); }
+.chart-theme .palace-minor-star[data-element="Kim"],
+.chart-theme .palace-neutral-star[data-element="Kim"] { --chart-element-color: var(--element-kim); }
 .chart-theme .palace-major-star[data-element="Mộc"],
 .chart-theme .palace-good-star[data-element="Mộc"],
-.chart-theme .palace-minor-star[data-element="Mộc"] { --chart-element-color: var(--element-moc); }
+.chart-theme .palace-minor-star[data-element="Mộc"],
+.chart-theme .palace-neutral-star[data-element="Mộc"] { --chart-element-color: var(--element-moc); }
 .chart-theme .palace-major-star[data-element="Thủy"],
 .chart-theme .palace-good-star[data-element="Thủy"],
-.chart-theme .palace-minor-star[data-element="Thủy"] { --chart-element-color: var(--element-thuy); }
+.chart-theme .palace-minor-star[data-element="Thủy"],
+.chart-theme .palace-neutral-star[data-element="Thủy"] { --chart-element-color: var(--element-thuy); }
 .chart-theme .palace-major-star[data-element="Hỏa"],
 .chart-theme .palace-good-star[data-element="Hỏa"],
-.chart-theme .palace-minor-star[data-element="Hỏa"] { --chart-element-color: var(--element-hoa); }
+.chart-theme .palace-minor-star[data-element="Hỏa"],
+.chart-theme .palace-neutral-star[data-element="Hỏa"] { --chart-element-color: var(--element-hoa); }
 .chart-theme .palace-major-star[data-element="Thổ"],
 .chart-theme .palace-good-star[data-element="Thổ"],
-.chart-theme .palace-minor-star[data-element="Thổ"] { --chart-element-color: var(--element-tho); }
+.chart-theme .palace-minor-star[data-element="Thổ"],
+.chart-theme .palace-neutral-star[data-element="Thổ"] { --chart-element-color: var(--element-tho); }
 .chart-theme .star-name[data-element="KIM"] { color: var(--element-kim); text-shadow: var(--star-glow); }
 .chart-theme .star-name[data-element="MOC"] { color: var(--element-moc); text-shadow: var(--star-glow); }
 .chart-theme .star-name[data-element="THUY"] { color: var(--element-thuy); text-shadow: var(--star-glow); }
@@ -1450,4 +1548,35 @@ h1, h2, h3, h4, .font-serif {
   .selected-qi-cycles-heading p { max-width: 235px; }
   .selected-qi-cycle-diagram > header strong { font-size: 13px; }
   .cycle-diagram-edge { padding: 10px; }
+}
+
+/* Final responsive overrides: never force the horoscope chart wider than its container. */
+.chart-export-frame { width: 100%; max-width: 100%; min-width: 0; }
+.chart-export-frame .palace-grid { width: min(100%, 1160px); max-width: 100%; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.chart-export-frame.chart-school-nam-phai { overflow-x: visible !important; }
+.chart-export-frame.chart-school-nam-phai .palace-grid { width: min(100%, 1160px); max-width: 100%; min-width: 0; }
+@media (max-width: 700px) {
+  .chart-export-frame .palace-grid, .chart-export-frame.chart-school-nam-phai .palace-grid { width: 100%; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(126px, auto)); min-height: 0; gap: 1px; }
+  .chart-export-frame .palace-cell, .chart-export-frame.chart-school-nam-phai .palace-cell { min-width: 0; min-height: 126px; padding: 4px 3px; gap: 3px; overflow-wrap: anywhere; }
+  .chart-export-frame .palace-heading-title { font-size: 10px; white-space: normal; line-height: 1.1; }
+  .chart-export-frame .palace-heading-age, .chart-export-frame .palace-heading-stem .palace-stem { font-size: 8px; }
+  .chart-export-frame .palace-major-star-entry .palace-major { font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
+  .chart-export-frame .palace-brightness-badge { font-size: 9px; }
+  .chart-export-frame.chart-school-nam-phai .palace-major-star-entry .palace-major { font-size: 10px; }
+  .chart-export-frame.chart-school-nam-phai .palace-good-star, .chart-export-frame.chart-school-nam-phai .palace-minor-star, .chart-export-frame.chart-school-nam-phai .palace-neutral-star, .chart-export-frame.chart-school-nam-phai .palace-annual-star { font-size: 8px; line-height: 1.15; }
+  .chart-export-frame.chart-school-nam-phai .palace-auxiliary-grid { gap: 3px; }
+  .chart-theme .center-chamber { padding: 3px; }
+  .chart-theme .chart-subject-panel { gap: 3px; padding: 5px; border-radius: 8px; }
+  .chart-theme .chart-center-brand .chart-center-symbol { font-size: 17px; }
+  .chart-theme .chart-center-brand-name { font-size: 10px; letter-spacing: .1em; }
+  .chart-theme .chart-center-eyebrow { font-size: 6px; letter-spacing: .08em; }
+  .chart-theme .chart-center-name-row { align-items: flex-start; gap: 3px; }
+  .chart-theme .chart-center-name-row .chart-data-label, .chart-theme .chart-info-row .chart-data-label { font-size: 7px; }
+  .chart-theme .chart-center-name { font-size: 11px; }
+  .chart-theme .chart-center-meta { font-size: 7px; }
+  .chart-theme .chart-subject-panel .chart-center-data { gap: 2px; padding: 4px; }
+  .chart-theme .chart-info-row { grid-template-columns: minmax(0, 1fr); gap: 0; line-height: 1.12; }
+  .chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { font-size: 8px; text-align: left; }
+  .chart-theme .chart-center-foot { font-size: 6px; letter-spacing: .04em; }
+  .chart-theme .chart-subject-slogan { font-size: 7px; }
 }

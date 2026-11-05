@@ -53,6 +53,17 @@ export const MenhBanView: React.FC = () => {
     endYear: 2030,
     nearestToBirthYearOnly: false,
   });
+  const [namPhaiRelationOptions, setNamPhaiRelationOptions] = useState(() => ({
+    tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true,
+  }));
+  const [namPhaiLayoutMode, setNamPhaiLayoutMode] = useState<'auto' | 'compact' | 'wide'>(() => {
+    const value = sessionStorage.getItem('hoai_nguyet_nam_phai_layout');
+    return value === 'compact' || value === 'wide' ? value : 'auto';
+  });
+  const setNamPhaiDensity = (value: 'auto' | 'compact' | 'wide') => {
+    setNamPhaiLayoutMode(value);
+    sessionStorage.setItem('hoai_nguyet_nam_phai_layout', value);
+  };
 
   const updatePalaceAgeOptions = (patch: Partial<PalaceAgeOptions>) => {
     setPalaceAgeOptions((current) => ({ ...current, ...patch }));
@@ -73,6 +84,8 @@ export const MenhBanView: React.FC = () => {
   const changeSchool = (nextSchool: TuHoaSchool) => {
     setSchool(nextSchool);
     localStorage.setItem('hoai_nguyet_tuhoa_school', nextSchool);
+    setSelectedPhiPalaceIndices([]);
+    setFocusedPalaceIndex(null);
   };
 
   const toggleLayer = (key: keyof ChartLayerVisibility) => {
@@ -84,6 +97,10 @@ export const MenhBanView: React.FC = () => {
       ? current.filter((selected) => selected !== index)
       : [...current, index]);
     setFocusedPalaceIndex(focusedPalaceIndex === index ? null : index);
+  };
+  const handleSelectPalace = (index: number) => {
+    if (school === 'nam_phai') setFocusedPalaceIndex(focusedPalaceIndex === index ? null : index);
+    else togglePhiPalace(index);
   };
 
   const handleDownloadPng = async () => {
@@ -124,7 +141,7 @@ export const MenhBanView: React.FC = () => {
     window.print();
   };
 
-  const natalFlows = calculateAllFlyingTransformations(activeChart, school);
+  const natalFlows = school === 'kham_thien' ? calculateAllFlyingTransformations(activeChart, school) : [];
 
   return (
     <div className="chart-workspace mx-auto max-w-7xl px-3 py-6 sm:px-6">
@@ -267,7 +284,10 @@ export const MenhBanView: React.FC = () => {
             selectedPhiPalaceIndices={selectedPhiPalaceIndices}
             palaceAgeOptions={palaceAgeOptions}
             selectedLunarMonth={selectedLunarMonth}
-            onSelectPalace={togglePhiPalace}
+            onSelectPalace={handleSelectPalace}
+            onClearPalaceSelection={() => { setFocusedPalaceIndex(null); setSelectedPhiPalaceIndices([]); }}
+            namPhaiRelationOptions={namPhaiRelationOptions}
+            namPhaiLayoutMode={namPhaiLayoutMode}
             layers={layers}
             theme={chartTheme}
             school={school}
@@ -279,14 +299,28 @@ export const MenhBanView: React.FC = () => {
             onClose={() => setFocusedPalaceIndex(null)}
             school={school}
             layers={layers}
+            showLaiNhan={namPhaiRelationOptions.laiNhan}
           />}
         </div>
-        <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />
+        {school === 'nam_phai' && <details className="nam-phai-controls">
+          <summary>⚙ Tiện ích Nam Phái</summary>
+          <div className="nam-phai-controls-content">
+            <fieldset><legend>Đường hội chiếu</legend>
+              {([['tamHop','Tam Hợp'],['xungChieu','Xung Chiếu'],['giapCung','Giáp Cung'],['highlight','Làm nổi cung liên hệ'],['lines','Hiển thị đường nối'],['laiNhan','Đánh dấu Lai Nhân Cung']] as const).map(([key,label]) => <label key={key}><input type="checkbox" checked={namPhaiRelationOptions[key]} onChange={(event) => setNamPhaiRelationOptions((old) => ({ ...old, [key]: event.target.checked }))} /> {label}</label>)}
+            </fieldset>
+            <label className="nam-phai-density">Bố cục lá số
+              <select value={namPhaiLayoutMode} onChange={(event) => setNamPhaiDensity(event.target.value as 'auto' | 'compact' | 'wide')}>
+                <option value="auto">Tự động</option><option value="compact">Gọn</option><option value="wide">Rộng</option>
+              </select>
+            </label>
+          </div>
+        </details>}
+        {school === 'kham_thien' && <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />}
 
         {/* One selected palace gets four focused Hóa views; multiple selections use the cycle graph. */}
-        {selectedPhiPalaceIndices.length === 1 && <SinglePalaceQiTabs palaceIndex={selectedPhiPalaceIndices[0]} transformations={natalFlows} visibility={phiHoaVisibility} />}
-        {selectedPhiPalaceIndices.length > 1 && <SelectedPalacesQiTabs transformations={natalFlows} palaceNames={activeChart.palaces.map((palace) => palace.name)} selectedPalaceIndices={selectedPhiPalaceIndices} visibility={phiHoaVisibility} />}
-        <QiFlowGraph transformations={natalFlows} palaceNames={activeChart.palaces.map((palace) => palace.name)} palaces={activeChart.palaces} selectedPalaceIndices={selectedPhiPalaceIndices} visibility={phiHoaVisibility} onTogglePalace={togglePhiPalace} />
+        {school === 'kham_thien' && selectedPhiPalaceIndices.length === 1 && <SinglePalaceQiTabs palaceIndex={selectedPhiPalaceIndices[0]} transformations={natalFlows} visibility={phiHoaVisibility} />}
+        {school === 'kham_thien' && selectedPhiPalaceIndices.length > 1 && <SelectedPalacesQiTabs transformations={natalFlows} palaceNames={activeChart.palaces.map((palace) => palace.name)} selectedPalaceIndices={selectedPhiPalaceIndices} visibility={phiHoaVisibility} />}
+        {school === 'kham_thien' && <QiFlowGraph transformations={natalFlows} palaceNames={activeChart.palaces.map((palace) => palace.name)} palaces={activeChart.palaces} selectedPalaceIndices={selectedPhiPalaceIndices} visibility={phiHoaVisibility} onTogglePalace={togglePhiPalace} />}
       </div>
 
       {/* Bottom Quick Contextual Prompt Bar */}

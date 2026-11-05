@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { PalaceCell } from '../components/chart/PalaceCell';
 import { NatalChart12 } from '../components/chart/NatalChart12';
 import { getYearCanChi, getHourBranch, NAP_AM_TABLE, solarToLunar, lunarToSolar, getDayCanChi } from './lunarCalendar';
-import { calculateCuc, findMenhAndThan, generateNatalChart, getTuanTrietBranches, placeMajorStars, placeMinorStars, placeTuVi } from './tuViEngine';
+import { calculateCuc, calculateThaiTueCycle, findMenhAndThan, generateNatalChart, getTuanTrietBranches, placeMajorStars, placeMinorStars, placeTuVi } from './tuViEngine';
 import { calculateAllFlyingTransformations, getAnnualTransformations, getBirthYearTransformations, getPalaceTransformationProfile, TU_HOA_CARRIER_STARS, TU_HOA_KHAM_THIEN, validateTransformationCarriers } from './tuHoaEngine';
 import { findHexagramByBinary, generateHexagramFromTosses } from './kinhDichEngine';
 import { DeterministicToolExecutor } from '../ai/tools';
@@ -12,9 +12,13 @@ import { getPalaceAgeMappings, getSexagenaryYear } from './palaceAge';
 import { getDisplayedPalaceStars, KHAM_THIEN_VISIBLE_STARS } from './starVisibility';
 import { calculateAnnualLimitState, calculateTieuHanBranchIndex } from './annualLimits';
 import { calculateAnnualStars } from './annualStars';
-import { getStarBrightness, NAM_PHAI_BRIGHTNESS_DEFINITIONS, NAM_PHAI_FULL_PROFILE_ID } from './starBrightness';
+import { buildNamPhaiBrightnessAudit, getNamPhaiMinorStarBrightness, getStarBrightness, NAM_PHAI_BRIGHTNESS_DEFINITIONS, NAM_PHAI_FULL_PROFILE_ID, NAM_PHAI_MINOR_BRIGHTNESS_DEFINITIONS } from './starBrightness';
 import { STAR_ID_BY_NAME } from './starElements';
-import { buildNamPhaiStarAuditReport, NAM_PHAI_STAR_REGISTRY } from './namPhaiStarRegistry';
+import { BRANCHES } from './types';
+import { buildNamPhaiStarAuditReport, buildNamPhaiStarCoverageReport, getNamPhaiStarIdForName, NAM_PHAI_STAR_REGISTRY } from './namPhaiStarRegistry';
+import { groupStarsForNamPhai } from './namPhaiStarDisplay';
+import { findNamPhaiLaiNhanPalace, getNamPhaiPalaceRelations } from './namPhaiPalaceRelationEngine';
+import { calculateNamPhaiRelationGeometry, type ChartRect, type EdgeSide } from './namPhaiEdgeAnchorEngine';
 
 describe('Domain Astrology & I Ching Engines', () => {
   it('calculates lunar calendar and Can Chi correctly', () => {
@@ -110,6 +114,47 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(getStarBrightness('VU_KHUC', 'Thìn', 'KHAM_THIEN_V1')).toBe('UNSPECIFIED');
   });
 
+  it('audits all six source-backed Nam Phái malefics without inferring brightness for other stars', () => {
+    expect(NAM_PHAI_MINOR_BRIGHTNESS_DEFINITIONS).toHaveLength(84); // six malefics + Thiên Khốc, 12 branches each
+    expect(NAM_PHAI_MINOR_BRIGHTNESS_DEFINITIONS.every(({ verified, sourceReference }) => verified && sourceReference.startsWith('https://hocvienlyso.org/'))).toBe(true);
+    expect(getNamPhaiMinorStarBrightness('Kình Dương', 'Thìn')).toBe('Đắc');
+    expect(getNamPhaiMinorStarBrightness('Kình Dương', 'Tý')).toBe('Hãm');
+    expect(getNamPhaiMinorStarBrightness('Đà La', 'Dần')).toBe('Đắc');
+    expect(getNamPhaiMinorStarBrightness('Hỏa Tinh', 'Ngọ')).toBe('Đắc');
+    expect(getNamPhaiMinorStarBrightness('Linh Tinh', 'Sửu')).toBe('Hãm');
+    expect(getNamPhaiMinorStarBrightness('Địa Không', 'Thân')).toBe('Đắc');
+    expect(getNamPhaiMinorStarBrightness('Địa Kiếp', 'Mão')).toBe('Hãm');
+    expect(getNamPhaiMinorStarBrightness('Bạch Hổ', 'Tý')).toBe('UNSPECIFIED');
+    expect(getNamPhaiMinorStarBrightness('Đại Hao', 'Dần')).toBe('UNSPECIFIED');
+    const audit = buildNamPhaiBrightnessAudit();
+    expect(audit.mainStars).toMatchObject({ expected: 168, verified: 168, status: 'COMPLETE' });
+    expect(audit.sixMalefics).toMatchObject({ expected: 72, verified: 72, status: 'COMPLETE' });
+    expect(audit.verifiedAuxiliaryStars).toContain('Thiên Khốc');
+    expect(audit.notApplicable).toContain('Bạch Hổ');
+    expect(audit.unverifiedRules).toEqual([]);
+  });
+
+  it('places all twelve natal Thai Tue stars from birth-year branch with distinct Quan Phu identities', () => {
+    const canhThin = calculateThaiTueCycle(BRANCHES.indexOf('Thìn'));
+    expect(canhThin).toHaveLength(12);
+    expect(new Set(canhThin.map(({ branchIndex }) => branchIndex)).size).toBe(12);
+    expect(canhThin[0]).toMatchObject({ starName: 'Thái Tuế', branchIndex: 4, starId: 'NATAL:THAI_TUE', layer: 'NATAL', cycleId: 'THAI_TUE' });
+    expect(canhThin.find(({ starName }) => starName === 'Quan Phù')).toMatchObject({ branchIndex: 8, starId: 'NATAL:QUAN_PHU_THAI_TUE' });
+    expect(canhThin.find(({ starName }) => starName === 'Bạch Hổ')).toMatchObject({ branchIndex: 0, starId: 'NATAL:BACH_HO' });
+    const kyMao = calculateThaiTueCycle(BRANCHES.indexOf('Mão'));
+    expect(kyMao.find(({ starName }) => starName === 'Thái Tuế')?.branchIndex).toBe(3);
+    expect(kyMao.find(({ starName }) => starName === 'Quan Phù')?.branchIndex).toBe(7);
+    expect(kyMao.find(({ starName }) => starName === 'Bạch Hổ')?.branchIndex).toBe(11);
+    expect(getNamPhaiStarIdForName('Quan Phù')).toBe('NATAL:QUAN_PHU_THAI_TUE');
+    expect(getNamPhaiStarIdForName('Quan Phủ')).toBe('NATAL:QUAN_PHU_BAC_SI');
+    for (const gender of ['Nam', 'Nữ'] as const) {
+      const minor = placeMinorStars('Canh', 'Thìn', 8, 'Tỵ', gender);
+      expect(minor['Thái Tuế']).toBe(4);
+      expect(minor['Quan Phù']).toBe(8);
+      expect(minor['Bạch Hổ']).toBe(0);
+    }
+  });
+
   it('applies the Nam Phai brightness profile without changing Khâm Thiên star brightness', () => {
     const chart = generateNatalChart({ name: 'Brightness profile', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
     const palace = chart.palaces.find((item) => item.majorStars.length > 0)!;
@@ -134,38 +179,174 @@ describe('Domain Astrology & I Ching Engines', () => {
   it('places the verified annual star set and re-keys the data when the forecast year changes', () => {
     const chart = generateNatalChart({ name: 'Annual test', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
     const annual2026 = calculateAnnualStars(chart, 2026);
-    expect(annual2026).toHaveLength(25);
+    expect(annual2026).toHaveLength(17);
     expect(annual2026.map(({ name, branch }) => [name, branch])).toEqual(expect.arrayContaining([
       ['Lưu Thái Tuế', 'Ngọ'], ['Lưu Tang Môn', 'Thân'], ['Lưu Bạch Hổ', 'Dần'],
       ['Lưu Thiên Khốc', 'Tý'], ['Lưu Thiên Hư', 'Tý'], ['Lưu Lộc Tồn', 'Tỵ'],
       ['Lưu Kình Dương', 'Ngọ'], ['Lưu Đà La', 'Thìn'], ['Lưu Thiên Mã', 'Thân'],
-      ['Lưu Thiếu Dương', 'Mùi'], ['Lưu Thiếu Âm', 'Dậu'], ['Lưu Quan Phù', 'Tuất'],
-      ['Lưu Tử Phù', 'Hợi'], ['Lưu Tuế Phá', 'Tý'], ['Lưu Long Đức', 'Sửu'],
-      ['Lưu Phúc Đức', 'Mão'], ['Lưu Điếu Khách', 'Thìn'], ['Lưu Trực Phù', 'Tỵ'],
       ['Lưu Thiên Khôi', 'Hợi'], ['Lưu Thiên Việt', 'Dậu'], ['Lưu Văn Xương', 'Thân'],
       ['Lưu Văn Khúc', 'Ngọ'], ['Lưu Đào Hoa', 'Mão'], ['Lưu Hồng Loan', 'Dậu'], ['Lưu Thiên Hỷ', 'Mão'],
+      ['Lưu Kiếp Sát', 'Hợi'],
     ]));
     expect(annual2026.every(({ brightness, annualYear, id }) => brightness === 'UNSPECIFIED' && annualYear === 2026 && id.startsWith('ANNUAL:2026:'))).toBe(true);
     expect(getAnnualTransformations(chart, 2026, 'nam_phai').map(({ type, star }) => [type, star])).toEqual([
       ['Lộc', 'Thiên Đồng'], ['Quyền', 'Thiên Cơ'], ['Khoa', 'Văn Xương'], ['Kỵ', 'Liêm Trinh'],
     ]);
     const annual2027 = calculateAnnualStars(chart, 2027);
+    expect(annual2027).toHaveLength(17);
+    expect(annual2027.map(({ name, branch }) => [name, branch])).toEqual(expect.arrayContaining([
+      ['Lưu Thái Tuế', 'Mùi'], ['Lưu Tang Môn', 'Dậu'], ['Lưu Bạch Hổ', 'Mão'],
+      ['Lưu Thiên Khốc', 'Hợi'], ['Lưu Thiên Hư', 'Sửu'], ['Lưu Lộc Tồn', 'Ngọ'],
+      ['Lưu Kình Dương', 'Mùi'], ['Lưu Đà La', 'Tỵ'], ['Lưu Thiên Mã', 'Tỵ'],
+    ]));
     expect(annual2027.every(({ annualYear, id }) => annualYear === 2027 && id.startsWith('ANNUAL:2027:'))).toBe(true);
     expect(annual2027.map(({ branch }) => branch)).not.toEqual(annual2026.map(({ branch }) => branch));
   });
 
-  it('audits Nam Phái stars by unique ID and flags unsupported placement rules', () => {
+  it('groups annual stars at the end of their configured natal columns without mutating the source list', () => {
+    const fixture = [
+      ...Array.from({ length: 10 }, (_, index) => ({ id: `natal-left-${index}`, name: `N${index}`, layer: 'NATAL' as const, displayColumn: 'LEFT_CATS' as const, displayOrder: 9 - index, data: null })),
+      ...Array.from({ length: 8 }, (_, index) => ({ id: `natal-right-${index}`, name: `H${index}`, layer: 'NATAL' as const, displayColumn: 'RIGHT_HUNG' as const, displayOrder: 7 - index, data: null })),
+      ...Array.from({ length: 5 }, (_, index) => ({ id: `annual-left-${index}`, name: `LN${index}`, layer: 'ANNUAL' as const, displayColumn: 'LEFT_CATS' as const, displayOrder: 4 - index, data: null })),
+      ...Array.from({ length: 7 }, (_, index) => ({ id: `annual-right-${index}`, name: `LH${index}`, layer: 'ANNUAL' as const, displayColumn: 'RIGHT_HUNG' as const, displayOrder: 6 - index, data: null })),
+    ];
+    const originalIds = fixture.map(({ id }) => id);
+    const grouped = groupStarsForNamPhai(fixture);
+    expect(grouped.leftNatal).toHaveLength(10);
+    expect(grouped.rightNatal).toHaveLength(8);
+    expect(grouped.leftAnnual).toHaveLength(5);
+    expect(grouped.rightAnnual).toHaveLength(7);
+    expect(grouped.leftNatal.map(({ name }) => name)).toEqual(['N9','N8','N7','N6','N5','N4','N3','N2','N1','N0']);
+    expect(grouped.rightNatal.map(({ name }) => name)).toEqual(['H7','H6','H5','H4','H3','H2','H1','H0']);
+    expect(grouped.leftAnnual.map(({ name }) => name)).toEqual(['LN4','LN3','LN2','LN1','LN0']);
+    expect(grouped.rightAnnual.map(({ name }) => name)).toEqual(['LH6','LH5','LH4','LH3','LH2','LH1','LH0']);
+    expect(fixture.map(({ id }) => id)).toEqual(originalIds);
+  });
+
+  it('audits Nam Phái full coverage and separates required rules from optional school variants', () => {
     expect(new Set(NAM_PHAI_STAR_REGISTRY.map(({ id }) => id)).size).toBe(NAM_PHAI_STAR_REGISTRY.length);
     expect(NAM_PHAI_BRIGHTNESS_DEFINITIONS).toHaveLength(168);
     const chart = generateNatalChart({ name: 'Audit', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const rendered = chart.palaces.flatMap((palace) => {
+      const display = getDisplayedPalaceStars(palace, 'nam_phai');
+      return [...display.majorStars, ...display.minorStars].map(({ id }) => id!).concat(
+        calculateAnnualStars(chart, 2026).filter(({ branchIndex }) => branchIndex === palace.index).map(({ baseStarId }) => `ANNUAL:${baseStarId}`),
+      );
+    });
+    const coverage = buildNamPhaiStarCoverageReport({
+      natalStars: chart.palaces.flatMap((palace) => [...palace.majorStars, ...palace.minorStars].map(({ id, name }) => ({ id, name, branchIndex: palace.index }))),
+      annualStars: calculateAnnualStars(chart, 2026).map(({ id, name, branchIndex }) => ({ id, name, branchIndex })),
+      renderedStarIds: rendered,
+    });
     const report = buildNamPhaiStarAuditReport(
       chart.palaces.flatMap((palace) => [...palace.majorStars, ...palace.minorStars].map(({ name }) => name)),
       calculateAnnualStars(chart, 2026).map(({ name }) => name),
     );
+    expect(coverage.passed).toBe(true);
+    expect(coverage.missingDefinitions).toEqual([]);
+    expect(coverage.missingPlacementRules).toEqual([]);
+    expect(coverage.unverifiedRequiredRules).toEqual([]);
+    expect(coverage.missingNatalPlacements).toEqual([]);
+    expect(coverage.missingAnnualPlacements).toEqual([]);
+    expect(coverage.missingRenderedStars).toEqual([]);
+    expect(coverage.duplicatedPlacements).toEqual([]);
+    expect(coverage.invalidBranchPlacements).toEqual([]);
     expect(report.missingBrightnessIds).toEqual([]);
     expect(report.missingAnnualStarIds).toEqual([]);
-    expect(report.unverifiedRuleIds).toContain('UNRESOLVED_PROFILE_VARIANT_V1');
-    expect(report.missingStarIds).toEqual(expect.arrayContaining(['NATAL:VAN_TINH','NATAL:THIEN_QUAN','NATAL:THIEN_PHUC']));
+    expect(report.unverifiedRuleIds).toEqual([]);
+    expect(report.missingStarIds).toEqual([]);
+    expect(findNamPhaiLaiNhanPalace(chart)).toMatchObject({ status: 'FOUND', branch: 'Thìn', palace: { name: 'Mệnh' } });
+  });
+
+  it('calculates Tam Phương Tứ Chính and Giáp from the twelve branch indices', () => {
+    expect(getNamPhaiPalaceRelations(4)).toEqual({ self: 4, tamHop: [8, 0], xungChieu: 10, giapCung: [3, 5] });
+  });
+
+  it('anchors all five Nam Phái relations on distributed palace edges for all twelve palaces', () => {
+    const grid: Record<number, [number, number]> = {
+      5: [1, 1], 6: [1, 2], 7: [1, 3], 8: [1, 4], 4: [2, 1], 9: [2, 4],
+      3: [3, 1], 10: [3, 4], 2: [4, 1], 1: [4, 2], 0: [4, 3], 11: [4, 4],
+    };
+    const width = 120;
+    const height = 90;
+    const gap = 4;
+    const rects = new Map<number, ChartRect>(Object.entries(grid).map(([index, [row, column]]) => [Number(index), {
+      left: (column - 1) * (width + gap), top: (row - 1) * (height + gap), width, height,
+    }]));
+    const sideIsCorrect = (point: { x: number; y: number; side: EdgeSide }, rect: ChartRect) => {
+      const epsilon = 0.001;
+      const pad = Math.min(18, (point.side === 'TOP' || point.side === 'BOTTOM' ? rect.width : rect.height) * 0.25);
+      if (point.side === 'TOP') return Math.abs(point.y - rect.top) < epsilon && point.x >= rect.left - epsilon && point.x <= rect.left + rect.width + epsilon && (point.x === rect.left || point.x === rect.left + rect.width || (point.x > rect.left + pad && point.x < rect.left + rect.width - pad));
+      if (point.side === 'BOTTOM') return Math.abs(point.y - (rect.top + rect.height)) < epsilon && point.x >= rect.left - epsilon && point.x <= rect.left + rect.width + epsilon && (point.x === rect.left || point.x === rect.left + rect.width || (point.x > rect.left + pad && point.x < rect.left + rect.width - pad));
+      if (point.side === 'LEFT') return Math.abs(point.x - rect.left) < epsilon && point.y >= rect.top - epsilon && point.y <= rect.top + rect.height + epsilon && (point.y === rect.top || point.y === rect.top + rect.height || (point.y > rect.top + pad && point.y < rect.top + rect.height - pad));
+      return Math.abs(point.x - (rect.left + rect.width)) < epsilon && point.y >= rect.top - epsilon && point.y <= rect.top + rect.height + epsilon && (point.y === rect.top || point.y === rect.top + rect.height || (point.y > rect.top + pad && point.y < rect.top + rect.height - pad));
+    };
+    for (let selected = 0; selected < 12; selected += 1) {
+      const geometry = calculateNamPhaiRelationGeometry(rects, selected, { tamHop: true, xungChieu: true, giapCung: true });
+      expect(geometry).toHaveLength(6);
+      const directRelations = geometry.filter(({ relationType }) => relationType !== 'tam-hop-bridge');
+      const sourceAnchors = directRelations.map(({ source }) => `${source.side}:${source.x.toFixed(3)}:${source.y.toFixed(3)}`);
+      expect(new Set(sourceAnchors).size, `selected palace ${selected}: ${sourceAnchors.join(' | ')}`).toBe(1);
+      directRelations.forEach(({ source, target }) => {
+        expect([source.x, source.y, target.x, target.y].every(Number.isFinite)).toBe(true);
+        expect(sideIsCorrect(source, rects.get(source.palaceId)!)).toBe(true);
+        expect(sideIsCorrect(target, rects.get(target.palaceId)!)).toBe(true);
+        expect(source.palaceId).toBe(selected);
+        expect(target.palaceId).not.toBe(selected);
+      });
+      const bridge = geometry.find(({ relationType }) => relationType === 'tam-hop-bridge')!;
+      const tamHopTargets = directRelations.filter(({ relationType }) => relationType === 'tam-hop').map(({ target }) => target);
+      expect(bridge.source).toEqual(tamHopTargets[0]);
+      expect(bridge.target).toEqual(tamHopTargets[1]);
+      expect(sideIsCorrect(bridge.source, rects.get(bridge.source.palaceId)!)).toBe(true);
+      expect(sideIsCorrect(bridge.target, rects.get(bridge.target.palaceId)!)).toBe(true);
+    }
+    // A mid-left palace always launches from its inner right edge, regardless
+    // of the target; a corner palace launches from one consistent inner-corner
+    // edge rather than fanning out from several different places.
+    const leftMid = calculateNamPhaiRelationGeometry(rects, 4, { tamHop: true, xungChieu: true, giapCung: true });
+    expect(leftMid.filter(({ relationType }) => relationType !== 'tam-hop-bridge').every(({ source }) => source.side === 'RIGHT')).toBe(true);
+    const topLeft = calculateNamPhaiRelationGeometry(rects, 5, { tamHop: true, xungChieu: true, giapCung: true });
+    expect(new Set(topLeft.filter(({ relationType }) => relationType !== 'tam-hop-bridge').map(({ source }) => source.side))).toEqual(new Set(['RIGHT']));
+    for (const cornerIndex of [2, 5, 8, 11]) {
+      expect(calculateNamPhaiRelationGeometry(rects, cornerIndex, { tamHop: true, xungChieu: true, giapCung: true })).toHaveLength(6);
+    }
+  });
+
+  it('covers Hỏa/Linh positions for all 12 year branches and 12 birth hours', () => {
+    const expectedStarts: Record<string, [number, number]> = {
+      Tý: [2, 10], Sửu: [3, 10], Dần: [1, 3], Mão: [9, 10], Thìn: [2, 10], Tỵ: [3, 10],
+      Ngọ: [1, 3], Mùi: [9, 10], Thân: [2, 10], Dậu: [3, 10], Tuất: [1, 3], Hợi: [9, 10],
+    };
+    const validYears = Array.from({ length: 60 }, (_, offset) => getYearCanChi(1984 + offset));
+    for (const yearBranch of BRANCHES) {
+      const year = validYears.find((item) => item.branch === yearBranch)!;
+      const [fireStart, bellStart] = expectedStarts[yearBranch];
+      BRANCHES.forEach((hourBranch, hourIndex) => {
+        const positions = placeMinorStars(year.stem, yearBranch, 8, hourBranch, 'Nam', undefined, 28);
+        expect(positions['Hỏa Tinh']).toBe((fireStart + hourIndex) % 12);
+        expect(positions['Linh Tinh']).toBe((bellStart + hourIndex) % 12);
+      });
+    }
+  });
+
+  it('uses a distinct stem table for Nam Phái quý tinh and Lưu Hà', () => {
+    const golden: Record<string, { quan: number; phuc: number; tru: number; luuHa: number }> = {
+      Giáp: { quan: 7, phuc: 9, tru: 5, luuHa: 9 }, Ất: { quan: 4, phuc: 8, tru: 6, luuHa: 10 },
+      Bính: { quan: 5, phuc: 0, tru: 0, luuHa: 7 }, Đinh: { quan: 2, phuc: 11, tru: 5, luuHa: 8 },
+      Mậu: { quan: 3, phuc: 3, tru: 6, luuHa: 5 }, Kỷ: { quan: 9, phuc: 2, tru: 8, luuHa: 6 },
+      Canh: { quan: 11, phuc: 6, tru: 2, luuHa: 3 }, Tân: { quan: 9, phuc: 5, tru: 6, luuHa: 4 },
+      Nhâm: { quan: 10, phuc: 6, tru: 9, luuHa: 11 }, Quý: { quan: 6, phuc: 5, tru: 11, luuHa: 2 },
+    };
+    const validYears = Array.from({ length: 60 }, (_, offset) => getYearCanChi(1984 + offset));
+    Object.entries(golden).forEach(([stem, expected]) => {
+      const year = validYears.find((item) => item.stem === stem)!;
+      const positions = placeMinorStars(year.stem, year.branch, 8, 'Tỵ', 'Nam', undefined, 28);
+      expect(positions['Thiên Quan']).toBe(expected.quan);
+      expect(positions['Thiên Phúc']).toBe(expected.phuc);
+      expect(positions['Thiên Trù']).toBe(expected.tru);
+      expect(positions['Lưu Hà']).toBe(expected.luuHa);
+    });
   });
 
   it('maps palace ages through the full 60-year Can Chi cycle and branch-only mode', () => {
@@ -375,7 +556,6 @@ describe('Domain Astrology & I Ching Engines', () => {
         birthYearTransformations: birthHua.filter((item) => item.palaceIndex === palace.index),
         annualStars: [],
         annualHuas: [],
-        annualYear: chart.forecastYear,
         palaceAgeMapping: null,
         school,
       }));
@@ -387,6 +567,11 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(renderPalace('Tật Ách')).toContain('Cự Môn');
     expect(renderPalace('Mệnh')).toContain('Vũ Khúc');
     expect(renderPalace('Tử Tức')).toContain('Thiên Lương');
+    const thaiTuePalace = chart.palaces.find((palace) => palace.minorStars.some((star) => star.name === 'Thái Tuế'))!;
+    const thaiTueMarkup = renderPalace(thaiTuePalace.name, 'nam_phai');
+    expect(thaiTueMarkup).toContain('palace-auxiliary-grid');
+    expect(thaiTueMarkup).toContain('Thái Tuế');
+    expect(thaiTueMarkup).not.toContain('palace-cycle-footer');
     expect(renderPalace('Tật Ách')).toContain('Tả Phù');
     expect(renderPalace('Huynh Đệ')).toContain('Hữu Bật');
     expect(renderPalace('Nô Bộc')).toContain('Văn Khúc');
@@ -453,6 +638,43 @@ describe('Domain Astrology & I Ching Engines', () => {
       phiHoaVisibility: { Lộc: false, Quyền: false, Khoa: false, Kỵ: false },
     }));
     expect((markup.match(/aria-hidden="false"/g) ?? [])).toHaveLength(transformations.length);
+  });
+
+  it('isolates Nam Phái rendering from Khâm Thiên Phi Hóa and retains all twelve palaces', () => {
+    const chart = generateNatalChart({ name: 'Canh Thìn', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
+    const markup = renderToStaticMarkup(React.createElement(NatalChart12, {
+      chart,
+      focusedPalaceIndex: null,
+      selectedPhiPalaceIndices: [],
+      onSelectPalace: () => undefined,
+      onClearPalaceSelection: () => undefined,
+      namPhaiRelationOptions: { tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true },
+      namPhaiLayoutMode: 'auto',
+      layers: { showBirthYear: true, showAnnual: true },
+      theme: 'paper',
+      school: 'nam_phai',
+      palaceAgeOptions: { enabled: false, mode: 'FULL_CAN_CHI', startYear: 1920, endYear: 2030, nearestToBirthYearOnly: false },
+      selectedLunarMonth: 1,
+      phiHoaVisibility: { Lộc: true, Quyền: true, Khoa: true, Kỵ: true },
+    }));
+    expect((markup.match(/data-palace-index=/g) ?? [])).toHaveLength(12);
+    expect(markup).toContain('LAI NHÂN');
+    expect(markup).toContain('palace-auxiliary-grid');
+    expect(markup).toContain('chart-export-frame');
+    expect(markup).not.toContain('palace-annual-star-list');
+    calculateAnnualStars(chart, chart.forecastYear).forEach((star) => expect(markup).toContain(star.name.replace(/^Lưu\s+/, 'L.')));
+    [
+      'L.Kiếp Sát','L.Thiên Khôi','L.Thiên Việt','L.Văn Xương','L.Văn Khúc','L.Đào Hoa','L.Hồng Loan','L.Thiên Hỷ',
+    ].forEach((label) => expect(markup).toContain(label));
+    [
+      'L.Long Đức','L.Hoa Cái','L.Quốc Ấn','L.Thiếu Âm','L.Thiếu Dương','L.Long Trì','L.Đường Phù',
+      'L.Quan Phù','L.Cô Thần','L.Thiên Quan','L.Trực Phù','L.Phá Toái','L.Quả Tú','L.Phượng Các',
+      'L.Giải Thần','L.Điếu Khách','L.Phúc Đức','L.Thiên Đức','L.Tuế Phá','L.Thiên Phúc','L.Thiên Trù',
+    ].forEach((label) => expect(markup).not.toContain(label));
+    expect(markup).toContain('L.Hóa Lộc');
+    expect(markup).not.toContain('L.Hóa Lộc → Thiên Đồng');
+    expect(markup).not.toContain('Đường Tứ Hóa Khâm Thiên');
+    expect(markup).not.toContain('phi-hoa-edge');
   });
 
   it('identifies the chart screenshot Quan Loc self-hua from its actual stem and carrier star', () => {

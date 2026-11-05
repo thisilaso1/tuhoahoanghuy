@@ -1,7 +1,8 @@
 import { Branch, BRANCHES, NatalChart } from './types';
 import { getYearCanChi } from './lunarCalendar';
 import { getLocTonBranchIndex, getThienMaBranchIndex } from './tuViEngine';
-import { NAM_PHAI_FULL_PROFILE_ID } from './starBrightness';
+import { ANNUAL_BRIGHTNESS_POLICY, BrightnessValue, getStarBrightness, NAM_PHAI_BRIGHTNESS_PROFILE_ID } from './starBrightness';
+import { NAM_PHAI_ANNUAL_STAR_REGISTRY } from './namPhaiStarRegistry';
 
 const mod12 = (value: number) => ((value % 12) + 12) % 12;
 
@@ -14,7 +15,7 @@ export interface AnnualStar {
   branchIndex: number;
   palaceId: string;
   palaceName: string;
-  brightness: 'UNSPECIFIED';
+  brightness: BrightnessValue;
   placementRuleId: string;
   brightnessProfileId: string;
   verified: boolean;
@@ -22,32 +23,23 @@ export interface AnnualStar {
 }
 
 const ANNUAL_CORE_STARS = [
-  { name: 'Thái Tuế', element: 'Hỏa', rule: 'ANNUAL_BRANCH_THAI_TUE_V1' },
-  { name: 'Tang Môn', element: 'Mộc', rule: 'ANNUAL_BRANCH_TANG_MON_V1' },
-  { name: 'Bạch Hổ', element: 'Kim', rule: 'ANNUAL_BRANCH_BACH_HO_V1' },
-  { name: 'Thiên Khốc', rule: 'ANNUAL_BRANCH_THIEN_KHOC_V1' },
-  { name: 'Thiên Hư', rule: 'ANNUAL_BRANCH_THIEN_HU_V1' },
-  { name: 'Lộc Tồn', element: 'Thổ', rule: 'ANNUAL_STEM_LOC_TON_V1' },
-  { name: 'Kình Dương', element: 'Kim', rule: 'ANNUAL_STEM_KINH_DUONG_V1' },
-  { name: 'Đà La', element: 'Kim', rule: 'ANNUAL_STEM_DA_LA_V1' },
-  { name: 'Thiên Mã', element: 'Hỏa', rule: 'ANNUAL_BRANCH_THIEN_MA_V1' },
-  { name: 'Thiếu Dương', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Thiếu Âm', element: 'Thủy', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Quan Phù', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Tử Phù', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Tuế Phá', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Long Đức', element: 'Thủy', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Phúc Đức', element: 'Thổ', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Điếu Khách', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Trực Phù', element: 'Hỏa', rule: 'ANNUAL_THAI_TUE_RING_V1' },
-  { name: 'Thiên Khôi', element: 'Hỏa', rule: 'ANNUAL_STEM_KHOI_VIET_V1' },
-  { name: 'Thiên Việt', element: 'Hỏa', rule: 'ANNUAL_STEM_KHOI_VIET_V1' },
-  { name: 'Văn Xương', element: 'Kim', rule: 'ANNUAL_STEM_VAN_XUONG_V1' },
-  { name: 'Văn Khúc', element: 'Thủy', rule: 'ANNUAL_STEM_VAN_KHUC_V1' },
-  { name: 'Đào Hoa', element: 'Mộc', rule: 'ANNUAL_BRANCH_DAO_HOA_V1' },
-  { name: 'Hồng Loan', element: 'Thủy', rule: 'ANNUAL_BRANCH_HONG_LOAN_V1' },
-  { name: 'Thiên Hỷ', element: 'Thủy', rule: 'ANNUAL_BRANCH_THIEN_HY_V1' },
+  { name: 'Thái Tuế', element: 'Hỏa', rule: 'ANNUAL_YEAR_BRANCH_THAI_TUE_RING_V1' },
+  { name: 'Tang Môn', element: 'Mộc', rule: 'ANNUAL_YEAR_BRANCH_THAI_TUE_RING_V1' },
+  { name: 'Bạch Hổ', element: 'Kim', rule: 'ANNUAL_YEAR_BRANCH_THAI_TUE_RING_V1' },
+  { name: 'Thiên Khốc', rule: 'ANNUAL_YEAR_BRANCH_THIEN_KHOC_V1' },
+  { name: 'Thiên Hư', rule: 'ANNUAL_YEAR_BRANCH_THIEN_HU_V1' },
+  { name: 'Lộc Tồn', element: 'Thổ', rule: 'ANNUAL_YEAR_STEM_LOC_TON_V1' },
+  { name: 'Kình Dương', element: 'Kim', rule: 'ANNUAL_YEAR_STEM_KINH_DUONG_V1' },
+  { name: 'Đà La', element: 'Kim', rule: 'ANNUAL_YEAR_STEM_DA_LA_V1' },
+  { name: 'Thiên Mã', element: 'Hỏa', rule: 'ANNUAL_YEAR_BRANCH_THIEN_MA_V1' },
 ] as const;
+
+// Fail at development/test time if the calculation definitions drift from the
+// locked annual registry; the registry is the coverage contract.
+if (ANNUAL_CORE_STARS.length !== NAM_PHAI_ANNUAL_STAR_REGISTRY.length
+  || ANNUAL_CORE_STARS.some(({ name, rule }) => !NAM_PHAI_ANNUAL_STAR_REGISTRY.some((star) => star.displayName === `Lưu ${name}` && star.calculationRuleId === rule))) {
+  throw new Error('Nam Phái annual calculation and registry definitions differ.');
+}
 
 export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number): AnnualStar[] {
   if (!Number.isInteger(targetLunarYear) || targetLunarYear < 1800 || targetLunarYear > 2199) {
@@ -57,22 +49,6 @@ export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number)
   const yearBranchIndex = BRANCHES.indexOf(yearCanChi.branch);
   const locTonIndex = getLocTonBranchIndex(yearCanChi.stem);
   const tangMonIndex = mod12(yearBranchIndex + 2);
-  const thaiTueRing = ['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù'];
-  const khoiViet: Record<string, [number, number]> = {
-    Giáp: [1,7], Ất: [0,8], Bính: [11,9], Đinh: [11,9], Mậu: [1,7],
-    Kỷ: [0,8], Canh: [1,7], Tân: [2,6], Nhâm: [3,5], Quý: [3,5],
-  };
-  const stemIndex = ['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'].indexOf(yearCanChi.stem);
-  const daoHoaByGroup: Record<number, number> = { 0: 9, 1: 6, 2: 3, 3: 0 };
-  const annualPositions: Record<string, number> = {};
-  thaiTueRing.forEach((name, offset) => { annualPositions[name] = mod12(yearBranchIndex + offset); });
-  annualPositions['Thiên Khôi'] = khoiViet[yearCanChi.stem][0];
-  annualPositions['Thiên Việt'] = khoiViet[yearCanChi.stem][1];
-  annualPositions['Văn Xương'] = mod12(10 - stemIndex);
-  annualPositions['Văn Khúc'] = mod12(4 + stemIndex);
-  annualPositions['Đào Hoa'] = daoHoaByGroup[yearBranchIndex % 4];
-  annualPositions['Hồng Loan'] = mod12(3 - yearBranchIndex);
-  annualPositions['Thiên Hỷ'] = mod12(annualPositions['Hồng Loan'] + 6);
   const positions: Record<string, number> = {
     'Thái Tuế': yearBranchIndex,
     'Tang Môn': tangMonIndex,
@@ -83,7 +59,6 @@ export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number)
     'Kình Dương': mod12(locTonIndex + 1),
     'Đà La': mod12(locTonIndex - 1),
     'Thiên Mã': getThienMaBranchIndex(yearCanChi.branch),
-    ...annualPositions,
   };
   const palaceByBranch = new Map(chart.palaces.map((palace) => [palace.index, palace]));
 
@@ -91,7 +66,7 @@ export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number)
     const branchIndex = positions[definition.name];
     const palace = palaceByBranch.get(branchIndex);
     if (!palace) throw new Error(`Không tìm thấy cung cho Lưu ${definition.name} tại index ${branchIndex}.`);
-    const baseStarId = definition.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+    const baseStarId = definition.name.replace(/[Đđ]/g, (value) => value === 'Đ' ? 'D' : 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
     return {
       id: `ANNUAL:${targetLunarYear}:${baseStarId}`,
       baseStarId,
@@ -101,9 +76,11 @@ export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number)
       branchIndex,
       palaceId: `palace-${branchIndex}`,
       palaceName: palace.name,
-      brightness: 'UNSPECIFIED' as const,
+      brightness: ANNUAL_BRIGHTNESS_POLICY.useBaseStarBrightness
+        ? getStarBrightness(baseStarId, palace.branch, NAM_PHAI_BRIGHTNESS_PROFILE_ID)
+        : 'UNSPECIFIED' as const,
       placementRuleId: definition.rule,
-      brightnessProfileId: `${NAM_PHAI_FULL_PROFILE_ID}:ANNUAL_UNSPECIFIED_V1`,
+      brightnessProfileId: NAM_PHAI_BRIGHTNESS_PROFILE_ID,
       verified: true,
       element: 'element' in definition ? definition.element : undefined,
     };

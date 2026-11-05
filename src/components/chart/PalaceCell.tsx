@@ -1,5 +1,5 @@
 import React from 'react';
-import { Palace, TransformationType } from '../../domain/types';
+import { Palace, Star, TransformationType } from '../../domain/types';
 import type { ChartTheme } from './NatalChart12';
 import type { BirthYearTransformation } from '../../domain/tuHoaEngine';
 import type { PalaceAgeMapping } from '../../domain/palaceAge';
@@ -7,6 +7,9 @@ import { getDisplayedPalaceStars } from '../../domain/starVisibility';
 import type { TuHoaSchool } from '../../domain/tuHoaEngine';
 import type { AnnualStar } from '../../domain/annualStars';
 import { STAR_ID_BY_NAME } from '../../domain/starElements';
+import { getNamPhaiMinorStarBrightness } from '../../domain/starBrightness';
+import { getAnnualDisplayRule, getNatalDisplayRule, groupStarsForNamPhai } from '../../domain/namPhaiStarDisplay';
+import type { RenderableNamPhaiStar } from '../../domain/namPhaiStarDisplay';
 import { StarName } from './StarName';
 
 interface PalaceCellProps {
@@ -24,14 +27,16 @@ interface PalaceCellProps {
   birthYearTransformations: BirthYearTransformation[];
   annualStars: AnnualStar[];
   annualHuas: Array<{ type: TransformationType; star: string }>;
-  annualYear: number;
   palaceAgeMapping: PalaceAgeMapping | null;
   school: TuHoaSchool;
+  onHoverPalace?: (index: number | null) => void;
+  onClearPalaceSelection?: () => void;
+  isLaiNhan?: boolean;
+  relationRole?: 'self' | 'tam-hop' | 'xung-chieu' | 'giap-cung' | null;
 }
 
 const BRIGHTNESS_SHORT: Record<string, string> = { Miếu: 'M', Vượng: 'V', Đắc: 'Đ', Hãm: 'H', Bình: 'B' };
 const TRANG_SINH_STAGES = new Set(['Tràng Sinh', 'Mộc Dục', 'Quan Đới', 'Lâm Quan', 'Đế Vượng', 'Suy', 'Bệnh', 'Tử', 'Mộ', 'Tuyệt', 'Thai', 'Dưỡng']);
-const CYCLE_STARS = new Set(['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù','Bác Sĩ','Lực Sĩ','Thanh Long','Tiểu Hao','Tướng Quân','Tấu Thư','Phi Liêm','Hỷ Thần','Bệnh Phù','Đại Hao','Phục Binh','Quan Phủ']);
 const BRANCH_ELEMENT: Record<string, string> = {
   Tý: 'Thủy', Sửu: 'Thổ', Dần: 'Mộc', Mão: 'Mộc', Thìn: 'Thổ', Tỵ: 'Hỏa',
   Ngọ: 'Hỏa', Mùi: 'Thổ', Thân: 'Kim', Dậu: 'Kim', Tuất: 'Thổ', Hợi: 'Thủy',
@@ -60,26 +65,70 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   birthYearTransformations,
   annualStars,
   annualHuas,
-  annualYear,
   palaceAgeMapping,
   school,
+  onHoverPalace,
+  onClearPalaceSelection,
+  isLaiNhan = false,
+  relationRole = null,
 }) => {
   const { majorStars: displayedMajorStars, minorStars: allDisplayedMinorStars } = getDisplayedPalaceStars(palace, school);
   const trangSinhStage = school === 'nam_phai' ? allDisplayedMinorStars.find((star) => TRANG_SINH_STAGES.has(star.name)) : undefined;
   const displayedMinorStars = school === 'nam_phai'
-    ? allDisplayedMinorStars.filter((star) => !TRANG_SINH_STAGES.has(star.name) && !CYCLE_STARS.has(star.name))
+    ? allDisplayedMinorStars.filter((star) => !TRANG_SINH_STAGES.has(star.name))
     : allDisplayedMinorStars;
   const auspiciousStars = displayedMinorStars.filter((star) => star.category === 'good');
   const adverseStars = displayedMinorStars.filter((star) => star.category === 'bad');
   const neutralStars = displayedMinorStars.filter((star) => star.category === 'other');
-  const cycleStars = school === 'nam_phai' ? allDisplayedMinorStars.filter((star) => CYCLE_STARS.has(star.name)) : [];
+  const namPhaiItems: RenderableNamPhaiStar<Star | AnnualStar>[] = school === 'nam_phai' ? [
+    ...displayedMinorStars.flatMap((star) => {
+      const rule = getNatalDisplayRule(star.name);
+      return rule ? [{ id: rule.starId, name: star.name, layer: 'NATAL' as const, displayColumn: rule.displayColumn, displayOrder: rule.order, data: star }] : [];
+    }),
+    ...(showAnnual ? annualStars.flatMap((star) => {
+      const rule = getAnnualDisplayRule(star.name);
+      return rule ? [{ id: star.id, name: star.name, layer: 'ANNUAL' as const, displayColumn: rule.displayColumn, displayOrder: rule.order, data: star }] : [];
+    }) : []),
+  ] : [];
+  const namPhaiGroups = groupStarsForNamPhai(namPhaiItems);
+  const leftAnnualHuas = showAnnual && school === 'nam_phai' ? annualHuas.filter((item) => item.type !== 'Kỵ') : [];
+  const rightAnnualHuas = showAnnual && school === 'nam_phai' ? annualHuas.filter((item) => item.type === 'Kỵ') : [];
+
+  const renderMinorStar = (star: typeof displayedMinorStars[number], className: string) => {
+    const brightness = school === 'nam_phai'
+      ? getNamPhaiMinorStarBrightness(star.name, palace.branch)
+      : 'UNSPECIFIED';
+    return (
+      <span
+        key={star.name}
+        data-element={star.element}
+        data-yinyang={YIN_YANG_STARS[star.name]}
+        className={className}
+        title={brightness !== 'UNSPECIFIED' ? `${star.name} · ${brightness} tại ${palace.branch}` : undefined}
+      >
+        {STAR_ID_BY_NAME[star.name]
+          ? <StarName starId={STAR_ID_BY_NAME[star.name]} name={star.name} />
+          : star.name}
+        {brightness !== 'UNSPECIFIED' && <strong className="palace-minor-brightness"> ({BRIGHTNESS_SHORT[brightness] || brightness})</strong>}
+      </span>
+    );
+  };
 
   return (
     <article
       onClick={onSelect}
+      onMouseEnter={() => onHoverPalace?.(palace.index)}
+      onMouseLeave={() => onHoverPalace?.(null)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(); }
+        if (event.key === 'Escape') { event.preventDefault(); onHoverPalace?.(null); onClearPalaceSelection?.(); }
+      }}
+      tabIndex={0}
+      data-palace-index={palace.index}
       style={{ gridRow, gridColumn }}
-      className={`palace-cell group ${theme === 'paper' ? 'palace-paper' : theme === 'parchment' ? 'palace-parchment' : 'palace-night'} ${isFocused ? 'focused' : ''} ${isPhiSelected ? 'phi-selected' : ''} ${isSelectedLunarMonth ? 'selected-lunar-month' : ''} ${showAnnual && palace.isAnnualLimit ? 'selected-annual-limit' : ''}`}
+      className={`palace-cell group ${theme === 'paper' ? 'palace-paper' : theme === 'parchment' ? 'palace-parchment' : 'palace-night'} ${isFocused ? 'focused' : ''} ${isPhiSelected ? 'phi-selected' : ''} ${isSelectedLunarMonth ? 'selected-lunar-month' : ''} ${showAnnual && palace.isAnnualLimit ? 'selected-annual-limit' : ''} ${isLaiNhan ? 'lai-nhan-palace' : ''} ${relationRole ? `nam-phai-relation-${relationRole}` : ''}`}
     >
+      {isLaiNhan && school === 'nam_phai' && <span className="nam-phai-lai-nhan-badge" title="Lai Nhân Cung — Can cung trùng Can năm sinh theo quy tắc LAI_NHAN_EXCLUDE_TY_SUU_V1">LAI NHÂN</span>}
       {/* ══ HEADER: Tên cung / Đại Hạn / Can Chi ══ */}
       <div className="palace-cell-heading">
         {/* Row 1: Tên cung lớn, căn giữa */}
@@ -176,76 +225,63 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
         )}
       </div>
 
-      {/* ══ PHỤ TINH — cát tinh trái | hung tinh phải ══ */}
+      {/* ══ SAO PHỤ — giữ nhóm sao gọn, không in nhãn phân loại ══ */}
       <div className="palace-minor-columns">
-        <div className="palace-auspicious-stars">
-          {school === 'nam_phai' && auspiciousStars.length > 0 && <span className="palace-minor-group-title">Cát / Trợ tinh</span>}
-          {auspiciousStars.map((star) => (
-            <span
-              key={star.name}
-              data-element={star.element}
-              data-yinyang={YIN_YANG_STARS[star.name]}
-              className="palace-good-star"
-            >
-              {STAR_ID_BY_NAME[star.name] ? (
-                <StarName starId={STAR_ID_BY_NAME[star.name]} name={star.name} />
-              ) : (
-                star.name
-              )}
-            </span>
-          ))}
-        </div>
-        <div className="palace-adverse-stars" aria-label="Sát bại tinh">
-          {school === 'nam_phai' && adverseStars.length > 0 && <span className="palace-minor-group-title">Sát / Hao tinh</span>}
-          {adverseStars.map((star) => (
-            <span
-              key={star.name}
-              data-element={star.element}
-              data-yinyang={YIN_YANG_STARS[star.name]}
-              className="palace-minor-star"
-            >
-              {STAR_ID_BY_NAME[star.name] ? (
-                <StarName starId={STAR_ID_BY_NAME[star.name]} name={star.name} />
-              ) : (
-                star.name
-              )}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {school === 'nam_phai' && neutralStars.length > 0 && <div className="palace-neutral-stars" aria-label="Phụ tinh khác">
-        <span className="palace-minor-group-title">Phụ tinh khác</span>
-        {neutralStars.map((star) => <span key={star.name} data-element={star.element} className="palace-neutral-star">{STAR_ID_BY_NAME[star.name] ? <StarName starId={STAR_ID_BY_NAME[star.name]} name={star.name} /> : star.name}</span>)}
-      </div>}
-
-      {showAnnual && school === 'nam_phai' && (annualStars.length > 0 || annualHuas.length > 0) && (
-        <div className="palace-annual-star-list" aria-label={`Sao Lưu Niên ${annualYear}`}>
-          <div className="palace-annual-star-items">
-            {annualStars.map((item) => (
-              <span key={item.id} className="palace-annual-star" data-element={item.element} title={`${item.name} · ${item.branch} · Độ sáng: Không quy định · ${item.placementRuleId}`}>
-                {item.name}
-              </span>
-            ))}
-            {annualHuas.map((item) => (
-              <span key={`annual-hua:${item.type}:${item.star}`} className={`palace-annual-hua hua-${item.type === 'Lộc' ? 'loc' : item.type === 'Quyền' ? 'quyen' : item.type === 'Khoa' ? 'khoa' : 'ky'}`} title={`Lưu Hóa ${item.type} gắn với sao nguyên bàn ${item.star}`}>
-                L.Hóa {item.type} · {item.star}
-              </span>
-            ))}
+        {school === 'nam_phai' ? (
+          <div className="palace-auxiliary-grid" aria-label="Phụ tinh và sao lưu niên">
+            <div className="palace-auxiliary-column palace-left-column">
+              <div className="palace-auxiliary-star-list">
+                {namPhaiGroups.leftNatal.map(({ data }) => {
+                  const star = data as Star;
+                  return renderMinorStar(star, star.category === 'bad' ? 'palace-minor-star' : star.category === 'other' ? 'palace-neutral-star' : 'palace-good-star');
+                })}
+                {namPhaiGroups.leftAnnual.map(({ data }) => {
+                  const item = data as AnnualStar;
+                  return <span key={item.id} className="palace-annual-star" data-element={item.element} title={`${item.name} · ${item.branch}`}>
+                    {item.name.replace(/^Lưu\s+/, 'L.')}
+                  </span>;
+                })}
+                {leftAnnualHuas.map((item) => <span key={`annual-hua:${item.type}:${item.star}`} className={`palace-annual-hua hua-${item.type === 'Lộc' ? 'loc' : item.type === 'Quyền' ? 'quyen' : 'khoa'}`} title={`Lưu Hóa ${item.type}`}>
+                  L.Hóa {item.type}
+                </span>)}
+              </div>
+            </div>
+            <div className="palace-auxiliary-column palace-right-column">
+              <div className="palace-auxiliary-star-list">
+                {namPhaiGroups.rightNatal.map(({ data }) => {
+                  const star = data as Star;
+                  return renderMinorStar(star, star.category === 'good' ? 'palace-good-star' : 'palace-minor-star');
+                })}
+                {namPhaiGroups.rightAnnual.map(({ data }) => {
+                  const item = data as AnnualStar;
+                  return <span key={item.id} className="palace-annual-star" data-element={item.element} title={`${item.name} · ${item.branch}`}>
+                    {item.name.replace(/^Lưu\s+/, 'L.')}
+                  </span>;
+                })}
+                {rightAnnualHuas.map((item) => <span key={`annual-hua:${item.type}:${item.star}`} className="palace-annual-hua hua-ky" title={`Lưu Hóa ${item.type}`}>
+                  L.Hóa {item.type}
+                </span>)}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <>
+            <div className="palace-auspicious-stars">
+              {auspiciousStars.map((star) => renderMinorStar(star, 'palace-good-star'))}
+              {neutralStars.map((star) => renderMinorStar(star, 'palace-neutral-star'))}
+            </div>
+            <div className="palace-adverse-stars" aria-label="Sao phụ">
+              {adverseStars.map((star) => renderMinorStar(star, 'palace-minor-star'))}
+            </div>
+          </>
+        )}
+      </div>
 
       {trangSinhStage && (
         <div className="palace-trang-sinh-stage" aria-label={`Vòng Tràng Sinh: ${trangSinhStage.name}`}>
           {trangSinhStage.name}
         </div>
       )}
-
-      {cycleStars.length > 0 && <div className="palace-cycle-footer" aria-label="Các vòng sao">
-        <span><b>Thái Tuế</b> · {cycleStars.find((star) => ['Thái Tuế','Thiếu Dương','Tang Môn','Thiếu Âm','Quan Phù','Tử Phù','Tuế Phá','Long Đức','Bạch Hổ','Phúc Đức','Điếu Khách','Trực Phù'].includes(star.name))?.name ?? '—'}</span>
-        <span><b>Bác Sĩ</b> · {cycleStars.find((star) => ['Bác Sĩ','Lực Sĩ','Thanh Long','Tiểu Hao','Tướng Quân','Tấu Thư','Phi Liêm','Hỷ Thần','Bệnh Phù','Đại Hao','Phục Binh','Quan Phủ'].includes(star.name))?.name ?? '—'}</span>
-      </div>}
 
       {/* ══ FOOTER: Nguyệt hạn + Tiểu Hạn ══ */}
       <div className="palace-cell-footer">
