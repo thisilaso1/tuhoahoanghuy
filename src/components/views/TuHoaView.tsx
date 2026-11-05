@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { STEMS, TransformationType } from '../../domain/types';
 import {
   calculateAllFlyingTransformations,
+  getAnnualTransformations,
   getBirthYearTransformations,
   getTuHoaRules,
   TU_HOA_KHAM_THIEN,
@@ -10,7 +11,13 @@ import {
   TuHoaSchool,
 } from '../../domain/tuHoaEngine';
 import { Layers, ArrowRight, ShieldCheck, Sparkles, Filter } from 'lucide-react';
-import { QiFlowGraph } from '../chart/QiFlowGraph';
+
+const FOUR_HUA = [
+  { symbol: 'A', name: 'Hóa Lộc', color: 'text-emerald-300', description: 'Duyên kết nối, nguồn lực và cơ hội. Xem sao mang Lộc và cung tiếp nhận để biết lĩnh vực được chú ý.' },
+  { symbol: 'B', name: 'Hóa Quyền', color: 'text-amber-300', description: 'Quyền chủ động, sức thúc đẩy và trách nhiệm. Có thể biểu hiện qua việc đứng ra quyết định hoặc gánh thêm việc.' },
+  { symbol: 'C', name: 'Hóa Khoa', color: 'text-sky-300', description: 'Học hỏi, danh tiếng, sự hỗ trợ và khả năng tháo gỡ. Đọc cùng tính chất của sao và cung liên quan.' },
+  { symbol: 'D', name: 'Hóa Kỵ', color: 'text-rose-300', description: 'Điểm vướng mắc, bận tâm hoặc ràng buộc. Cần xem hoàn cảnh của cung và các Hóa đi cùng trước khi luận.' },
+];
 
 export const TuHoaView: React.FC = () => {
   const { activeChart, sendMessageToThienCo, navigateTo } = useApp();
@@ -20,6 +27,9 @@ export const TuHoaView: React.FC = () => {
 
   const rules = getTuHoaRules(selectedSchool);
   const birthTransformations = getBirthYearTransformations(activeChart, selectedSchool);
+  const annualTransformations = getAnnualTransformations(activeChart, activeChart.forecastYear, selectedSchool);
+  const birthLoc = birthTransformations.find(({ type }) => type === 'Lộc');
+  const annualLoc = annualTransformations.find(({ type }) => type === 'Lộc');
   const flyingTransformations = calculateAllFlyingTransformations(activeChart, selectedSchool);
 
   const filteredFlying = flyingTransformations.filter((f) => {
@@ -111,9 +121,48 @@ export const TuHoaView: React.FC = () => {
         </div>
       </section>
 
-      <div className="my-8">
-        <QiFlowGraph transformations={flyingTransformations} palaceNames={activeChart.palaces.map((palace) => palace.name)} palaces={activeChart.palaces} />
-      </div>
+      <section className="mb-10 space-y-4 rounded-2xl border border-amber-900/30 bg-slate-900/80 p-5" aria-labelledby="tu-hoa-guide">
+        <div>
+          <h2 id="tu-hoa-guide" className="font-serif text-lg font-bold text-amber-200">Kiến thức về bộ bốn Tứ Hóa</h2>
+          <p className="mt-1 text-sm text-stone-300">
+            Lộc, Quyền, Khoa và Kỵ là bốn tính chất gắn với các sao. Để đọc một Hóa, hãy xác định Thiên Can dùng để tra bảng, sao mang Hóa và cung nơi sao đó tọa.
+          </p>
+        </div>
+        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {FOUR_HUA.map(({ symbol, name, color, description }) => (
+            <div key={symbol} className="rounded-xl border border-slate-700 bg-slate-950/50 p-3">
+              <dt className={`font-semibold ${color}`}>{symbol} · {name}</dt>
+              <dd className="mt-1 text-sm leading-relaxed text-stone-300">{description}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="grid gap-4 border-t border-amber-900/30 pt-4 sm:grid-cols-2">
+          <article>
+            <h3 className="font-semibold text-amber-200">Tứ Hóa năm sinh · Sinh niên</h3>
+            <p className="mt-1 text-sm leading-relaxed text-stone-300">
+              Lấy Can năm sinh để tra bốn sao mang Lộc, Quyền, Khoa, Kỵ. Đây là lớp nguyên cục của đương số. Đổi năm xem vẫn giữ các vị trí này.
+            </p>
+            {birthLoc && <p className="mt-2 text-sm text-emerald-300">
+              Trên lá số này, Can {activeChart.birthCanChi.year.stem} an Hóa Lộc năm sinh cho {birthLoc.star} tại cung {birthLoc.palaceName}.
+            </p>}
+          </article>
+          <article>
+            <h3 className="font-semibold text-amber-200">Tứ Hóa lưu niên · Năm đang xem</h3>
+            <p className="mt-1 text-sm leading-relaxed text-stone-300">
+              Lấy Can năm âm lịch đang xem để tra bốn sao mang Hóa rồi tìm cung có các sao ấy trên lá số gốc. Đây là lớp theo năm, nên đổi năm xem có thể đổi sao và cung được kích hoạt.
+            </p>
+            {annualLoc && <p className="mt-2 text-sm text-emerald-300">
+              Năm {activeChart.forecastYear}, Can {activeChart.forecastCanChi.stem} an Hóa Lộc lưu niên cho {annualLoc.star} tại cung {annualLoc.palaceName}.
+            </p>}
+          </article>
+        </div>
+        <article className="border-t border-amber-900/30 pt-4">
+          <h3 className="font-semibold text-amber-200">Phi Hóa từ một cung</h3>
+          <p className="mt-1 text-sm leading-relaxed text-stone-300">
+            Khi đọc đường Phi Hóa, lấy Can của cung xuất phát để tra sao mang Hóa, rồi lần đến cung có sao đó. Theo cách hiển thị của lá số, sao nằm ngay cung xuất phát là Tự Hóa Ly Tâm, còn sao ở đối cung là Tự Hóa Hướng Tâm. Bảng khảo sát bên dưới cho phép lọc theo cung xuất phát và từng loại Hóa.
+          </p>
+        </article>
+      </section>
 
       {/* Canonical Table: 10 Heavenly Stems */}
       <section className="mb-10 rounded-2xl border border-amber-900/30 bg-slate-900/80 p-5 shadow-xl">
