@@ -24,6 +24,9 @@ interface PalaceCellProps {
   annualLimitAge: number;
   annualLimitYear: number;
   isSelectedLunarMonth: boolean;
+  lunarMonth?: number;
+  isLuuNienMenh?: boolean;
+  showLimitLabels?: boolean;
   birthYearTransformations: BirthYearTransformation[];
   annualStars: AnnualStar[];
   annualHuas: Array<{ type: TransformationType; star: string }>;
@@ -62,6 +65,9 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
   annualLimitAge,
   annualLimitYear,
   isSelectedLunarMonth,
+  lunarMonth = palace.lunarMonth,
+  isLuuNienMenh,
+  showLimitLabels,
   birthYearTransformations,
   annualStars,
   annualHuas,
@@ -299,12 +305,13 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
 
       {/* ══ FOOTER: Nguyệt hạn + Tiểu Hạn ══ */}
       <div className="palace-cell-footer">
-        <span className={`palace-month ${isSelectedLunarMonth ? 'palace-month-current' : ''}`} title={`Nguyệt Hạn tháng ${palace.lunarMonth} âm lịch`}>
-          Nguyệt {palace.lunarMonth}{isSelectedLunarMonth && <small> · ĐANG XEM</small>}
+        <span className={`palace-month ${isSelectedLunarMonth ? 'palace-month-current' : ''}`} title={`Nguyệt Hạn tháng ${lunarMonth} âm lịch`}>
+          {showLimitLabels ? 'NH.' : 'Nguyệt '}{lunarMonth}{isSelectedLunarMonth && <small> · ĐANG XEM</small>}
         </span>
+        {showAnnual && isLuuNienMenh && <span className="palace-annual font-semibold" title="Lưu niên Mệnh">LN.Mệnh</span>}
         {showAnnual && palace.isAnnualLimit && (
           <span className="palace-annual font-semibold" title={`Cung an Tiểu Hạn năm ${annualLimitYear}, tuổi mụ ${annualLimitAge}`}>
-            TH {annualLimitYear} · {annualLimitAge}t
+            {showLimitLabels ? `TH.${annualLimitAge}` : `TH ${annualLimitYear} · ${annualLimitAge}t`}
           </span>
         )}
       </div>

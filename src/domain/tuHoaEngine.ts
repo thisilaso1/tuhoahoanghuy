@@ -176,16 +176,19 @@ export function getAnnualTransformations(
 }> {
   assertTransformationInputs(chart);
   const stem = STEMS[(forecastYear + 6) % 10];
-  const rules = getTuHoaRules(school)[stem];
-  const results: Array<{ type: TransformationType; star: string; layer: 'ANNUAL'; annualYear: number; carrierStarId: string; branch: Branch; palaceId: string; palaceIndex: number; palaceName: string }> = [];
+  return getTransformationsForStem(chart, stem, school).map((item) => ({
+    ...item, layer: 'ANNUAL', annualYear: forecastYear,
+  }));
+}
 
-  for (const [typeStr, star] of Object.entries(rules)) {
-    const type = typeStr as TransformationType;
-    const { palace: targetPalace, carrierStarId } = locateCarrierStar(chart, star);
-    results.push({ type, star, layer: 'ANNUAL', annualYear: forecastYear, carrierStarId, branch: targetPalace.branch, palaceId: `palace-${targetPalace.index}`, palaceIndex: targetPalace.index, palaceName: targetPalace.name });
-  }
-
-  return results;
+export function getTransformationsForStem(chart: NatalChart, stem: Stem, school: TuHoaSchool) {
+  return Object.entries(getTuHoaRules(school)[stem]).map(([type, star]) => {
+    const { palace, carrierStarId } = locateCarrierStar(chart, star);
+    return {
+      type: type as TransformationType, star, carrierStarId, branch: palace.branch,
+      palaceId: `palace-${palace.index}`, palaceIndex: palace.index, palaceName: palace.name,
+    };
+  });
 }
 
 // Phân tích toàn bộ hệ thống Phi Tinh và Tự Hóa (Khâm Thiên Môn)

@@ -808,6 +808,9 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme-night .selected-annual-limit .palace-annual { color: #1d2938; }
 .chart-view-period-picker > span { padding: 0 5px; font-size: 10px; white-space: nowrap; }
 .chart-view-period-picker select { max-width: 100px; padding: 5px 7px; border: 1px solid rgba(185,211,234,.24); border-radius: 7px; color: #e5edf4; background: #101d2b; font-size: 10px; }
+.chart-theme-picker.chart-limit-number { flex-wrap: wrap; }
+.chart-limit-number input { width: 65px; min-width: 0; padding: 5px 7px; border: 1px solid rgba(185,211,234,.24); border-radius: 7px; color: #e5edf4; background: #101d2b; font-size: 12px; }
+.chart-limit-number small { width: 100%; padding-inline: 5px; color: #fda4af; font-size: 10px; }
 .chart-theme-picker.chart-view-period-picker { width: auto; order: 0; justify-content: space-between; }
 
 /* ── New 2-row heading: Row 1 = palace name centred; Row 2 = meta left + stem right ── */

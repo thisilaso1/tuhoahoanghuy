@@ -1,3 +1,6 @@
+import { LimitNumberInput } from '../chart/LimitNumberInput';
+import { KhamThienLimitLookup } from '../chart/KhamThienLimitLookup';
+import { calculateAnnualLimitState, getLeapLunarMonth, type MonthlyLimitMethod } from '../../domain/annualLimits';
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { NatalChart12, ChartLayerVisibility, ChartTheme } from '../chart/NatalChart12';
@@ -45,6 +48,8 @@ export const MenhBanView: React.FC = () => {
       ? solarToLunar(now.getDate(), now.getMonth() + 1, now.getFullYear()).lMonth
       : 1;
   });
+  const [monthlyMethod, setMonthlyMethod] = useState<MonthlyLimitMethod>('tieu_han');
+  const [leapMonthYear, setLeapMonthYear] = useState<number>();
   const [showDefaultPhiHoa, setShowDefaultPhiHoa] = useState(true);
   const [phiHoaVisibility, setPhiHoaVisibility] = useState<PhiHoaVisibility>(DEFAULT_PHI_HOA_VISIBILITY);
   const [palaceAgeOptions, setPalaceAgeOptions] = useState<PalaceAgeOptions>({
@@ -142,6 +147,19 @@ export const MenhBanView: React.FC = () => {
     window.print();
   };
 
+  const khamThienLimits = school === 'kham_thien'
+    ? calculateAnnualLimitState(activeChart, activeChart.forecastYear, selectedLunarMonth, monthlyMethod)
+    : undefined;
+  const leapMonth = khamThienLimits ? getLeapLunarMonth(activeChart.forecastYear) : undefined;
+  const isLeapMonth = leapMonthYear === activeChart.forecastYear && leapMonth === selectedLunarMonth;
+  const changeLookupYear = (year: number) => {
+    setLeapMonthYear(undefined);
+    updateForecastYear(year);
+  };
+
+  const earliestForecastYear = Math.max(1800, activeChart.lunarDate.year);
+  const quickYearStart = Math.max(earliestForecastYear, activeChart.forecastYear - 10);
+  const quickYearEnd = Math.min(2199, activeChart.forecastYear + 10);
   const natalFlows = school === 'kham_thien' ? calculateAllFlyingTransformations(activeChart, school) : [];
 
   return (
@@ -151,19 +169,19 @@ export const MenhBanView: React.FC = () => {
       <div className="chart-workspace-toolbar mb-4 flex flex-col gap-3 rounded-2xl p-3 shadow-xl backdrop-blur-md">
         {/* Action Buttons & Layer Controls */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <LimitNumberInput key={activeChart.forecastYear} label="Năm xem" value={activeChart.forecastYear}
+            min={earliestForecastYear} max={2199} onChange={changeLookupYear} />
           <label className="chart-theme-picker chart-view-period-picker">
-            <span>Năm xem</span>
-            <select
-              aria-label="Năm âm lịch đang xem"
-              value={activeChart.forecastYear}
-              onChange={(event) => updateForecastYear(Number(event.target.value))}
-            >
-              {Array.from({ length: 2200 - Math.max(1800, activeChart.lunarDate.year) }, (_, index) => Math.max(1800, activeChart.lunarDate.year) + index).map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
+            <span>Chọn nhanh</span>
+            <select aria-label="Chọn năm xem trong khoảng 10 năm trước hoặc sau" value={activeChart.forecastYear}
+              onChange={(event) => changeLookupYear(Number(event.target.value))}>
+              {Array.from({ length: quickYearEnd - quickYearStart + 1 }, (_, offset) => {
+                const year = quickYearStart + offset;
+                return <option key={year} value={year}>{year}</option>;
+              })}
             </select>
           </label>
-          <label className="chart-theme-picker chart-view-period-picker">
+          {school === 'nam_phai' && <label className="chart-theme-picker chart-view-period-picker">
             <span>Tháng hạn</span>
             <select
               aria-label="Tháng hạn âm lịch"
@@ -174,7 +192,7 @@ export const MenhBanView: React.FC = () => {
                 <option key={month} value={month}>Tháng {month}</option>
               ))}
             </select>
-          </label>
+          </label>}
           <div className="chart-theme-picker" role="group" aria-label="Màu nền lá số">
             <Palette size={14} />
             {([
@@ -279,6 +297,13 @@ export const MenhBanView: React.FC = () => {
         </div>
       </div>
 
+      {khamThienLimits && <KhamThienLimitLookup chart={activeChart} limits={khamThienLimits}
+        method={monthlyMethod} onMethodChange={setMonthlyMethod} leapMonth={leapMonth} isLeap={isLeapMonth}
+        onYearChange={changeLookupYear} onMonthChange={(month, leap) => {
+          setSelectedLunarMonth(month);
+          setLeapMonthYear(leap ? activeChart.forecastYear : undefined);
+        }} />}
+
       {/* Give the birth chart the full row; palace details follow below it. */}
       <div className="chart-and-filter-layout">
         <div ref={chartContainerRef} className="w-full space-y-4">
@@ -288,6 +313,8 @@ export const MenhBanView: React.FC = () => {
             selectedPhiPalaceIndices={selectedPhiPalaceIndices}
             palaceAgeOptions={palaceAgeOptions}
             selectedLunarMonth={selectedLunarMonth}
+            khamThienLimits={khamThienLimits}
+            isLeapLimitMonth={isLeapMonth}
             onSelectPalace={handleSelectPalace}
             onClearPalaceSelection={() => { setFocusedPalaceIndex(null); setSelectedPhiPalaceIndices([]); }}
             namPhaiRelationOptions={namPhaiRelationOptions}

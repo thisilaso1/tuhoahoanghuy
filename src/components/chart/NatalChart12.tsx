@@ -1,5 +1,6 @@
+import type { AnnualLimitState } from '../../domain/annualLimits';
 import React, { useRef, useState } from 'react';
-import { NatalChart, STEMS } from '../../domain/types';
+import { BRANCHES, NatalChart, STEMS } from '../../domain/types';
 import { PalaceCell } from './PalaceCell';
 import { calculateAllFlyingTransformations, FlyingTransformation, getAnnualTransformations, getBirthYearTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
 import { calculateAnnualStars } from '../../domain/annualStars';
@@ -25,6 +26,8 @@ interface NatalChart12Props {
   school: TuHoaSchool;
   palaceAgeOptions: PalaceAgeOptions;
   selectedLunarMonth: number;
+  khamThienLimits?: AnnualLimitState;
+  isLeapLimitMonth?: boolean;
   phiHoaVisibility: PhiHoaVisibility;
   showDefaultPhiHoa?: boolean;
   namPhaiRelationOptions?: { tamHop: boolean; xungChieu: boolean; giapCung: boolean; lines: boolean; highlight: boolean; laiNhan: boolean };
@@ -99,6 +102,8 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
   school,
   palaceAgeOptions,
   selectedLunarMonth,
+  khamThienLimits,
+  isLeapLimitMonth = false,
   phiHoaVisibility,
   showDefaultPhiHoa = true,
   namPhaiRelationOptions = { tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true },
@@ -150,6 +155,7 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
         {/* 12 Cung xung quanh */}
         {chart.palaces.map((palace) => {
           const [row, col] = BRANCH_GRID[palace.index];
+          const lunarMonth = khamThienLimits?.monthlyLimits.find(({ branchIndex }) => branchIndex === palace.index)?.month ?? palace.lunarMonth;
           return (
             <PalaceCell
               key={palace.index}
@@ -165,7 +171,10 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               theme={theme}
               annualLimitAge={chart.forecastYear - chart.lunarDate.year + 1}
               annualLimitYear={chart.forecastYear}
-              isSelectedLunarMonth={palace.lunarMonth === selectedLunarMonth}
+              lunarMonth={lunarMonth}
+              isSelectedLunarMonth={lunarMonth === selectedLunarMonth && !(khamThienLimits && isLeapLimitMonth)}
+              isLuuNienMenh={Boolean(khamThienLimits) && BRANCHES[palace.index] === chart.forecastCanChi.branch}
+              showLimitLabels={Boolean(khamThienLimits)}
               birthYearTransformations={birthYearTransformations.filter((item) => item.palaceIndex === palace.index)}
               annualStars={annualStars.filter((item) => item.branchIndex === palace.index)}
               annualHuas={annualTransformations.filter((item) => item.palaceIndex === palace.index)}

@@ -1,4 +1,7 @@
-import { BRANCHES, Branch, NatalChart } from './types';
+import { BRANCHES, Branch, NatalChart, PALACE_NAMES } from './types';
+import { getYearCanChi, lunarToSolar, solarToLunar } from './lunarCalendar';
+
+export type MonthlyLimitMethod = 'tieu_han' | 'fixed_branch';
 
 export const ANNUAL_LIMIT_PROFILE_ID = 'TIEU_HAN_NAM_THUAN_NU_NGHICH_V1';
 export const MONTHLY_LIMIT_PROFILE_ID = 'NGUYET_HAN_TIEU_HAN_NGHICH_THANG_THUAN_GIO_V1';
@@ -70,6 +73,7 @@ export function calculateAnnualLimitState(
   chart: Pick<NatalChart, 'gender' | 'lunarDate' | 'birthCanChi' | 'palaces'>,
   targetLunarYear: number,
   selectedLunarMonth = 1,
+  monthlyMethod: MonthlyLimitMethod = 'tieu_han',
 ): AnnualLimitState {
   if (!Number.isInteger(selectedLunarMonth) || selectedLunarMonth < 1 || selectedLunarMonth > 12) {
     throw new RangeError('Tháng hạn phải nằm trong khoảng 1–12.');
@@ -80,7 +84,7 @@ export function calculateAnnualLimitState(
     targetLunarYear,
     chart.gender,
   );
-  const firstMonthIndex = calculateFirstMonthlyLimitBranchIndex(
+  const firstMonthIndex = monthlyMethod === 'fixed_branch' ? BRANCHES.indexOf('Dần') : calculateFirstMonthlyLimitBranchIndex(
     tieuHanBranchIndex,
     chart.lunarDate.month,
     chart.birthCanChi.hour.branch,
@@ -112,6 +116,23 @@ export function calculateAnnualLimitState(
     },
     monthlyLimits,
     selectedLunarMonth,
-    profileId: `${ANNUAL_LIMIT_PROFILE_ID}+${MONTHLY_LIMIT_PROFILE_ID}`,
+    profileId: `${ANNUAL_LIMIT_PROFILE_ID}+${monthlyMethod === 'fixed_branch' ? 'NGUYET_HAN_FIXED_BRANCH_V1' : MONTHLY_LIMIT_PROFILE_ID}`,
   };
+}
+
+export function getAnnualPalaceNames(year: number) {
+  const menhIndex = BRANCHES.indexOf(getYearCanChi(year).branch);
+  return BRANCHES.map((_, index) => PALACE_NAMES[mod12(index - menhIndex)]);
+}
+
+export function getLeapLunarMonth(year: number): number | undefined {
+  for (let month = 1; month <= 12; month++) {
+    try {
+      const solar = lunarToSolar(1, month, year, true);
+      const lunar = solarToLunar(solar.day, solar.month, solar.year);
+      if (lunar.isLeap && lunar.lMonth === month && lunar.lYear === year) return month;
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+    }
+  }
 }
