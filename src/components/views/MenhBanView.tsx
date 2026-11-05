@@ -6,7 +6,7 @@ import { SinglePalaceQiTabs } from '../chart/SinglePalaceQiTabs';
 import { SelectedPalacesQiTabs } from '../chart/SelectedPalacesQiTabs';
 import { QiFlowGraph } from '../chart/QiFlowGraph';
 import { PalaceInspector } from '../chart/PalaceInspector';
-import { DEFAULT_PHI_HOA_VISIBILITY, PhiHoaFilterPanel, PhiHoaVisibility } from '../chart/PhiHoaFilterPanel';
+import { DEFAULT_PHI_HOA_VISIBILITY, NamPhaiLayoutMode, NamPhaiRelationOptions, PhiHoaFilterPanel, PhiHoaVisibility } from '../chart/PhiHoaFilterPanel';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { calculateAllFlyingTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
 import { solarToLunar } from '../../domain/lunarCalendar';
@@ -53,14 +53,14 @@ export const MenhBanView: React.FC = () => {
     endYear: 2030,
     nearestToBirthYearOnly: false,
   });
-  const [namPhaiRelationOptions, setNamPhaiRelationOptions] = useState(() => ({
+  const [namPhaiRelationOptions, setNamPhaiRelationOptions] = useState<NamPhaiRelationOptions>(() => ({
     tamHop: true, xungChieu: true, giapCung: true, lines: true, highlight: true, laiNhan: true,
   }));
-  const [namPhaiLayoutMode, setNamPhaiLayoutMode] = useState<'auto' | 'compact' | 'wide'>(() => {
+  const [namPhaiLayoutMode, setNamPhaiLayoutMode] = useState<NamPhaiLayoutMode>(() => {
     const value = sessionStorage.getItem('hoai_nguyet_nam_phai_layout');
     return value === 'compact' || value === 'wide' ? value : 'auto';
   });
-  const setNamPhaiDensity = (value: 'auto' | 'compact' | 'wide') => {
+  const setNamPhaiDensity = (value: NamPhaiLayoutMode) => {
     setNamPhaiLayoutMode(value);
     sessionStorage.setItem('hoai_nguyet_nam_phai_layout', value);
   };
@@ -302,19 +302,17 @@ export const MenhBanView: React.FC = () => {
             showLaiNhan={namPhaiRelationOptions.laiNhan}
           />}
         </div>
-        {school === 'nam_phai' && <details className="nam-phai-controls">
-          <summary>⚙ Tiện ích Nam Phái</summary>
-          <div className="nam-phai-controls-content">
-            <fieldset><legend>Đường hội chiếu</legend>
-              {([['tamHop','Tam Hợp'],['xungChieu','Xung Chiếu'],['giapCung','Giáp Cung'],['highlight','Làm nổi cung liên hệ'],['lines','Hiển thị đường nối'],['laiNhan','Đánh dấu Lai Nhân Cung']] as const).map(([key,label]) => <label key={key}><input type="checkbox" checked={namPhaiRelationOptions[key]} onChange={(event) => setNamPhaiRelationOptions((old) => ({ ...old, [key]: event.target.checked }))} /> {label}</label>)}
-            </fieldset>
-            <label className="nam-phai-density">Bố cục lá số
-              <select value={namPhaiLayoutMode} onChange={(event) => setNamPhaiDensity(event.target.value as 'auto' | 'compact' | 'wide')}>
-                <option value="auto">Tự động</option><option value="compact">Gọn</option><option value="wide">Rộng</option>
-              </select>
-            </label>
-          </div>
-        </details>}
+        {school === 'nam_phai' && <PhiHoaFilterPanel
+          visibility={phiHoaVisibility}
+          onChange={setPhiHoaVisibility}
+          school={school}
+          birthStem={activeChart.birthCanChi.year.stem}
+          selectedPalaceStems={[]}
+          namPhaiRelationOptions={namPhaiRelationOptions}
+          onNamPhaiRelationChange={setNamPhaiRelationOptions}
+          namPhaiLayoutMode={namPhaiLayoutMode}
+          onNamPhaiLayoutChange={setNamPhaiDensity}
+        />}
         {school === 'kham_thien' && <PhiHoaFilterPanel visibility={phiHoaVisibility} onChange={setPhiHoaVisibility} school={school} birthStem={activeChart.birthCanChi.year.stem} selectedPalaceStems={selectedPhiPalaceIndices.map((index) => ({ name: activeChart.palaces[index].name, stem: activeChart.palaces[index].stem }))} />}
 
         {/* One selected palace gets four focused Hóa views; multiple selections use the cycle graph. */}
