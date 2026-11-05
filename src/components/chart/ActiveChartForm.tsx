@@ -1,3 +1,4 @@
+import { completeBirthDateSegment, formatBirthDateInput, parseBirthDateInput } from '../../domain/birthDateInput';
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, CalendarDays, Clock3, Sparkles } from 'lucide-react';
 import { BirthInput, Gender, NatalChart } from '../../domain/types';
@@ -19,16 +20,22 @@ function chartToInput(chart: NatalChart): BirthInput {
 
 export const ActiveChartForm: React.FC<ActiveChartFormProps> = ({ chart, onSubmit }) => {
   const [form, setForm] = useState<BirthInput>(() => chartToInput(chart));
+  const [birthDateText, setBirthDateText] = useState(() => formatBirthDateInput(chart.solarDate));
+  const birthDate = parseBirthDateInput(birthDateText, form.calendar);
   const [error, setError] = useState('');
 
-  useEffect(() => { setForm(chartToInput(chart)); setError(''); }, [chart.id]);
+  useEffect(() => { setForm(chartToInput(chart)); setBirthDateText(formatBirthDateInput(chart.solarDate)); setError(''); }, [chart.id]);
   useEffect(() => {
     setForm((current) => ({ ...current, forecastYear: chart.forecastYear }));
   }, [chart.forecastYear]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    try { onSubmit(form); setError(''); }
+    if (!birthDate) {
+      setError('Vui lòng nhập ngày sinh hợp lệ theo DD-MM-YYYY.');
+      return;
+    }
+    try { onSubmit({ ...form, date: birthDate }); setError(''); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Không thể lập lá số. Vui lòng kiểm tra lại thông tin.'); }
   };
 
@@ -39,7 +46,7 @@ export const ActiveChartForm: React.FC<ActiveChartFormProps> = ({ chart, onSubmi
     </div>
     <form className="chart-active-form" onSubmit={submit}>
       <label className="chart-active-field chart-active-name"><span>Họ và tên</span><input required autoComplete="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
-      <label className="chart-active-field"><span><CalendarDays size={12} />Ngày sinh dương lịch</span><input aria-label="Ngày sinh dương lịch" required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+      <label className="chart-active-field"><span><CalendarDays size={12} />Ngày sinh dương lịch</span><input aria-label="Ngày sinh dương lịch" required type="text" inputMode="numeric" placeholder="DD-MM-YYYY" value={birthDateText} onChange={(event) => setBirthDateText(completeBirthDateSegment(event.currentTarget, event.nativeEvent as InputEvent))} onBlur={() => { if (birthDate) setBirthDateText(formatBirthDateInput(birthDate)); }} /></label>
       <label className="chart-active-field"><span><Clock3 size={12} />Giờ sinh</span><input aria-label="Giờ sinh" required type="time" value={form.time} onChange={(event) => setForm({ ...form, time: event.target.value })} /></label>
       <label className="chart-active-field"><span>Giới tính</span><select value={form.gender} onChange={(event) => setForm({ ...form, gender: event.target.value as Gender })}><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select></label>
       <label className="chart-active-field chart-active-year"><span>Năm xem</span><input aria-label="Năm xem" required type="number" min="1900" max="2100" value={form.forecastYear} onChange={(event) => setForm({ ...form, forecastYear: Number(event.target.value) })} /></label>

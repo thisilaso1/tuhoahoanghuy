@@ -1,3 +1,4 @@
+import { completeBirthDateSegment, formatBirthDateInput, parseBirthDateInput } from '../../domain/birthDateInput';
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { BirthInput, CalendarType, Gender } from '../../domain/types';
@@ -17,10 +18,12 @@ export const ChartCreationView: React.FC = () => {
     forecastYear: 2026,
     notes: '',
   });
+  const [birthDateText, setBirthDateText] = useState(() => formatBirthDateInput(form.date));
+  const birthDate = parseBirthDateInput(birthDateText, form.calendar);
   const [formError, setFormError] = useState('');
 
   // Tính toán nháp tức thì để người dùng xem trước Can Chi
-  const [sYear, sMonth, sDay] = form.date.split('-').map(Number);
+  const [sYear, sMonth, sDay] = (birthDate ?? form.date).split('-').map(Number);
   const [hour, min] = form.time.split(':').map(Number);
 
   const lunar = form.calendar === 'solar' ? solarToLunar(sDay, sMonth, sYear) : { lYear: sYear, lMonth: sMonth, lDay: sDay, isLeap: Boolean(form.isLeapMonth) };
@@ -36,9 +39,13 @@ export const ChartCreationView: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!birthDate) {
+      setFormError('Vui lòng nhập ngày sinh hợp lệ theo DD-MM-YYYY.');
+      return;
+    }
     try {
       const finalName = form.name.trim() || 'Vô Danh Cư Sĩ';
-      createChart({ ...form, name: finalName });
+      createChart({ ...form, date: birthDate, name: finalName });
       setFormError('');
       navigateTo('/menh-ban');
     } catch (error) {
@@ -145,11 +152,14 @@ export const ChartCreationView: React.FC = () => {
                 <Calendar size={13} /> Ngày Sinh
               </label>
               <input
-                type="date"
+                type="text"
+                inputMode="numeric"
+                placeholder="DD-MM-YYYY"
                 required
                 aria-label="Ngày sinh"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                value={birthDateText}
+                onChange={(e) => setBirthDateText(completeBirthDateSegment(e.currentTarget, e.nativeEvent as InputEvent))}
+                onBlur={() => { if (birthDate) setBirthDateText(formatBirthDateInput(birthDate)); }}
                 className="w-full rounded-xl border border-amber-900/40 bg-slate-950 px-3.5 py-2 text-xs sm:text-sm text-amber-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
