@@ -3,14 +3,12 @@ import { useApp } from '../../context/AppContext';
 import { STEMS, TransformationType } from '../../domain/types';
 import {
   calculateAllFlyingTransformations,
-  getAnnualTransformations,
-  getBirthYearTransformations,
   getTuHoaRules,
   TU_HOA_KHAM_THIEN,
   TU_HOA_NAM_PHAI,
   TuHoaSchool,
 } from '../../domain/tuHoaEngine';
-import { Layers, ArrowRight, ShieldCheck, Sparkles, Filter } from 'lucide-react';
+import { Layers, ArrowRight, Sparkles, Filter } from 'lucide-react';
 
 const FOUR_HUA = [
   { symbol: 'A', name: 'Hóa Lộc', color: 'text-emerald-300', description: 'Duyên kết nối, nguồn lực và cơ hội. Xem sao mang Lộc và cung tiếp nhận để biết lĩnh vực được chú ý.' },
@@ -26,10 +24,6 @@ export const TuHoaView: React.FC = () => {
   const [selectedPalaceFilter, setSelectedPalaceFilter] = useState<number | 'all'>('all');
 
   const rules = getTuHoaRules(selectedSchool);
-  const birthTransformations = getBirthYearTransformations(activeChart, selectedSchool);
-  const annualTransformations = getAnnualTransformations(activeChart, activeChart.forecastYear, selectedSchool);
-  const birthLoc = birthTransformations.find(({ type }) => type === 'Lộc');
-  const annualLoc = annualTransformations.find(({ type }) => type === 'Lộc');
   const flyingTransformations = calculateAllFlyingTransformations(activeChart, selectedSchool);
 
   const filteredFlying = flyingTransformations.filter((f) => {
@@ -84,43 +78,6 @@ export const TuHoaView: React.FC = () => {
         </div>
       </div>
 
-      {/* Sinh Niên Tứ Hóa Cards (Tiên Thiên) */}
-      <section className="mb-10">
-        <h2 className="font-serif text-lg font-bold text-amber-200 mb-3 flex items-center gap-2">
-          <ShieldCheck size={16} className="text-emerald-400" />
-          Sinh Niên Tứ Hóa (Năm {activeChart.birthCanChi.year.stem} {activeChart.birthCanChi.year.branch} · {activeChart.name})
-        </h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {birthTransformations.map((t) => {
-            const badgeClasses = {
-              Lộc: 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300',
-              Quyền: 'border-amber-500/40 bg-amber-950/40 text-amber-300',
-              Khoa: 'border-sky-500/40 bg-sky-950/40 text-sky-300',
-              Kỵ: 'border-rose-500/40 bg-rose-950/40 text-rose-300',
-            };
-            return (
-              <div
-                key={t.type}
-                className={`rounded-2xl border p-4 shadow-lg backdrop-blur-md ${badgeClasses[t.type]}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-serif text-base font-bold">Hóa {t.type}</span>
-                  <span className="rounded bg-slate-900/80 px-2 py-0.5 text-xs font-semibold">
-                    Sao {t.star}
-                  </span>
-                </div>
-                <div className="text-xs font-semibold text-amber-200 mb-1">
-                  Tọa tại Cung {t.palaceName}
-                </div>
-                <p className="text-[11px] opacity-90 leading-relaxed">
-                  {t.meaning}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       <section className="mb-10 space-y-4 rounded-2xl border border-amber-900/30 bg-slate-900/80 p-5" aria-labelledby="tu-hoa-guide">
         <div>
           <h2 id="tu-hoa-guide" className="font-serif text-lg font-bold text-amber-200">Kiến thức về bộ bốn Tứ Hóa</h2>
@@ -142,18 +99,12 @@ export const TuHoaView: React.FC = () => {
             <p className="mt-1 text-sm leading-relaxed text-stone-300">
               Lấy Can năm sinh để tra bốn sao mang Lộc, Quyền, Khoa, Kỵ. Đây là lớp nguyên cục của đương số. Đổi năm xem vẫn giữ các vị trí này.
             </p>
-            {birthLoc && <p className="mt-2 text-sm text-emerald-300">
-              Trên lá số này, Can {activeChart.birthCanChi.year.stem} an Hóa Lộc năm sinh cho {birthLoc.star} tại cung {birthLoc.palaceName}.
-            </p>}
           </article>
           <article>
             <h3 className="font-semibold text-amber-200">Tứ Hóa lưu niên · Năm đang xem</h3>
             <p className="mt-1 text-sm leading-relaxed text-stone-300">
               Lấy Can năm âm lịch đang xem để tra bốn sao mang Hóa rồi tìm cung có các sao ấy trên lá số gốc. Đây là lớp theo năm, nên đổi năm xem có thể đổi sao và cung được kích hoạt.
             </p>
-            {annualLoc && <p className="mt-2 text-sm text-emerald-300">
-              Năm {activeChart.forecastYear}, Can {activeChart.forecastCanChi.stem} an Hóa Lộc lưu niên cho {annualLoc.star} tại cung {annualLoc.palaceName}.
-            </p>}
           </article>
         </div>
         <article className="border-t border-amber-900/30 pt-4">
