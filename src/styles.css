@@ -984,7 +984,7 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-subject-heading .chart-center-name { margin: 2px 0; font-size: 22px; line-height: 1.15; }
 .chart-theme .chart-subject-heading .chart-center-meta { font-size: 11px; }
 .chart-theme .chart-subject-panel .chart-center-data { display: flex; flex-direction: column; justify-content: center; grid-column: 2; grid-row: 1 / span 2; align-self: center; width: 100%; max-width: none; padding: 8px 10px; font-size: 11px; background: var(--chart-cell-alt); }
-.chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; margin-left: 40px; }
+.chart-theme .chart-subject-panel .chart-center-foot { grid-column: 1; grid-row: 2; }
 .chart-theme .chart-subject-slogan { grid-column: 1 / -1; grid-row: 3; margin: 1px 0 0; color: var(--chart-muted); font-family: "Newsreader", Georgia, serif; font-size: 12px; font-style: italic; letter-spacing: .025em; text-align: center; }
 .chart-theme .palace-minor-columns { display: block; min-width: 0; line-height: 1.25; }
 .chart-theme .palace-auxiliary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 5px 10px; min-width: 0; }
@@ -1019,8 +1019,8 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .palace-minor-star[data-element], .chart-theme .palace-good-star[data-element] { color: var(--chart-element-color, var(--chart-ink)); }
 
 /* Central birth details: vertical reading order with a quiet Hoài Nguyệt Các watermark. */
-.chart-theme .center-chamber { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; padding: clamp(5px, 1vw, 12px); }
-.chart-theme .chart-subject-panel { position: relative; isolation: isolate; display: flex; width: min(100%, 450px); height: 100%; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; overflow: hidden; padding: clamp(8px, 1.5vw, 16px); border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 14px; background: transparent; box-shadow: 0 8px 22px var(--chart-shadow); }
+.chart-theme .center-chamber { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; padding: 3px; }
+.chart-theme .chart-subject-panel { position: relative; isolation: isolate; display: flex; width: 100%; height: 100%; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; overflow: hidden; padding: clamp(8px, 1.5vw, 16px); border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 10px; background: transparent; }
 .chart-theme .chart-subject-panel::before { position: absolute; z-index: 0; inset: 0; content: ""; opacity: .13; background: linear-gradient(135deg, color-mix(in srgb, var(--chart-cell) 66%, transparent), color-mix(in srgb, var(--chart-center) 80%, transparent)), url("/art/moon-pavilion.png") center 48% / cover no-repeat; }
 .chart-theme .chart-subject-panel::after { position: absolute; z-index: 1; inset: 50% auto auto 50%; content: "HOÀI NGUYỆT CÁC"; color: color-mix(in srgb, var(--chart-accent) 9%, transparent); font-family: "Newsreader", Georgia, serif; font-size: clamp(19px, 3.2vw, 38px); font-weight: 700; letter-spacing: .09em; line-height: 1; white-space: nowrap; transform: translate(-50%, -50%) rotate(-8deg); pointer-events: none; }
 .chart-theme .chart-subject-panel > * { position: relative; z-index: 2; }
@@ -1028,13 +1028,13 @@ h1, h2, h3, h4, .font-serif {
 .chart-theme .chart-center-brand .chart-center-symbol { font-size: 22px; line-height: 1; }
 .chart-theme .chart-center-brand-name { color: var(--chart-accent); font-family: "Newsreader", Georgia, serif; font-size: clamp(12px, 1.4vw, 16px); font-weight: 700; letter-spacing: .16em; }
 .chart-theme .chart-center-eyebrow { color: var(--chart-muted); font-size: 8px; font-weight: 700; letter-spacing: .13em; }
-.chart-theme .chart-center-name-row { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 3px; border-bottom: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); }
-.chart-theme .chart-center-name { min-width: 0; margin: 0; font-family: "Newsreader", Georgia, serif; font-size: clamp(14px, 1.8vw, 19px); font-weight: 700; line-height: 1.15; text-align: right; overflow-wrap: anywhere; }
+.chart-theme .chart-center-name-row { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; gap: 6px; text-align: left; padding-bottom: 3px; border-bottom: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); }
+.chart-theme .chart-center-name { min-width: 0; margin: 0; font-family: "Newsreader", Georgia, serif; font-size: clamp(14px, 1.8vw, 19px); font-weight: 700; line-height: 1.15; text-align: left; overflow-wrap: anywhere; }
 .chart-theme .chart-center-meta { color: var(--chart-muted); font-size: 9px; line-height: 1.2; }
-.chart-theme .chart-subject-panel .chart-center-data { display: grid; width: 100%; max-width: 390px; gap: 2px; margin: 0; padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--chart-cell) 82%, var(--chart-center)); box-shadow: 0 4px 12px color-mix(in srgb, var(--chart-shadow) 48%, transparent); }
-.chart-theme .chart-info-row { display: grid; grid-template-columns: minmax(84px, .72fr) minmax(0, 1.28fr); align-items: baseline; gap: 6px; min-width: 0; line-height: 1.2; }
+.chart-theme .chart-subject-panel .chart-center-data { display: grid; flex: 1 0 auto; width: 100%; grid-template-columns: minmax(0, 1fr); justify-content: stretch; align-content: space-evenly; gap: 2px; margin: 0; padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--chart-border) 75%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--chart-cell) 82%, var(--chart-center)); box-shadow: none; }
+.chart-theme .chart-info-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; text-align: left; gap: 6px; min-width: 0; line-height: 1.2; }
 .chart-theme .chart-info-row .chart-data-label { font-size: 9px; }
-.chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { min-width: 0; font-size: 10px; text-align: right; overflow-wrap: anywhere; }
+.chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { min-width: 0; font-size: 10px; text-align: left; overflow-wrap: anywhere; }
 .chart-theme .chart-center-foot { color: var(--chart-muted); font-size: 8px; font-weight: 700; letter-spacing: .09em; line-height: 1.2; text-align: center; }
 .chart-theme .chart-center-foot span { padding-inline: 3px; }
 .chart-theme .chart-subject-slogan { margin: 1px 0 0; font-size: 10px; }
@@ -1066,7 +1066,7 @@ h1, h2, h3, h4, .font-serif {
   .chart-theme .chart-center-name { font-size: 11px; }
   .chart-theme .chart-center-meta { font-size: 7px; }
   .chart-theme .chart-subject-panel .chart-center-data { gap: 2px; padding: 4px; }
-  .chart-theme .chart-info-row { grid-template-columns: minmax(0, 1fr); gap: 0; line-height: 1.12; }
+  .chart-theme .chart-info-row { gap: 3px; line-height: 1.12; }
   .chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { font-size: 8px; text-align: left; }
   .chart-theme .chart-center-foot { font-size: 6px; letter-spacing: .04em; }
   .chart-theme .chart-subject-slogan { font-size: 7px; }
@@ -1582,7 +1582,7 @@ h1, h2, h3, h4, .font-serif {
   .chart-theme .chart-center-name { font-size: 11px; }
   .chart-theme .chart-center-meta { font-size: 7px; }
   .chart-theme .chart-subject-panel .chart-center-data { gap: 2px; padding: 4px; }
-  .chart-theme .chart-info-row { grid-template-columns: minmax(0, 1fr); gap: 0; line-height: 1.12; }
+  .chart-theme .chart-info-row { gap: 3px; line-height: 1.12; }
   .chart-theme .chart-info-row .chart-data-value, .chart-theme .chart-info-row .chart-data-emphasis, .chart-theme .chart-info-row .chart-data-forecast { font-size: 8px; text-align: left; }
   .chart-theme .chart-center-foot { font-size: 6px; letter-spacing: .04em; }
   .chart-theme .chart-subject-slogan { font-size: 7px; }
