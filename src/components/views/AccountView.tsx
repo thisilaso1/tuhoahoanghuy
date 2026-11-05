@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowRight, Moon } from 'lucide-react';
 import { useApp, type AuthenticatedUserProfile } from '../../context/AppContext';
 
@@ -15,6 +15,17 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
     const status = new URLSearchParams(window.location.search).get('google');
     return status && Object.hasOwn(GOOGLE_ERRORS, status) ? GOOGLE_ERRORS[status] : '';
   });
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/auth/providers', { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((providers) => {
+        if (!controller.signal.aborted) setGoogleEnabled(providers?.google === true);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   const registering = mode === 'register';
   const title = registering ? 'Đăng ký' : 'Đăng nhập';
 
@@ -93,10 +104,10 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
               <button type="submit" disabled={busy} className="chart-create-submit disabled:opacity-60">
                 {busy ? 'Đang xử lý…' : title}<ArrowRight size={16} />
               </button>
-              <a href="/api/auth/google"
+              {googleEnabled && <a href="/api/auth/google"
                 className="flex min-h-11 items-center justify-center rounded-xl border border-slate-500 bg-slate-950/60 px-4 text-sm font-semibold text-slate-100 hover:border-sky-200 focus-visible:outline focus-visible:outline-sky-200">
                 Tiếp tục với Google
-              </a>
+              </a>}
               <p className="text-center text-sm text-slate-300">
                 {registering ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
                 <button type="button" className="font-semibold text-sky-200 underline underline-offset-4"
