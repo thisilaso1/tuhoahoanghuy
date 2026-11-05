@@ -40,7 +40,8 @@ const MALEFIC_STAR_BRIGHTNESS = {
   DIA_KIEP: 'HHĐHHĐHHĐHHĐ',
   HOA_TINH: 'HHĐHĐHĐHHHĐH',
   LINH_TINH: 'HHĐHĐHĐHHHĐH',
-  KINH_DUONG: 'ĐHHĐHHĐHHĐHH',
+  // Dần retains the existing profile value pending source confirmation.
+  KINH_DUONG: 'VMHHMHHMVHMV',
   DA_LA: 'HĐHHĐHHĐHHĐH',
   THIEN_HINH: 'HHĐĐHHHHĐĐHH',
   THIEN_RIEU: 'HĐHHHHHĐHĐHH',

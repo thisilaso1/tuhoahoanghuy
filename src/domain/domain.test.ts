@@ -117,8 +117,6 @@ describe('Domain Astrology & I Ching Engines', () => {
   it('audits all six source-backed Nam Phái malefics without inferring brightness for other stars', () => {
     expect(NAM_PHAI_MINOR_BRIGHTNESS_DEFINITIONS).toHaveLength(84); // six malefics + Thiên Khốc, 12 branches each
     expect(NAM_PHAI_MINOR_BRIGHTNESS_DEFINITIONS.every(({ verified, sourceReference }) => verified && sourceReference.startsWith('https://hocvienlyso.org/'))).toBe(true);
-    expect(getNamPhaiMinorStarBrightness('Kình Dương', 'Thìn')).toBe('Đắc');
-    expect(getNamPhaiMinorStarBrightness('Kình Dương', 'Tý')).toBe('Hãm');
     expect(getNamPhaiMinorStarBrightness('Đà La', 'Dần')).toBe('Đắc');
     expect(getNamPhaiMinorStarBrightness('Hỏa Tinh', 'Ngọ')).toBe('Đắc');
     expect(getNamPhaiMinorStarBrightness('Linh Tinh', 'Sửu')).toBe('Hãm');
@@ -638,6 +636,29 @@ describe('Domain Astrology & I Ching Engines', () => {
       phiHoaVisibility: { Lộc: false, Quyền: false, Khoa: false, Kỵ: false },
     }));
     expect((markup.match(/aria-hidden="false"/g) ?? [])).toHaveLength(transformations.length);
+  });
+
+  it('renders natal Kình Dương at Dậu as Hãm in Nam Phái', () => {
+    const chart = generateNatalChart({ name: 'Canh Thìn', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2020 });
+    const markup = renderToStaticMarkup(React.createElement(NatalChart12, {
+      chart,
+      focusedPalaceIndex: null,
+      selectedPhiPalaceIndices: [],
+      onSelectPalace: () => undefined,
+      layers: { showBirthYear: true, showAnnual: true },
+      theme: 'paper',
+      school: 'nam_phai',
+      palaceAgeOptions: { enabled: false, mode: 'FULL_CAN_CHI', startYear: 1920, endYear: 2030, nearestToBirthYearOnly: false },
+      selectedLunarMonth: 1,
+      phiHoaVisibility: { Lộc: true, Quyền: true, Khoa: true, Kỵ: true },
+    }));
+    const dau = chart.palaces.find(({ branch }) => branch === 'Dậu');
+    expect(getStarBrightness('KINH_DUONG', 'Dậu')).toBe('Hãm');
+    expect(dau?.minorStars.find(({ name }) => name === 'Kình Dương')?.brightnessByProfile)
+      .toMatchObject({ [NAM_PHAI_FULL_PROFILE_ID]: 'Hãm' });
+    expect(calculateAnnualStars(chart, 2020).find(({ name }) => name === 'Lưu Kình Dương'))
+      .toMatchObject({ branch: 'Dậu', brightness: 'Hãm' });
+    expect(markup).toContain('title="Kình Dương · Hãm tại Dậu">Kình Dương<strong class="palace-minor-brightness"> (H)</strong>');
   });
 
   it('isolates Nam Phái rendering from Khâm Thiên Phi Hóa and retains all twelve palaces', () => {
