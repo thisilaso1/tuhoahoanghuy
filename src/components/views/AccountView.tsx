@@ -46,7 +46,7 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
         return;
       }
       if (response.status === 409) {
-        setError('Email này đã có tài khoản. Bạn có thể chuyển sang trang đăng nhập.');
+        setError('Email này đã được dùng làm tên đăng nhập. Bạn có thể chuyển sang trang đăng nhập.');
         return;
       }
       if (response.status === 400) {
@@ -91,8 +91,9 @@ export function AccountView({ mode }: { mode: 'login' | 'register' }) {
                 <input id="account-name" name="name" autoComplete="name" required maxLength={120} className="w-full px-3" />
               </div>}
               <div>
-                <label htmlFor="account-email">Email</label>
-                <input id="account-email" name="email" type="email" autoComplete="username" required maxLength={254} className="w-full px-3" />
+                <label htmlFor="account-email">Email (tên đăng nhập)</label>
+                <input id="account-email" name="email" type="email" autoComplete="username" required maxLength={254} aria-describedby={registering ? 'account-email-hint' : undefined} className="w-full px-3" />
+                {registering && <p id="account-email-hint" className="mt-1 text-xs text-slate-400">Dùng email này để đăng nhập sau khi tạo tài khoản.</p>}
               </div>
               <div>
                 <label htmlFor="account-password">Mật khẩu</label>
