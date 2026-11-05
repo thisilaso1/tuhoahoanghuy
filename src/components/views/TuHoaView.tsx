@@ -18,13 +18,13 @@ const FOUR_HUA = [
 ];
 
 export const TuHoaView: React.FC = () => {
-  const { activeChart, sendMessageToThienCo, navigateTo } = useApp();
+  const { activeChart, authenticatedUser } = useApp();
   const [selectedSchool, setSelectedSchool] = useState<TuHoaSchool>('kham_thien');
   const [filterType, setFilterType] = useState<TransformationType | 'all'>('all');
   const [selectedPalaceFilter, setSelectedPalaceFilter] = useState<number | 'all'>('all');
 
   const rules = getTuHoaRules(selectedSchool);
-  const flyingTransformations = calculateAllFlyingTransformations(activeChart, selectedSchool);
+  const flyingTransformations = authenticatedUser ? calculateAllFlyingTransformations(activeChart, selectedSchool) : [];
 
   const filteredFlying = flyingTransformations.filter((f) => {
     if (filterType !== 'all' && f.type !== filterType) return false;
@@ -178,7 +178,7 @@ export const TuHoaView: React.FC = () => {
       </section>
 
       {/* Flying & Self Transformation Explorer */}
-      <section className="rounded-2xl border border-amber-900/30 bg-slate-900/80 p-5 shadow-xl">
+      {authenticatedUser && <section className="rounded-2xl border border-amber-900/30 bg-slate-900/80 p-5 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-amber-900/20 pb-4 mb-4">
           <div>
             <h2 className="font-serif text-lg font-bold text-amber-200">
@@ -279,7 +279,7 @@ export const TuHoaView: React.FC = () => {
             </div>
           ))}
         </div>
-      </section>
+      </section>}
     </div>
   );
 };

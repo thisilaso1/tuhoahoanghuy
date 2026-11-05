@@ -8,6 +8,8 @@ import { ThienCoCopilot } from '../ai/copilot';
 
 export type AppRoute =
   | '/'
+  | '/dang-nhap'
+  | '/dang-ky'
   | '/la-so'
   | '/menh-ban'
   | '/thien-co'
@@ -31,9 +33,9 @@ export interface PersonalNote {
 export interface AuthenticatedUserProfile {
   id: string;
   name: string;
-  birthDate: string;
-  birthTime: string;
-  gender: 'Nam' | 'Nữ';
+  birthDate?: string;
+  birthTime?: string;
+  gender?: 'Nam' | 'Nữ';
   calendar?: 'solar' | 'lunar';
   isLeapMonth?: boolean;
 }
@@ -109,7 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => {
     const path = window.location.pathname;
     const validRoutes: AppRoute[] = [
-      '/', '/la-so', '/menh-ban', '/thien-co', '/tu-hoa', '/kinh-dich', '/van-han', '/thu-cac', '/ho-so', '/cai-dat',
+      '/', '/dang-nhap', '/dang-ky', '/la-so', '/menh-ban', '/thien-co', '/tu-hoa', '/kinh-dich', '/van-han', '/thu-cac', '/ho-so', '/cai-dat',
     ];
     if (validRoutes.includes(path as AppRoute)) return path as AppRoute;
     if (window.location.hash) {

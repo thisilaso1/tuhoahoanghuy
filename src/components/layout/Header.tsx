@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp, AppRoute } from '../../context/AppContext';
+import { AccountLogin } from './AccountLogin';
 import { SealStamp } from '../common/SealStamp';
 import {
   Compass,
@@ -73,17 +74,19 @@ export const Header: React.FC = () => {
               <span className="max-w-[150px] truncate font-medium">{authenticatedUser.name}</span>
             </button>
           ) : null}
+          <AccountLogin />
 
           {/* Quick links to Profile & Settings */}
-          <button
+          {authenticatedUser && <button
             onClick={() => navigateTo('/ho-so')}
-            className={`hidden rounded-full p-2 text-stone-300 transition hover:bg-slate-800 hover:text-amber-200 sm:block ${
+            className={`rounded-full p-2 text-stone-300 transition hover:bg-slate-800 hover:text-amber-200 ${
               currentRoute === '/ho-so' ? 'bg-amber-500/20 text-amber-200' : ''
             }`}
+            aria-label="Hồ sơ & Ghi chép"
             title="Hồ sơ & Ghi chép"
           >
             <User size={16} />
-          </button>
+          </button>}
 
           <button
             onClick={() => navigateTo('/cai-dat')}

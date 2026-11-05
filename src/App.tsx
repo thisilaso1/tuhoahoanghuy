@@ -3,6 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
 import { DaoSiDonate } from './components/views/DaoSiDonate';
 import { Footer } from './components/layout/Footer';
+import { AccountView } from './components/views/AccountView';
 import { ChartCreationView } from './components/views/ChartCreationView';
 import { LandingView } from './components/views/LandingView';
 import { MenhBanView } from './components/views/MenhBanView';
@@ -15,12 +16,16 @@ import { HoSoView } from './components/views/HoSoView';
 import { CaiDatView } from './components/views/CaiDatView';
 
 const MainRouter: React.FC = () => {
-  const { currentRoute } = useApp();
+  const { currentRoute, authenticatedUser } = useApp();
 
   const renderCurrentView = () => {
     switch (currentRoute) {
       case '/':
         return <LandingView />;
+      case '/dang-nhap':
+        return <AccountView key="login" mode="login" />;
+      case '/dang-ky':
+        return <AccountView key="register" mode="register" />;
       case '/la-so':
         return <ChartCreationView />;
       case '/menh-ban':
@@ -36,7 +41,7 @@ const MainRouter: React.FC = () => {
       case '/thu-cac':
         return <ThuCacView />;
       case '/ho-so':
-        return <HoSoView />;
+        return authenticatedUser ? <HoSoView /> : <AccountView key="profile-login" mode="login" />;
       case '/cai-dat':
         return <CaiDatView />;
       default:

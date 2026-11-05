@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { SealStamp } from '../common/SealStamp';
 
 export const Footer: React.FC = () => {
-  const { navigateTo } = useApp();
+  const { navigateTo, authenticatedUser } = useApp();
 
   return (
     <footer className="mt-20 border-t border-amber-900/20 bg-slate-950 py-12 text-stone-400">
@@ -72,11 +72,11 @@ export const Footer: React.FC = () => {
                   Cấu Hình API Key & Môn Phái
                 </button>
               </li>
-              <li>
+              {authenticatedUser && <li>
                 <button onClick={() => navigateTo('/ho-so')} className="hover:text-amber-200 transition">
                   Bảo Mật Dữ Liệu Bản Mệnh
                 </button>
-              </li>
+              </li>}
               <li className="pt-2 text-[11px] text-stone-500">
                 Toán thuật tất định vận hành 100% trên thiết bị của bạn.
               </li>
