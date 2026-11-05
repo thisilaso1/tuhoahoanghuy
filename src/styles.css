@@ -1590,3 +1590,42 @@ h1, h2, h3, h4, .font-serif {
   .chart-theme .chart-center-foot { font-size: 6px; letter-spacing: .04em; }
   .chart-theme .chart-subject-slogan { font-size: 7px; }
 }
+
+.dao-si-donate { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 40; text-align: center; }
+.dao-si-donate summary { display: grid; width: fit-content; margin-left: auto; border-radius: 50%; cursor: pointer; list-style: none; }
+.dao-si-donate summary::-webkit-details-marker { display: none; }
+.dao-si-donate summary:focus-visible { outline: 2px solid #d9c08b; outline-offset: 3px; }
+.dao-si-greeting { position: absolute; right: calc(100% + 8px); bottom: 24px; width: max-content; max-width: min(190px, calc(100vw - 128px)); padding: 8px 11px; border: 1px solid #c5d2d9; border-radius: 12px 12px 3px 12px; background: #f3f6f7; color: #233a49; font-size: 12px; line-height: 1.35; text-align: left; }
+.dao-si-donate[open] .dao-si-greeting { display: none; }
+.dao-si-donate small { font-size: 12px; }
+.dao-si-portrait { width: clamp(74px, 12vw, 104px); height: auto; filter: drop-shadow(0 4px 8px #07111d66); }
+.dao-si-donate:not([open]) .dao-si-portrait { animation: dao-si-idle 3.8s ease-in-out infinite; }
+.dao-si-hand { transform-box: fill-box; transform-origin: center bottom; }
+.dao-si-head { transform-box: view-box; transform-origin: 90px 105px; }
+.dao-si-mouth { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.dao-si-donate[open] .dao-si-head { animation: dao-si-look-up .32s .52s both; }
+.dao-si-donate[open] .dao-si-gaze { animation: dao-si-gaze-up .32s .52s both; }
+.dao-si-donate[open] .dao-si-smile { animation: dao-si-speaking-smile 1.44s .84s both; }
+.dao-si-donate[open] .dao-si-mouth { animation: dao-si-talk .36s .84s 4; }
+.dao-si-spark { opacity: .35; }
+.dao-si-donate[open] .dao-si-hand { animation: dao-si-divination .55s ease-in-out; }
+.dao-si-donate[open] .dao-si-spark { animation: dao-si-glimmer .55s ease-in-out; }
+.dao-si-speech { position: absolute; right: 0; bottom: calc(100% + 8px); width: min(320px, calc(100vw - 32px)); max-height: calc(100dvh - 130px); overflow: auto; padding: 14px; border: 1px solid #c5d2d9; border-radius: 16px; background: #f3f6f7; color: #233a49; }
+.dao-si-speech p { margin: 0 0 12px; font-family: "Newsreader", Georgia, serif; font-size: 16px; line-height: 1.45; }
+.dao-si-donate[open] .dao-si-speech { animation: dao-si-dialogue .25s .84s both; }
+.dao-si-qr { position: relative; width: min(100%, 230px); aspect-ratio: 1; margin: 0 auto 8px; overflow: hidden; background: #fff; }
+.dao-si-qr img { position: absolute; inset: 0 auto auto 0; width: 157.5%; max-width: none; height: auto; transform: translate(-18.25%, -40.39%); }
+@keyframes dao-si-idle { 50% { transform: translateY(-5px); } }
+@keyframes dao-si-divination { 30%, 70% { transform: rotate(-16deg); } 50% { transform: rotate(7deg); } }
+@keyframes dao-si-glimmer { 40%, 70% { opacity: 1; } }
+@keyframes dao-si-look-up { from { transform: none; } to { transform: translateY(-4px) rotate(-11deg) scaleY(.96); } }
+@keyframes dao-si-gaze-up { from { transform: none; } to { transform: translate(1px, -2.5px); } }
+@keyframes dao-si-speaking-smile { 0%, 99% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes dao-si-talk { 0%, 100% { opacity: 0; transform: scaleY(.2); } 45%, 65% { opacity: 1; transform: scaleY(1); } }
+@keyframes dao-si-dialogue { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .dao-si-donate:not([open]) .dao-si-portrait,
+  .dao-si-donate[open] :is(.dao-si-hand, .dao-si-spark, .dao-si-head, .dao-si-gaze, .dao-si-smile, .dao-si-mouth, .dao-si-speech) { animation: none; }
+}
+
+@media print { .dao-si-donate { display: none; } }

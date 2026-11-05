@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
+import { DaoSiDonate } from './components/views/DaoSiDonate';
 import { Footer } from './components/layout/Footer';
 import { ChartCreationView } from './components/views/ChartCreationView';
 import { LandingView } from './components/views/LandingView';
@@ -50,6 +51,7 @@ const MainRouter: React.FC = () => {
         {renderCurrentView()}
       </main>
       <Footer />
+      <DaoSiDonate />
     </div>
   );
 };
