@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { NatalChart } from '../../domain/types';
+import { NatalChart, STEMS } from '../../domain/types';
 import { PalaceCell } from './PalaceCell';
 import { calculateAllFlyingTransformations, FlyingTransformation, getAnnualTransformations, getBirthYearTransformations, TuHoaSchool } from '../../domain/tuHoaEngine';
 import { calculateAnnualStars } from '../../domain/annualStars';
@@ -113,7 +113,8 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
     : [];
   const palaceAgeMappings = getPalaceAgeMappings(chart.palaces, chart.lunarDate.year, palaceAgeOptions);
   const laiNhan = school === 'nam_phai' && namPhaiRelationOptions.laiNhan ? findNamPhaiLaiNhanPalace(chart) : null;
-  const laiNhanInfo = findNamPhaiLaiNhanPalace(chart);
+  const isYangYear = STEMS.indexOf(chart.birthCanChi.year.stem) % 2 === 0;
+  const isYinYangAligned = isYangYear === (chart.gender === 'Nam');
   const menhBranch = chart.palaces.find((palace) => palace.index === chart.menhPalaceIndex)?.branch;
   const menhChuByBranch: Record<string, string> = {
     Tý: 'Tham Lang', Sửu: 'Cự Môn', Dần: 'Lộc Tồn', Mão: 'Văn Khúc',
@@ -121,9 +122,6 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
     Thân: 'Liêm Trinh', Dậu: 'Văn Khúc', Tuất: 'Lộc Tồn', Hợi: 'Cự Môn',
   };
   const menhChu = menhBranch ? menhChuByBranch[menhBranch] : '—';
-  const laiNhanName = laiNhanInfo.status === 'FOUND'
-    ? `${laiNhanInfo.palace.name} (${laiNhanInfo.palace.stem} ${laiNhanInfo.branch})`
-    : 'Chưa xác định';
   const relationFocus = hoveredPalaceIndex ?? focusedPalaceIndex;
   const relations = relationFocus === null ? null : getNamPhaiPalaceRelations(relationFocus);
   const relationRole = (index: number): 'self' | 'tam-hop' | 'xung-chieu' | 'giap-cung' | null => {
@@ -214,14 +212,15 @@ export const NatalChart12: React.FC<NatalChart12Props> = ({
               <span className="chart-data-label">Họ và tên</span>
               <strong className="chart-center-name">{chart.name}</strong>
             </div>
-            <div className="chart-center-meta">{chart.gender} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}</div>
+            <div className="chart-center-meta">{isYangYear ? 'Dương' : 'Âm'} {chart.gender.toLowerCase()} · {chart.birthCanChi.year.stem} {chart.birthCanChi.year.branch}</div>
             <div className="chart-center-data">
-              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh dương</span><strong className="chart-data-value">{formatDateDDMMYYYY(chart.solarDate)} · {chart.time}</strong></div>
-              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh âm lịch</span><strong className="chart-data-value">{String(chart.lunarDate.day).padStart(2, '0')}/{String(chart.lunarDate.month).padStart(2, '0')}/{chart.lunarDate.year}{chart.lunarDate.isLeap ? ' (nhuận)' : ''} · {chart.birthCanChi.hour.stem} {chart.birthCanChi.hour.branch}</strong></div>
-              <div className="chart-info-row"><span className="chart-data-label">Lai nhân cung</span><strong className="chart-data-value">{laiNhanName}</strong></div>
-              <div className="chart-info-row"><span className="chart-data-label">Bản mệnh</span><strong className="chart-data-emphasis">{chart.napAm}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh dương lịch</span><strong className="chart-data-value">{formatDateDDMMYYYY(chart.solarDate)}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Ngày sinh âm lịch</span><strong className="chart-data-value">{String(chart.lunarDate.day).padStart(2, '0')}-{String(chart.lunarDate.month).padStart(2, '0')}-{chart.lunarDate.year}{chart.lunarDate.isLeap ? ' (nhuận)' : ''}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Giờ sinh</span><strong className="chart-data-value">{chart.birthCanChi.hour.branch}</strong></div>
               <div className="chart-info-row"><span className="chart-data-label">Cục số</span><strong className="chart-data-emphasis">{chart.cuc.name}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Bản mệnh (nạp âm)</span><strong className="chart-data-emphasis">{chart.napAm}</strong></div>
               <div className="chart-info-row chart-info-row-menh-chu"><span className="chart-data-label">Chủ mệnh</span><strong className="chart-data-emphasis">{menhChu}</strong></div>
+              <div className="chart-info-row"><span className="chart-data-label">Âm dương</span><strong className="chart-data-value">{isYinYangAligned ? 'Thuận lý' : 'Nghịch lý'}</strong></div>
               <div className="chart-info-row"><span className="chart-data-label">Năm xem</span><strong className="chart-data-forecast">{chart.forecastCanChi.stem} {chart.forecastCanChi.branch} {chart.forecastYear}</strong></div>
             </div>
             <div className="chart-center-foot">HOÀI NGUYỆT CÁC <span>·</span> {school === 'nam_phai' ? 'TỬ VI NAM PHÁI' : 'KHÂM THIÊN TỨ HÓA'}</div>
