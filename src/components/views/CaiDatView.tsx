@@ -70,6 +70,7 @@ export const CaiDatView: React.FC = () => {
                 <option value="demo">
                   ✦ Khảo Sát Học Thuật Cổ Điển (Tất định 100% · Không cần API Key)
                 </option>
+                <option value="local">AI Tử Vi nội bộ · Qwen (cần đăng nhập)</option>
                 <option value="gemini">Google Gemini API (Gemini 1.5 Pro / Flash)</option>
                 <option value="openai">OpenAI API (GPT-4o / GPT-4 Turbo)</option>
                 <option value="anthropic">Anthropic API (Claude 3.5 Sonnet)</option>
@@ -78,11 +79,12 @@ export const CaiDatView: React.FC = () => {
               <p className="text-[11px] text-stone-400 mt-1">
                 {localSettings.provider === 'demo'
                   ? 'Chế độ an toàn cao nhất: Sử dụng trực tiếp bộ engine toán học tất định tích hợp sẵn của Hoài Nguyệt Các.'
+                  : localSettings.provider === 'local' ? 'Dùng model Tử Vi trên máy chủ Hoài Nguyệt Các qua tài khoản đăng nhập.'
                   : 'Sử dụng API Key cá nhân của quý vị để trò chuyện với mô hình ngôn ngữ lớn thời gian thực.'}
               </p>
             </div>
 
-            {localSettings.provider !== 'demo' && (
+            {localSettings.provider !== 'demo' && localSettings.provider !== 'local' && (
               <>
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1">

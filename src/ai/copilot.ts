@@ -38,6 +38,46 @@ export class ThienCoCopilot {
   ) {
     this.executor.setChart(activeChart);
 
+    if (this.settings.provider === 'local') {
+      let content: string;
+      try {
+        const response = await fetch('/api/auth/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: userPrompt,
+            school: this.settings.school === 'nam_phai' ? 'nam_phai' : 'kham_thien_tu_hoa',
+            chart: {
+              birthCanChi: activeChart.birthCanChi,
+              cuc: activeChart.cuc,
+              menhPalaceIndex: activeChart.menhPalaceIndex,
+              forecastYear: activeChart.forecastYear,
+              palaces: activeChart.palaces.map((palace) => ({
+                name: palace.name, stem: palace.stem, branch: palace.branch,
+                majorStars: palace.majorStars.map((star) => star.name),
+                minorStars: palace.minorStars.map((star) => star.name),
+              })),
+            },
+          }),
+        });
+        if (response.status === 401) content = 'Vui lòng đăng nhập để dùng AI Tử Vi nội bộ.';
+        else if (response.status === 409) content = 'Model đang huấn luyện hoặc xử lý câu hỏi khác. Bạn thử lại sau nhé.';
+        else if (!response.ok) content = 'AI Tử Vi nội bộ hiện chưa sẵn sàng. Vui lòng thử lại sau.';
+        else {
+          const result = await response.json();
+          content = result.answer;
+          if (result.sources?.length) {
+            content += '\n\nNguồn tham khảo · ' + result.sources.map((source: { title: string }) => source.title).join(', ');
+          }
+        }
+      } catch {
+        content = 'Không kết nối được AI Tử Vi nội bộ.';
+      }
+      onChunk(content);
+      onComplete({ id: `msg-${Date.now()}`, role: 'assistant', content, createdAt: new Date().toISOString() });
+      return;
+    }
+
     // Nếu người dùng có cài đặt API key của nhà cung cấp bên ngoài (Gemini/OpenAI/Anthropic)
     if (this.settings.apiKey && this.settings.provider !== 'demo') {
       try {

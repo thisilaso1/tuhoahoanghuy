@@ -71,7 +71,7 @@ export interface ChatMessage {
 }
 
 export interface AISettings {
-  provider: 'demo' | 'gemini' | 'openai' | 'anthropic' | 'custom';
+  provider: 'local' | 'demo' | 'gemini' | 'openai' | 'anthropic' | 'custom';
   apiKey: string;
   apiEndpoint?: string;
   modelName: string;
