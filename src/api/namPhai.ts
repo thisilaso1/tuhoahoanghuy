@@ -1,4 +1,18 @@
 import type { BirthInput, NatalChart } from '../domain/types';
+import { getStarBrightness, NAM_PHAI_FULL_PROFILE_ID } from '../domain/starBrightness';
+import { STAR_ID_BY_NAME } from '../domain/starElements';
+
+export function palaceReadingPayload(chart: NatalChart, palaceIndex: number, refresh = false) {
+  const palace = chart.palaces.find(value => value.index === palaceIndex);
+  if (!palace) throw new Error('Cung không hợp lệ.');
+  const codes: Record<string, string | null> = { Miếu: 'M', Vượng: 'V', Đắc: 'Đ', Bình: 'B', Hãm: 'H', UNSPECIFIED: null };
+  const stars = (items: typeof palace.majorStars) => items.map(star => ({ ten: star.name,
+    do_sang: codes[getStarBrightness(STAR_ID_BY_NAME[star.name] ?? star.id ?? star.name, palace.branch, NAM_PHAI_FULL_PROFILE_ID)] ?? null }));
+  return { school: 'nam_phai', birthInput: birthInputFromChart(chart), palaceIndex, refresh,
+    cung_vi: { index: palace.index, ten: palace.name, thien_can: palace.stem, dia_chi: palace.branch,
+      gioi_tinh: chart.gender, can_chi: chart.birthCanChi, chinh_tinh: stars(palace.majorStars), phu_tinh: stars(palace.minorStars),
+      tuan: Boolean(palace.tuan), triet: Boolean(palace.triet), dai_han: palace.decade, nam_xem: chart.forecastYear } };
+}
 
 export function birthInputFromChart(chart: NatalChart): BirthInput {
   return { name: chart.name, date: chart.solarDate, time: chart.time, gender: chart.gender,

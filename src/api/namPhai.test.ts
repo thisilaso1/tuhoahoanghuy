@@ -26,3 +26,13 @@ describe('Nam Phai backend contract', () => {
     await expect(readingRequest('', { school: 'nam_phai', birthInput: input })).rejects.toThrow('đăng nhập');
   });
 });
+
+it('sends the full selected palace snapshot including brightness and gender', async () => {
+  const { palaceReadingPayload } = await import('./namPhai');
+  const chart = generateNatalChart({ ...input, time: '10:30' });
+  const payload = palaceReadingPayload(chart, 4);
+  expect(payload.cung_vi).toMatchObject({ index: 4, ten: 'Mệnh', thien_can: 'Canh', dia_chi: 'Thìn', gioi_tinh: 'Nam' });
+  expect(payload.cung_vi.chinh_tinh).toContainEqual({ ten: 'Vũ Khúc', do_sang: 'M' });
+  expect(payload.cung_vi.phu_tinh.length).toBeGreaterThan(0);
+  expect(payload.cung_vi.can_chi.year).toEqual({ stem: 'Canh', branch: 'Thìn' });
+});
