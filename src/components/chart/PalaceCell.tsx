@@ -223,7 +223,7 @@ export const PalaceCell: React.FC<PalaceCellProps> = ({
                 name={star.name}
                 className="palace-major"
               />
-              {star.brightness && (
+              {school === 'nam_phai' && star.brightness && (
                 <span
                   title={star.brightness}
                   data-element={star.element}

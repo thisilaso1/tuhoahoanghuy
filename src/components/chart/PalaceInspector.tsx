@@ -92,9 +92,9 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
                   className="flex items-center gap-1.5 rounded-lg border border-amber-600/30 bg-slate-800/80 px-2.5 py-1 text-xs"
                 >
                   <span className="font-semibold text-amber-100">{star.name}</span>
-                  <span className="rounded bg-amber-500/20 px-1 text-[10px] text-amber-300">
+                  {school === 'nam_phai' && <span className="rounded bg-amber-500/20 px-1 text-[10px] text-amber-300">
                     {star.brightness}
-                  </span>
+                  </span>}
                   <span className="text-[10px] text-stone-400">({star.element})</span>
                 </div>
               ))
