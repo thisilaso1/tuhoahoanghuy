@@ -78,7 +78,7 @@ export const Footer: React.FC = () => {
                 </button>
               </li>}
               <li className="pt-2 text-[11px] text-stone-500">
-                Toán thuật tất định vận hành 100% trên thiết bị của bạn.
+                An sao bằng toán thuật tất định · Nam Phái được tính trên máy chủ.
               </li>
             </ul>
           </div>

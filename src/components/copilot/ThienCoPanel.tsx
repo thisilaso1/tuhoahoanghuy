@@ -180,7 +180,7 @@ export const ThienCoPanel: React.FC<{ fullScreen?: boolean }> = ({ fullScreen = 
           <span className="flex items-center gap-1">
             <HelpCircle size={11} /> Nhấn <kbd className="rounded bg-slate-800 px-1">Enter</kbd> để gửi, <kbd className="rounded bg-slate-800 px-1">Shift + Enter</kbd> để xuống dòng
           </span>
-          <span>Toán học tất định & Không suy đoán bịa đặt</span>
+          <span>An sao tất định · Lời luận AI cần đối chiếu nguồn</span>
         </div>
       </div>
     </div>
