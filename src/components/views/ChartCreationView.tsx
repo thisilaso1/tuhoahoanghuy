@@ -21,6 +21,7 @@ export const ChartCreationView: React.FC = () => {
   const [birthDateText, setBirthDateText] = useState(() => formatBirthDateInput(form.date));
   const birthDate = parseBirthDateInput(birthDateText, form.calendar);
   const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Tính toán nháp tức thì để người dùng xem trước Can Chi
   const [sYear, sMonth, sDay] = (birthDate ?? form.date).split('-').map(Number);
@@ -37,20 +38,22 @@ export const ChartCreationView: React.FC = () => {
   }
   const dayCanChi = getDayCanChi(solarBirth.year, solarBirth.month, solarBirth.day, hour || 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!birthDate) {
       setFormError('Vui lòng nhập ngày sinh hợp lệ theo DD-MM-YYYY.');
       return;
     }
     try {
+      setSubmitting(true);
       const finalName = form.name.trim() || 'Vô Danh Cư Sĩ';
-      createChart({ ...form, date: birthDate, name: finalName });
+      await createChart({ ...form, date: birthDate, name: finalName });
       setFormError('');
       navigateTo('/menh-ban');
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Ngày âm lịch không hợp lệ. Vui lòng kiểm tra lại.');
-    }
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -225,6 +228,7 @@ export const ChartCreationView: React.FC = () => {
           {/* Submit CTA */}
           <button
             type="submit"
+            disabled={submitting}
             className="chart-create-submit"
           >
             <Sparkles size={16} />

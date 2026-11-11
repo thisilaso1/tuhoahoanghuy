@@ -1,4 +1,5 @@
 import { NatalChart, PalaceName } from '../domain/types';
+import { birthInputFromChart } from '../api/namPhai';
 import { DeterministicToolExecutor } from './tools';
 import { AISettings, ChatMessage, ChatWidget, ToolCallTrace } from './types';
 
@@ -47,6 +48,7 @@ export class ThienCoCopilot {
           body: JSON.stringify({
             question: userPrompt,
             school: this.settings.school === 'nam_phai' ? 'nam_phai' : 'kham_thien_tu_hoa',
+            birthInput: this.settings.school === 'nam_phai' ? birthInputFromChart(activeChart) : undefined,
             chart: {
               birthCanChi: activeChart.birthCanChi,
               cuc: activeChart.cuc,

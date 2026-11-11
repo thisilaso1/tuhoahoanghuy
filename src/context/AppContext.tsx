@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { BirthInput, NatalChart } from '../domain/types';
 import { generateNatalChart } from '../domain/tuViEngine';
+import { generateServerNamPhaiChart } from '../api/namPhai';
 import { getYearCanChi, solarToLunar } from '../domain/lunarCalendar';
 import { calculateAnnualLimitState, getAnnualAgeAtBranch } from '../domain/annualLimits';
 import { AISettings, ChatMessage } from '../ai/types';
@@ -48,7 +49,7 @@ interface AppContextType {
   savedCharts: NatalChart[];
   authenticatedUser: AuthenticatedUserProfile | null;
   setAuthenticatedUser: (user: AuthenticatedUserProfile | null) => void;
-  createChart: (input: BirthInput) => NatalChart;
+  createChart: (input: BirthInput) => Promise<NatalChart>;
   updateForecastYear: (year: number) => void;
   selectChart: (chart: NatalChart) => void;
   deleteChart: (id: string) => void;
@@ -290,8 +291,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const createChart = (input: BirthInput): NatalChart => {
-    const chart = generateNatalChart(input);
+  const createChart = async (input: BirthInput): Promise<NatalChart> => {
+    const chart = settings.school === 'nam_phai' ? await generateServerNamPhaiChart(input) : generateNatalChart(input);
     const updated = [chart, ...savedCharts.filter((c) => c.name !== chart.name || c.solarDate !== chart.solarDate)];
     setSavedCharts(updated);
     setActiveChart(chart);
