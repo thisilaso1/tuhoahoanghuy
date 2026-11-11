@@ -35,6 +35,8 @@ export const MenhBanView: React.FC = () => {
     setFocusedPalaceIndex,
     sendMessageToThienCo,
     navigateTo,
+    settings,
+    updateSettings,
   } = useApp();
 
   const [layers, setLayers] = useState<ChartLayerVisibility>({
@@ -81,7 +83,7 @@ export const MenhBanView: React.FC = () => {
     const saved = localStorage.getItem('hoai_nguyet_chart_theme');
     return saved === 'parchment' || saved === 'night' ? saved : 'paper';
   });
-  const [school, setSchool] = useState<TuHoaSchool>('kham_thien');
+  const [school, setSchool] = useState<TuHoaSchool>(() => settings.school);
 
   const changeChartTheme = (theme: ChartTheme) => {
     setChartTheme(theme);
@@ -89,6 +91,7 @@ export const MenhBanView: React.FC = () => {
   };
   const changeSchool = (nextSchool: TuHoaSchool) => {
     setSchool(nextSchool);
+    updateSettings({ school: nextSchool });
     localStorage.setItem('hoai_nguyet_tuhoa_school', nextSchool);
     setSelectedPhiPalaceIndices([]);
     setFocusedPalaceIndex(null);
@@ -164,7 +167,7 @@ export const MenhBanView: React.FC = () => {
 
   return (
     <div className="chart-workspace mx-auto max-w-7xl px-3 py-6 sm:px-6">
-      <ActiveChartForm chart={activeChart} onSubmit={createChart} />
+      <ActiveChartForm chart={activeChart} onSubmit={input => createChart(input, school)} />
       {/* Chart Workspace Toolbar */}
       <div className="chart-workspace-toolbar mb-4 flex flex-col gap-3 rounded-2xl p-3 shadow-xl backdrop-blur-md">
         {/* Action Buttons & Layer Controls */}

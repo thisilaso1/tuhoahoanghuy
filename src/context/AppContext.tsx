@@ -49,7 +49,7 @@ interface AppContextType {
   savedCharts: NatalChart[];
   authenticatedUser: AuthenticatedUserProfile | null;
   setAuthenticatedUser: (user: AuthenticatedUserProfile | null) => void;
-  createChart: (input: BirthInput) => Promise<NatalChart>;
+  createChart: (input: BirthInput, school?: 'kham_thien' | 'nam_phai') => Promise<NatalChart>;
   updateForecastYear: (year: number) => void;
   selectChart: (chart: NatalChart) => void;
   deleteChart: (id: string) => void;
@@ -291,8 +291,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const createChart = async (input: BirthInput): Promise<NatalChart> => {
-    const chart = settings.school === 'nam_phai' ? await generateServerNamPhaiChart(input) : generateNatalChart(input);
+  const createChart = async (input: BirthInput, school = settings.school): Promise<NatalChart> => {
+    const chart = school === 'nam_phai' ? await generateServerNamPhaiChart(input) : generateNatalChart(input);
     const updated = [chart, ...savedCharts.filter((c) => c.name !== chart.name || c.solarDate !== chart.solarDate)];
     setSavedCharts(updated);
     setActiveChart(chart);
