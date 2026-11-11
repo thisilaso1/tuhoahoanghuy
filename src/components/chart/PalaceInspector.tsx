@@ -212,7 +212,7 @@ export const PalaceInspector: React.FC<PalaceInspectorProps> = ({
       </>}
 
       {/* Ask Copilot CTA */}
-      {school === 'nam_phai' && palace.majorStars.some(star => star.name === 'Vũ Khúc') && <VuKhucReading chart={chart} palaceIndex={palace.index} />}
+      {school === 'nam_phai' && <VuKhucReading chart={chart} palaceIndex={palace.index} />}
       <button
         onClick={handleAskCopilot}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-600/40 via-amber-500/50 to-amber-600/40 p-2.5 text-xs font-semibold text-amber-100 hover:from-amber-600/60 hover:to-amber-500/60 transition shadow-lg"
