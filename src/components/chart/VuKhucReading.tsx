@@ -16,6 +16,7 @@ type Result = {
   id?: string;
   status?: string;
   targetStarName?: string;
+  mode?: string;
   dau_vao: {
     gioi_tinh: string;
     can_chi: NatalChart['birthCanChi'];
@@ -279,7 +280,8 @@ export const VuKhucReading: React.FC<{
     const stars = (result.dau_vao.cung_chu.chinh_tinh ?? [])
       .map((star) => star.ten)
       .filter(Boolean);
-    const combined = combineStarReadings(stars, result.sources);
+    // mode 'case': the trained model already answered for the star pair + palace + branch.
+    const combined = result.mode === 'case' ? null : combineStarReadings(stars, result.sources);
     const overview = result.luan_giai.tong_quan ?? '';
     const cung = result.dau_vao.cung_chu;
     return {
