@@ -46,7 +46,7 @@ const ANNUAL_CORE_STARS = [
 // Same tables as the natal stars, keyed by the viewing year's Can/Chi.
 const KHOI_VIET_BY_STEM: Record<string, [number, number]> = {
   Giáp: [1, 7], Ất: [0, 8], Bính: [11, 9], Đinh: [11, 9], Mậu: [1, 7],
-  Kỷ: [0, 8], Canh: [1, 7], Tân: [2, 6], Nhâm: [3, 5], Quý: [3, 5],
+  Kỷ: [0, 8], Canh: [6, 2], Tân: [6, 2], Nhâm: [3, 5], Quý: [3, 5], // Canh Tân phùng Mã Hổ
 };
 const STEMS = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
 

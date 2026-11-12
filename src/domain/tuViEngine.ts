@@ -239,8 +239,9 @@ export function placeMinorStars(
     Đinh: [11, 9],  // Hợi, Dậu
     Mậu: [1, 7],    // Sửu, Mùi
     Kỷ: [0, 8],     // Tý, Thân
-    Canh: [1, 7],   // Sửu, Mùi
-    Tân: [2, 6],    // Dần, Ngọ
+    // Nam Phái: "Canh Tân phùng Mã Hổ" — both Canh and Tân take Khôi at Ngọ, Việt at Dần.
+    Canh: [6, 2],   // Ngọ, Dần
+    Tân: [6, 2],    // Ngọ, Dần
     Nhâm: [3, 5],   // Mão, Tỵ
     Quý: [3, 5],    // Mão, Tỵ
   };

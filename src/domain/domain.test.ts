@@ -174,6 +174,18 @@ describe('Domain Astrology & I Ching Engines', () => {
     expect(trangSinhRing.map((star) => reverse[star])).toEqual(Array.from({ length: 12 }, (_, index) => (5 - index + 12) % 12));
   });
 
+  it('places Thiên Khôi at Ngọ and Thiên Việt at Dần for Canh and Tân years (Canh Tân phùng Mã Hổ)', () => {
+    for (const stem of ['Canh', 'Tân'] as const) {
+      expect(placeMinorStars(stem, 'Thìn', 8, 'Tỵ')).toMatchObject({ 'Thiên Khôi': 6, 'Thiên Việt': 2 });
+    }
+    expect(placeMinorStars('Giáp', 'Tý', 8, 'Tỵ')).toMatchObject({ 'Thiên Khôi': 1, 'Thiên Việt': 7 });
+    const chart = generateNatalChart({ name: 'Khôi Việt', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2030 });
+    for (const year of [2030, 2031]) {
+      const annual = calculateAnnualStars(chart, year).map(({ name, branch }) => [name, branch]);
+      expect(annual).toEqual(expect.arrayContaining([['Lưu Thiên Khôi', 'Ngọ'], ['Lưu Thiên Việt', 'Dần']]));
+    }
+  });
+
   it('places the verified annual star set and re-keys the data when the forecast year changes', () => {
     const chart = generateNatalChart({ name: 'Annual test', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2026 });
     const annual2026 = calculateAnnualStars(chart, 2026);
