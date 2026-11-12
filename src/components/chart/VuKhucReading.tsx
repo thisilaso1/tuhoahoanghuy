@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { NatalChart } from '../../domain/types';
 import { useApp } from '../../context/AppContext';
 import {
+  birthInputFromChart,
   palaceReadingPayload,
   type PalaceReading,
 } from '../../api/namPhai';
@@ -17,6 +18,10 @@ type Result = {
   status?: string;
   targetStarName?: string;
   mode?: string;
+  saved?: boolean;
+  palaceIndex?: number;
+  savedAt?: string;
+  nam_xem?: number;
   dau_vao: {
     gioi_tinh: string;
     can_chi: NatalChart['birthCanChi'];
@@ -103,6 +108,26 @@ function getPalaceMainStars(
   return normalizeStars(payloadStars);
 }
 
+// Saved readings of one natal chart (per signed-in user), fetched once and shared by all palaces.
+const savedCache = new Map<string, Promise<Result[]>>();
+function natalCacheKey(chart: NatalChart, userId: string | undefined) {
+  const { forecastYear: _year, ...natal } = birthInputFromChart(chart);
+  return JSON.stringify([userId ?? '', natal]);
+}
+function loadSaved(chart: NatalChart, userId: string | undefined): Promise<Result[]> {
+  const key = natalCacheKey(chart, userId);
+  if (!savedCache.has(key)) {
+    const request = fetch('/api/auth/ai/palace/saved/lookup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birthInput: birthInputFromChart(chart) }),
+    }).then(async (response) => (response.ok ? ((await response.json()).items as Result[]) : []))
+      .catch(() => []);
+    savedCache.set(key, request);
+    request.then((items) => { if (!items.length) savedCache.delete(key); });
+  }
+  return savedCache.get(key)!;
+}
+
 export const VuKhucReading: React.FC<{
   chart: NatalChart;
   palaceIndex: number;
@@ -112,7 +137,12 @@ export const VuKhucReading: React.FC<{
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  // "Luận lại" applies only to the palace it was clicked on.
+  const [refresh, setRefresh] = useState({ palace: -1, n: 0 });
+  const attempt = refresh.palace === palaceIndex ? refresh.n : 0;
+  const setAttempt = () => setRefresh((value) => ({ palace: palaceIndex, n: value.palace === palaceIndex ? value.n + 1 : 1 }));
+  const [reload, setReload] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState('');
 
   // Dữ liệu phụ thuộc cung hiện tại.
@@ -176,6 +206,16 @@ export const VuKhucReading: React.FC<{
 
     const timer = setTimeout(async () => {
       try {
+        // A saved reading of this palace is shown as is, without calling the model again.
+        if (attempt === 0) {
+          setProgress('Đang tìm luận giải đã lưu của cung này…');
+          const saved = (await loadSaved(chart, authenticatedUser?.id)).find((item) => item.palaceIndex === palaceIndex);
+          if (controller.signal.aborted) return;
+          if (saved) {
+            setResult(saved);
+            return;
+          }
+        }
         const response = await fetch('/api/auth/ai/palace', {
           method: 'POST',
           signal: controller.signal,
@@ -269,7 +309,34 @@ export const VuKhucReading: React.FC<{
       clearTimeout(timer);
       controller.abort();
     };
-  }, [payload, authenticatedUser?.id, displayStarName]);
+  }, [payload, authenticatedUser?.id, displayStarName, reload]);
+
+  const saveReading = async () => {
+    if (!result?.id) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/auth/ai/palace/saved', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId: result.id }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error('Chưa lưu được luận giải. Bạn thử lại nhé.');
+      savedCache.delete(natalCacheKey(chart, authenticatedUser?.id));
+      setResult(data as Result);
+      setError('');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Chưa lưu được luận giải.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteSaved = async () => {
+    if (!result?.id || !window.confirm('Xóa bản luận giải đã lưu của cung này?')) return;
+    const response = await fetch('/api/auth/ai/palace/saved/' + result.id, { method: 'DELETE' });
+    if (!response.ok) { setError('Chưa xóa được bản lưu. Bạn thử lại nhé.'); return; }
+    savedCache.delete(natalCacheKey(chart, authenticatedUser?.id));
+    setReload((value) => value + 1);
+  };
 
   const currentStarName =
     result?.targetStarName || displayStarName;
@@ -377,6 +444,31 @@ export const VuKhucReading: React.FC<{
               'Chưa có nguồn đã duyệt phù hợp'}
           </p>
 
+          {result.saved ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-300">
+              <span>
+                ✓ Đã lưu
+                {result.savedAt ? ' ngày ' + new Date(result.savedAt).toLocaleDateString('vi-VN') : ''}
+                {result.nam_xem ? ' · năm xem ' + result.nam_xem : ''}
+                {' · lời luận cung vị gốc không đổi theo năm'}
+              </span>
+              <button
+                className="rounded-lg border border-red-400/30 px-2 py-1 text-red-300"
+                onClick={deleteSaved}
+              >
+                Xóa bản lưu
+              </button>
+            </div>
+          ) : result.id ? (
+            <button
+              className="rounded-lg border border-emerald-500/40 px-3 py-1.5 text-xs text-emerald-300 disabled:opacity-50"
+              onClick={saveReading}
+              disabled={saving}
+            >
+              {saving ? 'Đang lưu…' : 'Lưu luận giải này'}
+            </button>
+          ) : null}
+
           <details>
             <summary className="cursor-pointer text-xs text-amber-200">
               Xem JSON và dữ liệu gửi model
@@ -392,7 +484,7 @@ export const VuKhucReading: React.FC<{
       {authenticatedUser && !loading && (
         <button
           className="mt-3 rounded-lg border border-amber-600/30 px-3 py-1.5 text-xs text-amber-200"
-          onClick={() => setAttempt((value) => value + 1)}
+          onClick={() => setAttempt()}
         >
           Luận lại cung này
         </button>
