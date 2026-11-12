@@ -286,7 +286,7 @@ export const VuKhucReading: React.FC<{
     const cung = result.dau_vao.cung_chu;
     return {
       main: combined
-        ? `${stars.join(' – ')} đồng cung tại ${cung.ten} (${cung.dia_chi}). ${combined}`
+        ? `Cung ${cung.ten} (${cung.dia_chi}) có ${stars.join(' và ')} đồng cung. ${combined}`
         : overview,
       extra: combined && overview && !isStarListOnly(overview, stars) ? overview : '',
       hide: new Set(stars),

@@ -12,6 +12,17 @@ function sourceBody(source: ReadingSource): string {
   return (first.trim() === source.title.trim() ? rest.join('\n') : text).trim();
 }
 
+const PROPER = ['Tử Vi', 'Thiên Cơ', 'Thái Dương', 'Vũ Khúc', 'Thiên Đồng', 'Liêm Trinh', 'Thiên Phủ', 'Thái Âm',
+  'Tham Lang', 'Cự Môn', 'Thiên Tướng', 'Thiên Lương', 'Thất Sát', 'Phá Quân', 'Mệnh', 'Phụ Mẫu', 'Phúc Đức',
+  'Điền Trạch', 'Quan Lộc', 'Nô Bộc', 'Thiên Di', 'Tật Ách', 'Tài Bạch', 'Tử Tức', 'Phu Thê', 'Huynh Đệ'];
+
+/** "Với Tử Vi, sự nghiệp vững vàng…": joins one star's reading into flowing prose. */
+export function leadWith(star: string, text: string): string {
+  const body = text.trim();
+  const proper = PROPER.some((name) => body.startsWith(name));
+  return `Với ${star}, ` + (proper || !body ? body : body[0].toLowerCase() + body.slice(1));
+}
+
 /** Star name a source is about, taken from its "Sao · Cung · Địa chi" title. */
 const sourceStar = (source: ReadingSource) => source.title.split('·')[0].trim();
 
@@ -42,5 +53,5 @@ export function combineStarReadings(
     })
     .filter((part): part is { star: string; text: string } => part !== null);
   if (parts.length < 2) return null;
-  return parts.map((part) => `${part.star}: ${part.text}`).join(' ');
+  return parts.map((part) => leadWith(part.star, part.text)).join(' ');
 }
