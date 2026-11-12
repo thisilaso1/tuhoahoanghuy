@@ -29,6 +29,8 @@ export interface PalaceReading {
   stage: 'cung_vi' | 'tam_hop' | 'xung_chieu' | 'giap_cung';
   palaceIndex: number; palaceName: string;
   luan_giai: { tong_quan: string; mat_thuan: string[]; diem_can_luu_y: string[]; thong_tin_con_thieu: string[] };
+  // Readings of the separate phụ tinh, giáp cung and xung chiếu models.
+  luan_phu_tinh?: RelationReading[]; luan_giap_cung?: RelationReading[]; luan_xung_chieu?: RelationReading[];
   sources: { title: string }[]; model: string; adapter: boolean;
 }
 export interface ReadingJob {
@@ -47,3 +49,4 @@ export async function readingRequest(path = '', body?: unknown): Promise<Reading
     : data.message ?? 'Không thể xử lý yêu cầu luận giải. Vui lòng thử lại.');
   return data;
 }
+export interface RelationReading { loai: 'phu_tinh' | 'cach'; ten: string; quan_he?: string | null; luan_giai: string }

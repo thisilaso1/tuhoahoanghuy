@@ -68,6 +68,13 @@ export const NamPhaiReadingPanel: React.FC = () => {
         <h3 className="text-sm font-semibold text-amber-200">{label}</h3>
         {job.results.filter(r => r.stage === stage).map(result => <details key={result.palaceIndex} className="mt-2 rounded-lg border border-amber-900/30 p-3">
           <summary className="cursor-pointer text-sm">{result.palaceName} · {result.luan_giai.tong_quan}</summary>
+          {([['luan_phu_tinh', 'Phụ tinh & bộ cách'], ['luan_giap_cung', 'Giáp cung'], ['luan_xung_chieu', 'Xung chiếu']] as const)
+            .map(([key, title]) => (result[key]?.length ?? 0) > 0 && <div key={key} className="mt-2 text-sm">
+              <strong className="text-amber-200">{title}</strong>
+              <ul className="mt-1 space-y-1">{result[key]!.map((item, index) => <li key={index}>
+                <span className="text-amber-100">{item.loai === 'cach' ? item.ten + (item.quan_he ? ' (' + item.quan_he + ')' : '') : item.ten}</span>: {item.luan_giai}
+              </li>)}</ul>
+            </div>)}
           <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words text-xs leading-relaxed">{JSON.stringify(result, null, 2)}</pre>
         </details>)}
       </div>)}
