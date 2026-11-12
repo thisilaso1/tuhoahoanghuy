@@ -267,6 +267,10 @@ const ANNUAL_STAR_RULE_IDS: Record<string, string> = {
   'Lộc Tồn': 'ANNUAL_YEAR_STEM_LOC_TON_V1', 'Kình Dương': 'ANNUAL_YEAR_STEM_KINH_DUONG_V1',
   'Đà La': 'ANNUAL_YEAR_STEM_DA_LA_V1', 'Thiên Mã': 'ANNUAL_YEAR_BRANCH_THIEN_MA_V1',
   'Thiên Khốc': 'ANNUAL_YEAR_BRANCH_THIEN_KHOC_V1', 'Thiên Hư': 'ANNUAL_YEAR_BRANCH_THIEN_HU_V1',
+  'Thiên Khôi': 'ANNUAL_YEAR_STEM_KHOI_VIET_V1', 'Thiên Việt': 'ANNUAL_YEAR_STEM_KHOI_VIET_V1',
+  'Văn Xương': 'ANNUAL_YEAR_STEM_VAN_XUONG_V1', 'Văn Khúc': 'ANNUAL_YEAR_STEM_VAN_KHUC_V1',
+  'Đào Hoa': 'ANNUAL_YEAR_BRANCH_DAO_HOA_V1', 'Hồng Loan': 'ANNUAL_YEAR_BRANCH_HONG_LOAN_V1',
+  'Thiên Hỷ': 'ANNUAL_YEAR_BRANCH_THIEN_HY_V1', 'Kiếp Sát': 'ANNUAL_YEAR_BRANCH_KIEP_SAT_V1',
 };
 const ANNUAL_BRANCH_SOURCE = 'https://hocvienlyso.org/nguyen-tac-an-sau-luu.html';
 const ANNUAL_STEM_SOURCE = 'https://hocvienlyso.org/tu-hoc-tu-vi-dau-bai-10-cac-sao-hang-can.html';
@@ -274,6 +278,7 @@ const ANNUAL_STEM_SOURCE = 'https://hocvienlyso.org/tu-hoc-tu-vi-dau-bai-10-cac-
 export const NAM_PHAI_ANNUAL_STAR_REGISTRY = [
   'Thái Tuế','Tang Môn','Bạch Hổ',
   'Lộc Tồn','Kình Dương','Đà La','Thiên Mã','Thiên Khốc','Thiên Hư',
+  'Thiên Khôi','Thiên Việt','Văn Xương','Văn Khúc','Đào Hoa','Hồng Loan','Thiên Hỷ','Kiếp Sát',
 ].map((name) => ({
   id: `ANNUAL:${normalizeId(name)}`,
   displayName: `Lưu ${name}`,

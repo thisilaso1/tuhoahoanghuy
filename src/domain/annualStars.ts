@@ -32,7 +32,23 @@ const ANNUAL_CORE_STARS = [
   { name: 'Kình Dương', element: 'Kim', rule: 'ANNUAL_YEAR_STEM_KINH_DUONG_V1' },
   { name: 'Đà La', element: 'Kim', rule: 'ANNUAL_YEAR_STEM_DA_LA_V1' },
   { name: 'Thiên Mã', element: 'Hỏa', rule: 'ANNUAL_YEAR_BRANCH_THIEN_MA_V1' },
+  // Restored annual auspicious/peach-blossom stars (removed in e3b77af), plus Lưu Kiếp Sát.
+  { name: 'Thiên Khôi', element: 'Hỏa', rule: 'ANNUAL_YEAR_STEM_KHOI_VIET_V1' },
+  { name: 'Thiên Việt', element: 'Hỏa', rule: 'ANNUAL_YEAR_STEM_KHOI_VIET_V1' },
+  { name: 'Văn Xương', element: 'Kim', rule: 'ANNUAL_YEAR_STEM_VAN_XUONG_V1' },
+  { name: 'Văn Khúc', element: 'Thủy', rule: 'ANNUAL_YEAR_STEM_VAN_KHUC_V1' },
+  { name: 'Đào Hoa', element: 'Mộc', rule: 'ANNUAL_YEAR_BRANCH_DAO_HOA_V1' },
+  { name: 'Hồng Loan', element: 'Thủy', rule: 'ANNUAL_YEAR_BRANCH_HONG_LOAN_V1' },
+  { name: 'Thiên Hỷ', element: 'Thủy', rule: 'ANNUAL_YEAR_BRANCH_THIEN_HY_V1' },
+  { name: 'Kiếp Sát', element: 'Hỏa', rule: 'ANNUAL_YEAR_BRANCH_KIEP_SAT_V1' },
 ] as const;
+
+// Same tables as the natal stars, keyed by the viewing year's Can/Chi.
+const KHOI_VIET_BY_STEM: Record<string, [number, number]> = {
+  Giáp: [1, 7], Ất: [0, 8], Bính: [11, 9], Đinh: [11, 9], Mậu: [1, 7],
+  Kỷ: [0, 8], Canh: [1, 7], Tân: [2, 6], Nhâm: [3, 5], Quý: [3, 5],
+};
+const STEMS = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
 
 // Fail at development/test time if the calculation definitions drift from the
 // locked annual registry; the registry is the coverage contract.
@@ -59,6 +75,14 @@ export function calculateAnnualStars(chart: NatalChart, targetLunarYear: number)
     'Kình Dương': mod12(locTonIndex + 1),
     'Đà La': mod12(locTonIndex - 1),
     'Thiên Mã': getThienMaBranchIndex(yearCanChi.branch),
+    'Thiên Khôi': KHOI_VIET_BY_STEM[yearCanChi.stem][0],
+    'Thiên Việt': KHOI_VIET_BY_STEM[yearCanChi.stem][1],
+    'Văn Xương': mod12(10 - STEMS.indexOf(yearCanChi.stem)),
+    'Văn Khúc': mod12(4 + STEMS.indexOf(yearCanChi.stem)),
+    'Đào Hoa': ({ 0: 9, 1: 6, 2: 3, 3: 0 } as Record<number, number>)[yearBranchIndex % 4],
+    'Hồng Loan': mod12(3 - yearBranchIndex),
+    'Thiên Hỷ': mod12(3 - yearBranchIndex + 6),
+    'Kiếp Sát': ({ 0: 5, 1: 2, 2: 11, 3: 8 } as Record<number, number>)[yearBranchIndex % 4],
   };
   const palaceByBranch = new Map(chart.palaces.map((palace) => [palace.index, palace]));
 
