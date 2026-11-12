@@ -6,6 +6,11 @@ import {
   palaceReadingPayload,
   type PalaceReading,
 } from '../../api/namPhai';
+import {
+  combineStarReadings,
+  isStarListOnly,
+  type ReadingSource,
+} from './combinePalaceReading';
 
 type Result = {
   id?: string;
@@ -18,10 +23,11 @@ type Result = {
       ten: string;
       dia_chi: string;
       thien_can: string;
+      chinh_tinh?: { ten: string }[];
     };
   };
   luan_giai: PalaceReading['luan_giai'];
-  sources: { title: string }[];
+  sources: ReadingSource[];
 };
 
 type StarData = {
@@ -267,6 +273,24 @@ export const VuKhucReading: React.FC<{
   const currentStarName =
     result?.targetStarName || displayStarName;
 
+  // Cung có từ 2 chính tinh: gom lời luận nguồn của từng sao thành một câu trả lời.
+  const reading = useMemo(() => {
+    if (!result) return null;
+    const stars = (result.dau_vao.cung_chu.chinh_tinh ?? [])
+      .map((star) => star.ten)
+      .filter(Boolean);
+    const combined = combineStarReadings(stars, result.sources);
+    const overview = result.luan_giai.tong_quan ?? '';
+    const cung = result.dau_vao.cung_chu;
+    return {
+      main: combined
+        ? `${stars.join(' – ')} đồng cung tại ${cung.ten} (${cung.dia_chi}). ${combined}`
+        : overview,
+      extra: combined && overview && !isStarListOnly(overview, stars) ? overview : '',
+      hide: new Set(stars),
+    };
+  }, [result]);
+
   return (
     <section
       className="mt-4 rounded-xl border border-amber-600/30 bg-slate-950/70 p-4"
@@ -316,14 +340,17 @@ export const VuKhucReading: React.FC<{
             {result.dau_vao.can_chi.year.branch}
           </p>
 
-          <p>{result.luan_giai.tong_quan}</p>
+          <p>{reading?.main}</p>
+          {reading?.extra && <p>{reading.extra}</p>}
 
           {([
             ['mat_thuan', 'Mặt thuận'],
             ['diem_can_luu_y', 'Điểm cần lưu ý'],
             ['thong_tin_con_thieu', 'Thông tin còn thiếu'],
           ] as const).map(([key, title]) => {
-            const items = result.luan_giai[key] ?? [];
+            const items = (result.luan_giai[key] ?? []).filter(
+              (text) => !reading?.hide.has(text.trim())
+            );
 
             return items.length > 0 ? (
               <div key={key}>
