@@ -33,6 +33,8 @@ type Result = {
     };
   };
   luan_giai: PalaceReading['luan_giai'];
+  // Readings of the separate phụ tinh model: phụ tinh in this palace and bộ cách it forms.
+  luan_phu_tinh?: { loai: 'phu_tinh' | 'cach'; ten: string; quan_he?: string | null; luan_giai: string }[];
   sources: ReadingSource[];
 };
 
@@ -435,6 +437,23 @@ export const VuKhucReading: React.FC<{
               </div>
             ) : null;
           })}
+
+          {(result.luan_phu_tinh?.length ?? 0) > 0 && (
+            <div>
+              <strong className="text-amber-200">Phụ tinh & bộ cách</strong>
+              <ul className="mt-1 space-y-1">
+                {result.luan_phu_tinh!.map((item, index) => (
+                  <li key={index}>
+                    <span className="text-amber-100">
+                      {item.loai === 'cach' ? 'Cách ' + item.ten + (item.quan_he ? ' (' + item.quan_he + ')' : '') : item.ten}
+                    </span>
+                    {': '}
+                    {item.luan_giai}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <p className="text-xs text-stone-400">
             Nguồn:{' '}
