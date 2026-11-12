@@ -312,10 +312,10 @@ export function placeMinorStars(
     Kỷ: 'Thân', Canh: 'Dần', Tân: 'Ngọ', Nhâm: 'Dậu', Quý: 'Hợi',
   };
   minor['Thiên Trù'] = BRANCHES.indexOf(thienTruByStem[yearStem]);
-  // Lưu Hà table selected from Tử Vi Khảo Luận; other schools vary at Đinh/Canh.
+  // Lưu Hà, Nam Phái Việt table: Canh at Thìn, Tân at Mão (Tử Vi Khảo Luận swaps these two).
   const luuHaByStem: Record<Stem, Branch> = {
     Giáp: 'Dậu', Ất: 'Tuất', Bính: 'Mùi', Đinh: 'Thân', Mậu: 'Tỵ',
-    Kỷ: 'Ngọ', Canh: 'Mão', Tân: 'Thìn', Nhâm: 'Hợi', Quý: 'Dần',
+    Kỷ: 'Ngọ', Canh: 'Thìn', Tân: 'Mão', Nhâm: 'Hợi', Quý: 'Dần',
   };
   minor['Lưu Hà'] = BRANCHES.indexOf(luuHaByStem[yearStem]);
   // Lưu Niên Văn Tinh (also called Văn Tinh in this profile): from Lộc Tồn,

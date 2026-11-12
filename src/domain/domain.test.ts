@@ -179,6 +179,10 @@ describe('Domain Astrology & I Ching Engines', () => {
       expect(placeMinorStars(stem, 'Thìn', 8, 'Tỵ')).toMatchObject({ 'Thiên Khôi': 6, 'Thiên Việt': 2 });
     }
     expect(placeMinorStars('Giáp', 'Tý', 8, 'Tỵ')).toMatchObject({ 'Thiên Khôi': 1, 'Thiên Việt': 7 });
+    // Lưu Hà (Nam Phái Việt): Canh at Thìn, Tân at Mão.
+    expect(placeMinorStars('Canh', 'Thìn', 8, 'Tỵ')['Lưu Hà']).toBe(4);
+    expect(placeMinorStars('Tân', 'Tỵ', 8, 'Tỵ')['Lưu Hà']).toBe(3);
+    expect(placeMinorStars('Giáp', 'Tý', 8, 'Tỵ')['Lưu Hà']).toBe(9);
     const chart = generateNatalChart({ name: 'Khôi Việt', date: '2000-09-25', time: '10:20', gender: 'Nam', calendar: 'solar', forecastYear: 2030 });
     for (const year of [2030, 2031]) {
       const annual = calculateAnnualStars(chart, year).map(({ name, branch }) => [name, branch]);
@@ -345,7 +349,7 @@ describe('Domain Astrology & I Ching Engines', () => {
       Giáp: { quan: 7, phuc: 9, tru: 5, luuHa: 9 }, Ất: { quan: 4, phuc: 8, tru: 6, luuHa: 10 },
       Bính: { quan: 5, phuc: 0, tru: 0, luuHa: 7 }, Đinh: { quan: 2, phuc: 11, tru: 5, luuHa: 8 },
       Mậu: { quan: 3, phuc: 3, tru: 6, luuHa: 5 }, Kỷ: { quan: 9, phuc: 2, tru: 8, luuHa: 6 },
-      Canh: { quan: 11, phuc: 6, tru: 2, luuHa: 3 }, Tân: { quan: 9, phuc: 5, tru: 6, luuHa: 4 },
+      Canh: { quan: 11, phuc: 6, tru: 2, luuHa: 4 }, Tân: { quan: 9, phuc: 5, tru: 6, luuHa: 3 },
       Nhâm: { quan: 10, phuc: 6, tru: 9, luuHa: 11 }, Quý: { quan: 6, phuc: 5, tru: 11, luuHa: 2 },
     };
     const validYears = Array.from({ length: 60 }, (_, offset) => getYearCanChi(1984 + offset));

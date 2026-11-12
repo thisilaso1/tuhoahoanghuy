@@ -32,7 +32,7 @@ export const NAM_PHAI_PROFILE_CONFIG = {
   brightnessProfileId: NAM_PHAI_BRIGHTNESS_PROFILE_ID,
   laiNhanRuleId: 'LAI_NHAN_EXCLUDE_TY_SUU_V1',
   hỏaLinhRuleId: 'NAM_PHAI_TRINE_START_AND_FORWARD_HOUR_V1',
-  luuHaVariantId: 'YEAR_STEM_LUU_HA_TU_VI_KHAO_LUAN_V1',
+  luuHaVariantId: 'YEAR_STEM_LUU_HA_NAM_PHAI_VIET_V1',
   aliases: {
     'Tả Phụ': 'Tả Phù', 'Thiên Diêu': 'Thiên Riêu', 'Bác Sỹ': 'Bác Sĩ',
     'Phượng Cát': 'Phượng Các', 'Hỉ Thần': 'Hỷ Thần', 'Văn Tinh': 'Lưu Niên Văn Tinh',
@@ -147,7 +147,7 @@ const verifiedRules: Record<string, { rule: string; depends: string[]; element?:
   'Thiên Giải': { rule: 'LUNAR_MONTH_THIEN_GIAI_FORWARD_V1', depends: ['lunarMonth'], element: 'Hỏa' },
   'Địa Giải': { rule: 'LUNAR_MONTH_DIA_GIAI_FORWARD_V1', depends: ['lunarMonth'], element: 'Thổ' },
   'Giải Thần': { rule: 'PHUONG_CAC_ALIAS_GIAI_THAN_V1', depends: ['Phượng Các'], element: 'Mộc' },
-  'Lưu Hà': { rule: 'YEAR_STEM_LUU_HA_TU_VI_KHAO_LUAN_V1', depends: ['birthYearStem'], element: 'Thủy' },
+  'Lưu Hà': { rule: 'YEAR_STEM_LUU_HA_NAM_PHAI_VIET_V1', depends: ['birthYearStem'], element: 'Thủy' },
   'Lưu Niên Văn Tinh': { rule: 'LOC_TON_PLUS_THREE_LUU_NIEN_VAN_TINH_V1', depends: ['Lộc Tồn'], element: 'Kim' },
 };
 
