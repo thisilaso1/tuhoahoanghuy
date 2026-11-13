@@ -34,6 +34,9 @@ jobs:
           tags: |
             thisilaso1/tuhoabe:${{ github.sha }}
             thisilaso1/tuhoabe:latest
+          # Reuse the npm ci layer when package-lock.json has not changed.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     needs: build-and-push
@@ -57,6 +60,10 @@ jobs:
           ssh-keygen -y -f ~/.ssh/tuhoa_deploy > /dev/null
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           cat > ~/.ssh/config <<EOF_SSH
+          Host *
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h-%p
+            ControlPersist 300
           Host tuhoa-bastion
             HostName $DEPLOY_HOST
             User $DEPLOY_USER
