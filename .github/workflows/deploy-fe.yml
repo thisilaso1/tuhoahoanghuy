@@ -83,4 +83,4 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ssh tuhoa-k3s "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /usr/local/bin/kubectl -n envitek-iot set image deployment/tu-hoa-kham-thien web=thisilaso1/tuhoabe:${IMAGE_TAG} && KUBECONFIG=/etc/rancher/k3s/k3s.yaml /usr/local/bin/kubectl -n envitek-iot rollout status deployment/tu-hoa-kham-thien --timeout=180s"
+          ssh tuhoa-k3s "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /usr/local/bin/kubectl -n tuvi set image deployment/tu-hoa-kham-thien web=thisilaso1/tuhoabe:${IMAGE_TAG} && KUBECONFIG=/etc/rancher/k3s/k3s.yaml /usr/local/bin/kubectl -n tuvi rollout status deployment/tu-hoa-kham-thien --timeout=180s"
